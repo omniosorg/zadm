@@ -55,14 +55,6 @@ sub getPostProcess {
             my ($index) = $cfg->{attr}->[$i]->{name} =~ /^disk(\d+)$/
                 or next;
 
-            $self->autores({
-                %{$self->autores},
-                attr => {
-                    %{$self->autores->{attr} // {}},
-                    $cfg->{attr}->[$i]->{name} => 'name',
-                },
-            });
-
             if (defined $index) {
                 $cfg->{disk}->[$index] = $cfg->{attr}->[$i]->{value};
             }
@@ -71,7 +63,6 @@ sub getPostProcess {
             }
             splice @{$cfg->{attr}}, $i, 1;
         }
-        $self->ignattr({ %{$self->ignattr}, disk => undef });
     }
 
     # add disk w/o index to the first available slot
@@ -88,18 +79,12 @@ sub getPostProcess {
     $cfg = $self->SUPER::getPostProcess($cfg);
 
     # remove cdrom lofs mount from config
-    if ($cfg->{cdrom} && $cfg->{fs} && ref $cfg->{fs} eq 'ARRAY') {
-        $cfg->{fs} = [ grep { $_->{special} ne $cfg->{cdrom} } @{$cfg->{fs}} ];
-
-        $self->autores({ %{$self->autores}, fs => undef });
-    }
+    $cfg->{fs} = [ grep { $_->{special} ne $cfg->{cdrom} } @{$cfg->{fs}} ]
+        if ($cfg->{cdrom} && $cfg->{fs} && ref $cfg->{fs} eq 'ARRAY');
 
     # remove device for bootdisk
-    if ($cfg->{bootdisk} && $cfg->{device} && ref $cfg->{device} eq 'ARRAY') {
-        $cfg->{device} = [ grep { $_->{match} !~ m!^(?:$ZVOLRX)?$cfg->{bootdisk}$! } @{$cfg->{device}} ];
-
-        $self->autores({ %{$self->autores}, device => undef });
-    }
+    $cfg->{device} = [ grep { $_->{match} !~ m!^(?:$ZVOLRX)?$cfg->{bootdisk}$! } @{$cfg->{device}} ]
+        if ($cfg->{bootdisk} && $cfg->{device} && ref $cfg->{device} eq 'ARRAY');
 
     # remove device for disk
     if ($cfg->{disk} && ref $cfg->{disk} eq 'ARRAY' && $cfg->{device} && ref $cfg->{device} eq 'ARRAY') {
@@ -108,9 +93,6 @@ sub getPostProcess {
                 if grep { $cfg->{device}->[$i]->{match} =~ m!^(?:$ZVOLRX)?$_$! } @{$cfg->{disk}};
         }
 
-        # there could be a rare case when bootdisk is not set but disks are configured
-        # so we add it here, too. just in case
-        $self->autores({ %{$self->autores}, device => undef });
     }
 
     # remove fs/device/disk if empty

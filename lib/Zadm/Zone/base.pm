@@ -185,22 +185,9 @@ my $addResource = sub {
 my $delResource = sub {
     my $self  = shift;
     my $res   = shift;
-    my $prop  = shift || '';
-    my $val   = shift || '';
-    my $force = shift;
-
-    return if !$self->$resourceExisted($res, $prop, $val) && !$force;
-
-    if ($self->$resIsAttr($res)) {
-        $val  = $res;
-        $res  = 'attr';
-        $prop = 'name';
-    }
 
     my $name = $self->name;
-    my @cmd  = ('-z', $name, 'remove');
-
-    push @cmd, $prop && $val ? ($res, "$prop=$val") : ('-F', $res);
+    my @cmd  = ('-z', $name, qw(remove -F), $res);
 
     $self->utils->exec('zonecfg', \@cmd, "cannot delete resource '$res' from zone '$name'");
 };
@@ -208,25 +195,9 @@ my $delResource = sub {
 my $clearResources = sub {
     my $self = shift;
 
-    # force removal of automatically added resources
-    for my $res (keys %{$self->autores}) {
-        if (ref $self->autores->{$res} eq 'HASH') {
-            $self->$delResource($res, $self->autores->{$res}->{$_}, $_, 1)
-                for keys %{$self->autores->{$res}};
+    my $conf = $self->setPreProcess($self->oldConf);
 
-            next;
-        }
-
-        $self->$delResource($res, undef, undef, 1);
-    }
-
-    $self->$delResource($_) for grep {
-        # TODO: add generic handler for attr arrays (e.g. disk)
-        # for now the derived class needs to make sure to put the attrs to wipe
-        # on the autores stack
-        (exists $self->resmap->{$_} || ($self->$resIsAttr($_) && !exists $self->ignattr->{$_}))
-        && !exists $self->autores->{$_}
-    } keys %{$self->oldConf};
+    $self->$delResource($_) for grep { exists $self->resmap->{$_} } keys %$conf;
 };
 
 my $setProperty = sub {
@@ -410,8 +381,6 @@ has opts    => sub { {} };
 has smod    => sub { my $mod = ref shift; $mod =~ s/Zone/Schema/; $mod };
 has exists  => sub { my $self = shift; $self->zones->exists($self->name) };
 has valid   => sub { 0 };
-has autores => sub { {} };
-has ignattr => sub { {} };
 
 has schema  => sub {
     my $self = shift;
@@ -495,8 +464,6 @@ sub setPreProcess {
     my $self = shift;
     my $cfg  = shift;
 
-    my $schema = $self->schema;
-
     for my $res (keys %$cfg) {
         next if !$self->$resIsAttr($res);
 
@@ -505,7 +472,8 @@ sub setPreProcess {
             type => 'string',
         );
 
-        $elem{value} = ref $cfg->{$res} eq 'ARRAY' ? join (',', @{$cfg->{$res}})
+        $elem{value} = ref $cfg->{$res} eq 'ARRAY'
+                     ? join (',', @{$cfg->{$res}})
                      : $cfg->{$res};
 
         push @{$cfg->{attr}}, { %elem };
