@@ -1,0 +1,4 @@
+Makefile.in     linguist-vendored
+bootstrap       linguist-vendored
+conftools/**    linguist-vendored
+configure       linguist-vendored 

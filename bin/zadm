@@ -1,0 +1,308 @@
+#!/usr/bin/env perl
+
+use lib qw(); # PERL5LIB
+use FindBin;
+# PERL5LIB
+use lib "$FindBin::RealBin/../lib"; use lib "$FindBin::RealBin/../thirdparty/lib/perl5"; # LIBDIR
+use strict;
+use warnings;
+
+use Pod::Usage;
+use File::Basename qw(basename);
+use Getopt::Long qw(:config posix_default no_ignore_case);
+
+use Zadm::Zones;
+
+my $VERSION = '0.dev'; # VERSION
+my $PROG    = basename $0;
+
+#fix perldoc pager if not set
+$ENV{PERLDOC_PAGER} ||= '/usr/bin/less -rins' if -x '/usr/bin/less';
+
+my %delPurgeMap;
+
+sub main {
+    my $mainOpt = shift;
+
+    $mainOpt or pod2usage(1);
+
+    my $zones = Zadm::Zones->new(loglvl => 'debug');
+#    my $zones = Zadm::Zones->new;
+
+    # check if we are in global zone
+    $zones->isGZ or die "ERROR: $PROG can only be run from global zone\n";
+
+    for ($mainOpt) {
+        /^create$/ && do {
+            my $zName = pop @ARGV;
+            $zName or pod2usage(1);
+
+            my $opts = {};
+            Getopt::Long::Configure(qw(pass_through));
+            GetOptions($opts, qw(brand|b=s)) or exit 1;
+            $opts->{brand} or pod2usage(1);
+
+            my $zone = $zones->zone($zName, brand => $opts->{brand}, opts => $opts);
+
+            Getopt::Long::Configure(qw());
+            GetOptions($opts, @{$zone->getOptions('create')}) or exit 1;
+            $zone->checkMandOptions('create') or $zone->usage;
+
+            $zones->exists($zName)
+                && die "ERROR: zone '$zName' already exists. use 'edit' to change properties\n";
+
+            $zones->utils->edit($zone) && $zone->install;
+
+            last;
+        };
+        /^edit$/ && do {
+            my $zName = shift @ARGV;
+            defined $zName or pod2usage(1);
+
+            $zones->exists($zName)
+                || die "ERROR: zone '$zName' does not exist. use 'create' to create a zone\n";
+
+            my $zone = $zones->zone($zName);
+            $zones->utils->edit($zone) && $zone->is('configured') && $zone->install;
+
+            last;
+        };
+        /^delete$/ && do {
+            my $zName = pop @ARGV;
+            defined $zName or pod2usage(1);
+
+            my $opts = {};
+            GetOptions($opts, qw(purge=s)) or exit 1;
+            #split all features into individual options
+            if ($opts->{purge}) {
+                for my $purge (split /,/, $opts->{purge}) {
+                    $delPurgeMap{$purge} or die "ERROR: purge '$purge' not supported\n";
+                    $opts->{$purge} = 1;
+                }
+                delete $opts->{purge};
+            }
+
+            my $zone = $zones->zone($zName);
+            $zone->remove($opts);
+
+            last;
+        };
+        /^list$/ && do {
+            my $zName = shift @ARGV;
+
+            my $list = $zName ? $zones->zone($zName)->config
+                : { map { my $z = $_; $z => $zones->zone($z)->config } keys %{$zones->list} };
+
+            print $zones->utils->encodeJSON($list);
+
+            last;
+        };
+        /^status$/ && do {
+            $zones->utils->exec('zoneadm', [ qw(list -cv) ]);
+
+            last;
+        };
+        /^list-images$/ && do {
+            $zones->image->dump;
+
+            last;
+        };
+        /^refresh$/ && do {
+            # force download of index
+            $zones->image->fetchImages(1);
+
+            last;
+        };
+        /^start$/ && do {
+            my $zName = shift @ARGV;
+            defined $zName or pod2usage(1);
+
+            $zones->zone($zName)->boot;
+            last;
+        };
+        /^stop$/ && do {
+            my $zName = shift @ARGV;
+            defined $zName or pod2usage(1);
+
+            $zones->zone($zName)->shutdown;
+            last;
+        };
+        /^restart$/ && do {
+            my $zName = shift @ARGV;
+            defined $zName or pod2usage(1);
+
+            $zones->zone($zName)->reboot;
+            last;
+        };
+        /^poweroff$/ && do {
+            my $zName = shift @ARGV;
+            defined $zName or pod2usage(1);
+
+            $zones->zone($zName)->poweroff;
+            last;
+        };
+        /^console$/ && do {
+            my $zName = shift @ARGV;
+            defined $zName or pod2usage(1);
+
+            $zones->zone($zName)->console;
+            last;
+        };
+        /^man$/ && do {
+            pod2usage(-exitstatus => 0, -verbose => 2);
+
+            last;
+        };
+        /^help$/ && do {
+            pod2usage(-exitval => 'NOEXIT');
+
+            last;
+        };
+        /^version$/ && do {
+            print "$PROG $VERSION\n";
+
+            last;
+        };
+        # not a generic command, so we forward it to the brand specific implementation
+        /^\w+$/ && do {
+            my $zName = shift @ARGV;
+
+            defined $zName or pod2usage(1);
+
+            my $zone = $zones->zone($zName);
+
+            $zone->usage if !$zone->can($mainOpt) || !$zone->isPublic($mainOpt);
+
+            $zones->zone($zName)->$mainOpt;
+            last;
+        };
+        #main argument invalid
+        pod2usage(1);
+    }
+    return 1;
+}
+
+main(shift);
+
+1;
+
+__END__
+
+=head1 NAME
+
+zadm - Manage OmniOS zones.
+
+=head1 SYNOPSIS
+
+B<zadm> I<command> [I<options...>]
+
+where 'command' is one of the following:
+
+    create -b <brand> <zone_name>
+    delete [--purge=vnic] <zone_name>
+    edit <zone_name>
+    list [zone_name]
+    status
+    list-images
+    start <zone_name>
+    stop <zone_name>
+    restart <zone_name>
+    poweroff <zone_name>
+    console <zone_name>
+    help
+    man
+    version
+
+=head1 DESCRIPTION
+
+Use zadm to create/edit your zones.
+
+=head2 B<create>
+
+creates a zone with the name B<zone_name>. Create will open an editor
+where the properties can be set. vnics which do not exist will be created.
+
+zone properties are according to I<zonecfg>.
+global properties can be set as "property" : "value" pair, single
+resources as "resource" : { } hash structure and multiple resources
+as "resource" : [ { }, ... ] array of hash structures.
+
+=head2 B<import>
+
+imports a zone configuration from a file.
+
+=head2 B<delete>
+
+deletes a zone with the name B<zone_name>.
+
+=head2 B<edit>
+
+modify the configuration of a zone. See the descriptions in the B<create>
+function for details.
+
+=head2 B<list>
+
+lists the available zones with their properties. Lists details for B<zone_name>
+if given.
+
+=head2 B<status>
+
+prints the status of all existing zones
+
+=head2 B<list-images>
+
+list all available images ready for download and install.
+
+=head2 B<refresh>
+
+forces image index refresh.
+
+=head2 B<start>
+
+starts the zone B<zone_name>
+
+=head2 B<stop>
+
+stops the zone B<zone_name>
+
+=head2 B<restart>
+
+restarts the zone B<zone_name>
+
+=head2 B<poweroff>
+
+forcefully stops the zone B<zone_name> (i.e. "unplug")
+
+=head2 B<console>
+
+attaches to the B<zone_name> zone console
+
+=head1 COPYRIGHT
+
+Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
+
+=head1 LICENSE
+
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option)
+any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+more details.
+
+You should have received a copy of the GNU General Public License along with
+this program. If not, see L<http://www.gnu.org/licenses/>.
+
+=head1 AUTHOR
+
+S<Dominik Hassler E<lt>hadfl@omniosce.orgE<gt>>
+
+=head1 HISTORY
+
+2020-04-12 had Initial Version
+
+=cut
+
