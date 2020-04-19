@@ -8,6 +8,7 @@ use JSON::PP; # for pretty encoding
 use Mojo::Log;
 use File::Temp;
 use FindBin;
+use Text::ParseWords qw(shellwords);
 
 # commands
 my %CMDS = (
@@ -22,8 +23,12 @@ my %CMDS = (
     curl        => '/usr/bin/curl',
 );
 
+my %ENVARGS = map {
+    $_ => [ shellwords($ENV{'__ZADM_' .  uc ($_) . '_ARGS'} // '') ]
+} keys %CMDS;
+
 # attributes
-has log         => sub { Mojo::Log->new(level => 'debug') };
+has log => sub { Mojo::Log->new(level => 'debug') };
 
 # private methods
 my $edit = sub {
@@ -58,7 +63,7 @@ sub pipe {
     Mojo::Exception->throw("ERROR: command '$cmd' not defined.\n")
         if !exists $CMDS{$cmd};
 
-    my @cmd = ($CMDS{$cmd}, @$args);
+    my @cmd = ($CMDS{$cmd}, @{$ENVARGS{$cmd}}, @$args);
     $self->log->debug("@cmd");
 
     open my $pipe, $dir, @cmd
@@ -77,7 +82,7 @@ sub exec {
     Mojo::Exception->throw("ERROR: command '$cmd' not defined.\n")
         if !exists $CMDS{$cmd};
 
-    my @cmd = ($CMDS{$cmd}, @$args);
+    my @cmd = ($CMDS{$cmd}, @{$ENVARGS{$cmd}}, @$args);
     $self->log->debug("@cmd");
 
     if ($fork) {
@@ -120,6 +125,8 @@ sub edit {
         };
         if ($@) {
             print $@;
+            # TODO: is there a better way of handling this?
+            return 0 if $ENV{'__ZADMTEST'};
             print 'Do you want to retry [Y/n]? ';
             chomp (my $check = <STDIN>);
 

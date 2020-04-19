@@ -23,6 +23,7 @@ my %delPurgeMap;
 
 sub main {
     my $mainOpt = shift;
+    my $ret = 0;
 
     $mainOpt or pod2usage(1);
 
@@ -63,7 +64,7 @@ sub main {
                 || die "ERROR: zone '$zName' does not exist. use 'create' to create a zone\n";
 
             my $zone = $zones->zone($zName);
-            $zones->utils->edit($zone) && $zone->is('configured') && $zone->install;
+            ($ret = !$zones->utils->edit($zone)) || ($zone->is('configured') && $zone->install);
 
             last;
         };
@@ -179,10 +180,10 @@ sub main {
         #main argument invalid
         pod2usage(1);
     }
-    return 1;
+    return $ret;
 }
 
-main(shift);
+exit main(shift);
 
 1;
 
