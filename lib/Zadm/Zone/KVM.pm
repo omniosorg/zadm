@@ -24,8 +24,9 @@ has vncsocket => sub {
 has public    => sub { [ qw(reset nmi vnc) ] };
 
 my $queryMonitor = sub {
-    my $self  = shift;
-    my $query = shift;
+    my $self   = shift;
+    my $query  = shift;
+    my $nowait = shift;
 
     my $socket = IO::Socket::UNIX->new(
         Type => SOCK_STREAM,
@@ -33,6 +34,8 @@ my $queryMonitor = sub {
     ) or Mojo::Exception->throw("Cannot open socket $!\n");
 
     $socket->send($query);
+
+    return if $nowait;
 
     my $wait = IO::Select->new;
     $wait->add($socket);
@@ -180,18 +183,18 @@ sub setPreProcess {
 sub poweroff {
     my $self = shift;
 
-    $self->$queryMonitor("quit\n");
+    $self->$queryMonitor("quit\n", 1);
 
     # make sure parent class does 'halt'
     $self->SUPER::poweroff;
 }
 
 sub reset {
-    shift->$queryMonitor("system_reset\n");
+    shift->$queryMonitor("system_reset\n", 1);
 }
 
 sub nmi {
-    shift->$queryMonitor("nmi 0\n");
+    shift->$queryMonitor("nmi 0\n", 1);
 }
 
 sub vnc {
