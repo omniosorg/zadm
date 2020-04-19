@@ -53,14 +53,14 @@ my $resIsArray = sub {
     my $self = shift;
     my $res  = shift;
 
-    return $self->schema->{$res}->{array};
+    return exists $self->schema->{$res} && $self->schema->{$res}->{array};
 };
 
 my $resIsAttr = sub {
     my $self = shift;
     my $res  = shift;
 
-    return $self->schema->{$res}->{'x-attr'};
+    return exists $self->schema->{$res} && $self->schema->{$res}->{'x-attr'};
 };
 
 my $propIsArray = sub {
@@ -68,7 +68,8 @@ my $propIsArray = sub {
     my $res  = shift;
     my $prop = shift;
 
-    return $self->schema->{$res}->{members}->{$prop}->{array};
+    return exists $self->schema->{$res}->{members}->{$prop}
+        && $self->schema->{$res}->{members}->{$prop}->{array};
 };
 
 my $propIsHash = sub {
@@ -444,7 +445,8 @@ sub decodeProp {
     my ($_prop, $_val) = $val =~ /name=([^,]+),value="([^"]+)"/;
 
     ($prop, $val) = ($_prop, $_val)
-        if ($res eq 'net' && $_prop && $self->schema->{$res}->{members}->{$_prop}->{'x-netprop'});
+        if ($res eq 'net' && $_prop && exists $self->schema->{$res}->{members}->{$_prop}
+            && $self->schema->{$res}->{members}->{$_prop}->{'x-netprop'});
 
     return ($prop, $val);
 }
@@ -454,7 +456,8 @@ sub encodeProp {
     my ($res, $prop, $val) = @_;
 
     return ('set', $prop, '=', q{"} . $self->$setVal($val) . q{"}, ';')
-        if ($res ne 'net' || !$self->schema->{$res}->{members}->{$prop}->{'x-netprop'});
+        if ($res ne 'net' || (exists $self->schema->{$res}->{members}->{$prop}
+            && !$self->schema->{$res}->{members}->{$prop}->{'x-netprop'}));
 
     $val = ref $val eq 'ARRAY' ? "(name=$prop,value=\"" . join (',', @$val) . '")'
          : "(name=$prop,value=\"$val\")";
@@ -473,7 +476,8 @@ sub getPostProcess {
 
         next if !$self->$resIsAttr($name);
 
-        $cfg->{$name} = $schema->{$name}->{array} ? [ split /,/, $cfg->{attr}->[$i]->{value} ]
+        $cfg->{$name} = exists $schema->{$name} && $schema->{$name}->{array}
+                      ? [ split /,/, $cfg->{attr}->[$i]->{value} ]
                       : $cfg->{attr}->[$i]->{value};
 
         splice @{$cfg->{attr}}, $i, 1;
