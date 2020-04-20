@@ -52,7 +52,7 @@ sub getPostProcess {
     # handle disks before the default getPostProcess
     if ($cfg->{attr} && ref $cfg->{attr} eq 'ARRAY') {
         for (my $i = $#{$cfg->{attr}}; $i >= 0; $i--) {
-            my ($index) = $cfg->{attr}->[$i]->{name} =~ /^disk(\d+)$/
+            my ($index) = $cfg->{attr}->[$i]->{name} =~ /^disk(\d+)?$/
                 or next;
 
             if (defined $index) {
@@ -90,7 +90,8 @@ sub getPostProcess {
     if ($cfg->{disk} && ref $cfg->{disk} eq 'ARRAY' && $cfg->{device} && ref $cfg->{device} eq 'ARRAY') {
         for (my $i = $#{$cfg->{device}}; $i >= 0; $i--) {
             splice @{$cfg->{device}}, $i, 1
-                if grep { $cfg->{device}->[$i]->{match} =~ m!^(?:$ZVOLRX)?$_$! } @{$cfg->{disk}};
+                # disks are indexed and there might be empty slots
+                if grep { $_ && $cfg->{device}->[$i]->{match} =~ m!^(?:$ZVOLRX)?$_$! } @{$cfg->{disk}};
         }
 
     }
