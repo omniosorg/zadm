@@ -18,14 +18,14 @@ my %vcpuOptions = (
 );
 
 # private methods
-my $getPhys = sub {
+my $getOverLink = sub {
     my $self = shift;
 
-    my $dladm = $self->utils->pipe('dladm', [ qw(show-phys -p -o link) ]);
+    chomp (my @int = map {
+        my $dladm = $self->utils->pipe('dladm', [ "show-$_", qw(-p -o link) ]); (<$dladm>)
+    } qw(phys etherstub overlay));
 
-    chomp (my @phys = (<$dladm>));
-
-    return \@phys;
+    return \@int;
 };
 
 # static private methods
@@ -107,17 +107,6 @@ sub file {
     }
 }
 
-sub physical {
-    my $self = shift;
-
-    return sub {
-        my $nic = shift;
-
-        return (grep { $_ eq $nic } @{$self->$getPhys}) ? undef
-            : "physical link '$nic' does not exist";
-    }
-}
-
 sub globalNic {
     my $self = shift;
 
@@ -128,8 +117,8 @@ sub globalNic {
         return $net->{'allowed-address'} ? undef : 'allowed-address must be set when global-nic is auto'
             if $nic eq 'auto';
 
-        return (grep { $_ eq $nic } @{$self->$getPhys}) ? undef
-            : "physical link '$nic' does not exist";
+        return (grep { $_ eq $nic } @{$self->$getOverLink}) ? undef
+            : "link '$nic' does not exist or is wrong type";
     }
 }
 
@@ -159,9 +148,9 @@ sub vnic {
         }
 
         # only reach here if vnic does not exist
-        # get first physical link if over is not given
+        # get first global link if over is not given
 
-        $nic->{over} = $self->$getPhys->[0] if !exists $nic->{over};
+        $nic->{over} = $self->$getOverLink->[0] if !exists $nic->{over};
 
         # TODO: add exception handling and return error string instead
         $self->utils->exec('dladm', [ (qw(create-vnic -l), $nic->{over}, $name) ]);
