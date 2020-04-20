@@ -3,8 +3,7 @@ use Mojo::Base -base;
 
 use POSIX qw(isatty);
 use Mojo::Exception;
-use Mojo::JSON qw(decode_json);
-use JSON::PP; # for pretty encoding
+use JSON::PP; # for pretty encoding and 'relaxed' decoding
 use Mojo::Log;
 use File::Temp;
 use FindBin;
@@ -121,7 +120,7 @@ sub edit {
             local $SIG{__DIE__};
 
             $self->log->debug("validating config");
-            $cfgValid = $zone->setConfig(decode_json $json);
+            $cfgValid = $zone->setConfig(JSON::PP->new->relaxed(1)->decode($json));
         };
         if ($@) {
             print $@;
