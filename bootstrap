@@ -1,4 +1,6 @@
 #!/bin/sh
+# some perl modules require gnu-tar to unpack
+export PATH=/usr/gnu/bin:$PATH
 export MAKE=gmake
 autoreconf --force --install --verbose --make
 git log --full-history --simplify-merges --dense --no-merges > CHANGES
