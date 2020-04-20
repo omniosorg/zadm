@@ -173,7 +173,7 @@ sub main {
         };
         # not a generic command, so we forward it to the brand specific implementation
         /^\w+$/ && do {
-            my $zName = shift @ARGV;
+            my $zName = pop @ARGV;
 
             defined $zName or pod2usage(1);
 
@@ -181,7 +181,7 @@ sub main {
 
             $zone->usage if !$zone->can($mainOpt) || !$zone->isPublic($mainOpt);
 
-            $zones->zone($zName)->$mainOpt;
+            $zones->zone($zName)->$mainOpt(@ARGV);
             last;
         };
         #main argument invalid

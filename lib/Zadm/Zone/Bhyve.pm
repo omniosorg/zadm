@@ -52,6 +52,7 @@ where 'command' is one of the following:
     reset <zone_name>
     nmi <zone_name>
     console <zone_name>
+    vnc [<[bind_addr:]port>] <zone_name>
     log
     help
     man

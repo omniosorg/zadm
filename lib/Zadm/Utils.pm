@@ -20,6 +20,7 @@ my %CMDS = (
     editor      => $ENV{VISUAL} || $ENV{EDITOR} || '/usr/bin/vi',
     zfs         => '/usr/sbin/zfs',
     curl        => '/usr/bin/curl',
+    socat       => '/usr/bin/socat',
 );
 
 my %ENVARGS = map {

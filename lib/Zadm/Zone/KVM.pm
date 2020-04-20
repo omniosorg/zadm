@@ -4,6 +4,8 @@ use Mojo::Base 'Zadm::Zone::base';
 use Mojo::Exception;
 use IO::Socket::UNIX qw(SOCK_STREAM);
 use IO::Select;
+use Regexp::IPv4 qw($IPv4_re);
+use Regexp::IPv6 qw($IPv6_re);
 
 # gobals
 my $ZVOLDEV  = '/dev/zvol/rdsk';
@@ -11,8 +13,9 @@ my $ZVOLRX   = qr!/dev/zvol/r?dsk/!;
 my @MON_INFO = qw(block blockstats chardev cpus kvm network pci registers qtree usb version vnc);
 my $RCV_TMO  = 3;
 
-has socket => sub { shift->config->{zonepath} . '/root/tmp/vm.monitor' };
-has public => sub { [ qw(reset nmi) ] };
+has socket    => sub { shift->config->{zonepath} . '/root/tmp/vm.monitor' };
+has vncsocket => sub { shift->config->{zonepath} . '/root/tmp/vm.vnc' };
+has public    => sub { [ qw(reset nmi vnc) ] };
 
 my $queryMonitor = sub {
     my $self  = shift;
@@ -158,6 +161,27 @@ sub nmi {
     shift->$queryMonitor("nmi 0\n");
 }
 
+sub vnc {
+    my $self   = shift;
+    my $listen = shift // '5900';
+
+    Mojo::Exception->throw('ERROR: zone ' . $self->name . " is not running\n")
+        if !$self->is('running');
+    Mojo::Exception->throw('ERROR: vnc is not set-up for zone ' . $self->name . "\n")
+        if !$self->config->{vnc} || $self->config->{vnc} eq 'off';
+
+    my ($ip, $port) = $listen =~ /^(?:($IPv4_re|$IPv6_re):)?(\d+)$/;
+    Mojo::Exception->throw("ERROR: port '$port' is not valid\n")
+        if !$port;
+    $ip //= '127.0.0.1';
+
+    $self->log->debug("VNC proxy listening on: $ip:$port");
+
+    print 'VNC server for zone ' . $self->name . " console started on $ip:$port\n";
+    $self->utils->exec('socat', [ "TCP-LISTEN:$port,bind=$ip,reuseaddr,fork",
+        'UNIX-CONNECT:' . $self->vncsocket ]);
+}
+
 1;
 
 __END__
@@ -180,6 +204,7 @@ where 'command' is one of the following:
     poweroff <zone_name>
     reset <zone_name>
     console <zone_name>
+    vnc [<[bind_addr:]port>] <zone_name>
     log
     help
     man
