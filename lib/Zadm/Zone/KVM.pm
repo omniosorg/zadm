@@ -180,6 +180,7 @@ where 'command' is one of the following:
     poweroff <zone_name>
     reset <zone_name>
     console <zone_name>
+    log
     help
     man
     version

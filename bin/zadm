@@ -149,6 +149,13 @@ sub main {
             $zones->zone($zName)->console;
             last;
         };
+        /^log$/ && do {
+            my $zName = shift @ARGV;
+            defined $zName or pod2usage(1);
+
+            print $zones->zone($zName)->logfile . "\n";
+            last;
+        };
         /^man$/ && do {
             pod2usage(-exitstatus => 0, -verbose => 2);
 
@@ -210,6 +217,7 @@ where 'command' is one of the following:
     restart <zone_name>
     poweroff <zone_name>
     console <zone_name>
+    log
     help
     man
     version
@@ -277,6 +285,10 @@ forcefully stops the zone B<zone_name> (i.e. "unplug")
 =head2 B<console>
 
 attaches to the B<zone_name> zone console
+
+=head2 B<log>
+
+returns the log path for B<zone_name>
 
 =head1 COPYRIGHT
 

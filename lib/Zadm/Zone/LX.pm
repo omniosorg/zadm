@@ -45,6 +45,7 @@ where 'command' is one of the following:
     restart <zone_name>
     poweroff <zone_name>
     console <zone_name>
+    log
     help
     man
     version
