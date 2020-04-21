@@ -114,28 +114,28 @@ sub main {
 
             last;
         };
-        /^start$/ && do {
+        /^(?:start|boot)$/ && do {
             my $zName = shift @ARGV;
             defined $zName or pod2usage(1);
 
             $zones->zone($zName)->boot;
             last;
         };
-        /^stop$/ && do {
+        /^(?:stop|shutdown)$/ && do {
             my $zName = shift @ARGV;
             defined $zName or pod2usage(1);
 
             $zones->zone($zName)->shutdown;
             last;
         };
-        /^restart$/ && do {
+        /^(?:restart|reboot)$/ && do {
             my $zName = shift @ARGV;
             defined $zName or pod2usage(1);
 
             $zones->zone($zName)->reboot;
             last;
         };
-        /^poweroff$/ && do {
+        /^(?:poweroff|halt)$/ && do {
             my $zName = shift @ARGV;
             defined $zName or pod2usage(1);
 
