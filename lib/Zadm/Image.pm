@@ -82,13 +82,14 @@ sub fetchImages {
 
 sub dump {
     my $self = shift;
+    my $opts = shift // {};
 
     $self->fetchImages;
 
     printf "%-10s%-10s%-8s%-36s%-16s%s\n", qw(UUID PROVIDER BRAND NAME VERSION DESCRIPTION);
     for my $prov (sort keys %{$self->images}) {
         printf "%-10s%-10s%-8s%-36s%-16s%s\n", substr ($_->{uuid}, length ($_->{uuid}) - 8), $prov, $_->{brand}, $_->{name}, $_->{vers}, $_->{desc}
-            for sort { $a->{name} cmp $b->{name} } @{$self->images->{$prov}};
+            for sort { $a->{name} cmp $b->{name} } grep { !$opts->{brand} || ($opts->{brand} eq $_->{brand}) } @{$self->images->{$prov}};
     }
 }
 

@@ -104,7 +104,9 @@ sub main {
             last;
         };
         /^list-images$/ && do {
-            $zones->image->dump;
+            my $opts = {};
+            GetOptions($opts, qw(brand|b=s));
+            $zones->image->dump($opts);
 
             last;
         };
@@ -218,7 +220,7 @@ where 'command' is one of the following:
     edit <zone_name>
     list [zone_name]
     status
-    list-images
+    list-images [-b <brand>]
     start <zone_name>
     stop <zone_name>
     restart <zone_name>

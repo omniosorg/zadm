@@ -39,7 +39,7 @@ where 'command' is one of the following:
     edit <zone_name>
     list [zone_name]
     status
-    list-images
+    list-images [-b <brand>]
     start <zone_name>
     stop <zone_name>
     restart <zone_name>
