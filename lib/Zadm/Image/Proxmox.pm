@@ -26,6 +26,7 @@ sub postProcess {
             img    => $self->baseurl . "/$img{Location}",
             brand  => 'lx',
             comp   => 'gzip',
+            ext    => '.tar.gz',
             # we provide a default kernel version of 4.4
             kernel => '4.4',
             chksum => {

@@ -18,7 +18,9 @@ sub postProcess {
             vers   => $_->{version},
             img    => $self->baseurl . "/$_->{path}",
             brand  => $_->{brand},
-            comp   => 'xz',
+            type   => $_->{type},
+            comp   => $_->{comp},
+            ext    => ".$_->{comp}",
             chksum => {
                 digest => 'sha256',
                 chksum => $_->{sha256},

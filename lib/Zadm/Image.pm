@@ -60,8 +60,11 @@ sub getImage {
     my $img = $imgs[0];
     $self->log->info("found $brand image '$img->{name}' from provider '$provider'");
 
-    # TODO: need to add filename + extension handling, for now just assume everything is tar.gz
-    $img->{_file} = $self->provider->{$provider}->download($img->{uuid} . '.tar.gz', $img->{img}, chksum => $img->{chksum});
+    $img->{_file}    = $self->provider->{$provider}->download($img->{uuid}
+        . ($img->{ext} // '.tar.gz'), $img->{img}, chksum => $img->{chksum});
+    # TODO: instopt needs rework; e.g. joyent lx images are "type" : "lx-dataset"
+    # but tarballs (i.e. need -t for install). for now we don't set type for the Joyent provider
+    $img->{_instopt} = ($img->{type} // '') =~ /-dataset$/ ? '-s' : '-t';
 
     # return the whole structure including all the metadata
     return $img;

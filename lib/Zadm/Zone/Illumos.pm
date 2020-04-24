@@ -1,4 +1,4 @@
-package Zadm::Zone::LX;
+package Zadm::Zone::Illumos;
 use Mojo::Base 'Zadm::Zone::base';
 
 has options => sub {
@@ -14,8 +14,6 @@ has options => sub {
     return $options;
 };
 
-# TODO: we need a mechanism to override kernel-version if provided by the image metadata
-# but it's too late here since we already configured the zone and are about to install
 sub install {
     my $self = shift;
 

@@ -19,6 +19,7 @@ sub postProcess {
             img    => $self->baseurl . "/$_->{uuid}/file",
             brand  => 'lx',
             comp   => $_->{files}->[0]->{compression},
+            ext    => '.tar.gz',
             kernel => $_->{tags}->{'kernel-version'},
             chksum => {
                 digest => 'sha1',
