@@ -389,7 +389,12 @@ has schema  => sub {
 
     my $mod = $self->smod;
     return do {
-        eval "require $mod";
+        # fall back to generic schema if there is no brand specific
+        eval "require $mod" || do {
+            $mod = __PACKAGE__;
+            $mod =~ s/Zone/Schema/;
+            eval "require $mod";
+        };
         $mod->new(sv => $self->sv)->schema;
     };
 };
