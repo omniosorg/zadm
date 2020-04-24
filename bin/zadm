@@ -162,7 +162,14 @@ sub main {
             last;
         };
         /^help$/ && do {
-            pod2usage(-exitval => 'NOEXIT');
+            my $opts = {};
+            GetOptions($opts, qw(brand|b=s));
+
+            pod2usage(-exitstatus => 0) if (!$opts->{brand});
+
+            # TODO: make sure we don't clash with an existing zone
+            my $zone = $zones->zone('__zadm_help__', brand => $opts->{brand});
+            $zone->usage;
 
             last;
         };
@@ -217,8 +224,8 @@ where 'command' is one of the following:
     restart <zone_name>
     poweroff <zone_name>
     console <zone_name>
-    log
-    help
+    log <zone_name>
+    help [-b <brand>]
     man
     version
 
