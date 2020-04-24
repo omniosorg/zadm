@@ -15,12 +15,11 @@ use Zadm::Validator;
 has purgemap   => sub { shift->utils->genmap([ qw(vnic zvol) ]) };
 has statemap   => sub {
     {
-        boot        => 'installed',
-        shutdown    => 'running',
-        halt        => 'running',
-        install     => 'configured',
-        # TODO: handle incomplete properly
-        uninstall   => 'installed',
+        boot        => [ qw(installed) ],
+        shutdown    => [ qw(running) ],
+        halt        => [ qw(running) ],
+        install     => [ qw(configured) ],
+        uninstall   => [ qw(incomplete installed) ],
 
     }
 };
@@ -353,9 +352,9 @@ my $zoneCmd = sub {
 
     my $name = $self->name;
 
-    $self->statemap->{$cmd} && !$self->is($self->statemap->{$cmd}) && do {
+    $self->statemap->{$cmd} && !(grep { $self->is($_) } @{$self->statemap->{$cmd}}) && do {
         $self->log->warn("WARNING: cannot '$cmd' $name. "
-            . "$name is not in " . $self->statemap->{$cmd} . ' state.');
+            . "$name is not " . join (' or ', @{$self->statemap->{$cmd}}) . '.');
         return 0;
     };
 
