@@ -26,6 +26,8 @@ my %ENVARGS = map {
     $_ => [ shellwords($ENV{'__ZADM_' .  uc ($_) . '_ARGS'} // '') ]
 } keys %CMDS;
 
+my $ZPATH = '/etc/zones';
+
 # attributes
 has log => sub { Mojo::Log->new(level => 'debug') };
 
@@ -107,6 +109,18 @@ sub edit {
     my $self = shift;
     my $zone = shift;
 
+    # backup current zone XML so it can be restored when things get hairy
+    my $backcfg;
+    my $backmod;
+    my $zonexml = "$ZPATH/" . $zone->name . '.xml';
+
+    if (-r $zonexml) {
+        $self->log->debug('backing up current zone config');
+
+        $backmod = (stat $zonexml)[9];
+        $backcfg = Mojo::File->new($zonexml)->slurp;
+    }
+
     my $json = $self->encodeJSON($zone->config);
 
     my $cfgValid = 0;
@@ -129,7 +143,13 @@ sub edit {
             print 'Do you want to retry [Y/n]? ';
             chomp (my $check = <STDIN>);
 
-            return 0 if $check =~ /^no?$/i;
+            if ($check =~ /^no?$/i) {
+                # restoring the zone XML config since it was changed but something went wrong
+                Mojo::File->new($zonexml)->spurt($backcfg)
+                    if $backmod && $backmod != (stat $zonexml)[9];
+
+                return 0;
+            }
         }
     }
 
