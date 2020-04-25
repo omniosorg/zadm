@@ -126,7 +126,7 @@ sub edit {
         if ($@) {
             print $@;
             # TODO: is there a better way of handling this?
-            return 0 if $ENV{'__ZADMTEST'};
+            return 0 if $ENV{__ZADMTEST};
             print 'Do you want to retry [Y/n]? ';
             chomp (my $check = <STDIN>);
 

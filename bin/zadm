@@ -27,8 +27,7 @@ sub main {
 
     $mainOpt or pod2usage(1);
 
-    my $zones = Zadm::Zones->new(loglvl => 'debug');
-#    my $zones = Zadm::Zones->new;
+    my $zones = Zadm::Zones->new($ENV{__ZADMDEBUG} ? (loglvl => 'debug') : ());
 
     # check if we are in global zone
     $zones->isGZ or die "ERROR: $PROG can only be run from global zone\n";
