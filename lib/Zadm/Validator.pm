@@ -144,6 +144,7 @@ sub vnic {
                 && $self->log->warn("WARNING: vnic specified over '" . $nic->{over}
                     . "' but is over '" . $nicProps{over} . "'\n");
 
+            delete $nic->{over};
             return undef;
         }
 
@@ -155,9 +156,7 @@ sub vnic {
         # TODO: add exception handling and return error string instead
         $self->utils->exec('dladm', [ (qw(create-vnic -l), $nic->{over}, $name) ]);
 
-        # TODO: vnic handling. do we support over?
         delete $nic->{over};
-
         return undef;
     }
 }
@@ -193,6 +192,7 @@ sub zvol {
         $path =~ s|^/dev/zvol/r?dsk/||;
 
         if (!-e "/dev/zvol/rdsk/$path") {
+            # TODO: there is no disk_size attribute. add proper disk size handling
             my @cmd = (qw(create -p), '-V', ($disk->{disk_size} // '10G'), $path);
 
             # TODO: add exception handling and return error string instead

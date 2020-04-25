@@ -221,10 +221,10 @@ has schema => sub {
             },
             options => {
                 optional    => 1,
-				array		=> 1,
+                array       => 1,
                 description => 'mounting options',
                 validator   => $self->sv->regexp(qr/^\w+$/, 'options not valid'),
-			},
+            },
         },
     },
     net => {
@@ -260,6 +260,12 @@ has schema => sub {
                 optional    => 1,
                 description => 'MAC address of the interface',
                 validator   => $self->sv->macaddr,
+            },
+            over        => {
+                optional    => 1,
+                description => 'link where vnic traffic goes over',
+                example     => '"over" : "igb0"',
+                validator   => $self->sv->globalNic,
             },
         },
     },
