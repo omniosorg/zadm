@@ -39,10 +39,14 @@ sub main {
 
             my $opts = {};
             Getopt::Long::Configure(qw(pass_through));
-            GetOptions($opts, qw(brand|b=s)) or exit 1;
+            GetOptions($opts, qw(brand|b=s template|t=s)) or exit 1;
             $opts->{brand} or pod2usage(1);
 
-            my $zone = $zones->zone($zName, brand => $opts->{brand}, opts => $opts);
+            my @extraopts = $opts->{template}
+                ? (template => $zones->utils->loadJSON($opts->{template}))
+                : ();
+
+            my $zone = $zones->zone($zName, brand => $opts->{brand}, opts => $opts, @extraopts);
 
             Getopt::Long::Configure(qw());
             GetOptions($opts, @{$zone->getOptions('create')}) or exit 1;
@@ -214,7 +218,7 @@ B<zadm> I<command> [I<options...>]
 
 where 'command' is one of the following:
 
-    create -b <brand> <zone_name>
+    create -b <brand> [-t <template_path>] <zone_name>
     delete [--purge=vnic] <zone_name>
     edit <zone_name>
     list [zone_name]

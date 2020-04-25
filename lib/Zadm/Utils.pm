@@ -6,7 +6,6 @@ use Mojo::Exception;
 use JSON::PP; # for pretty encoding and 'relaxed' decoding
 use Mojo::Log;
 use File::Temp;
-use FindBin;
 use Text::ParseWords qw(shellwords);
 
 # commands
@@ -135,6 +134,14 @@ sub edit {
     }
 
     return 1;
+}
+
+sub loadJSON {
+    my $self = shift;
+    my $file = shift;
+
+    # TODO: add proper error handling
+    return JSON::PP->new->relaxed(1)->decode(Mojo::File->new($file)->slurp);
 }
 
 sub isVirtual {
