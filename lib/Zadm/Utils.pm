@@ -127,7 +127,7 @@ sub edit {
 
     while (!$cfgValid) {
         (my $mod, $json) = $self->$edit($json);
-        return 1 if !$mod;
+        return 1 if !$mod && $zone->exists;
 
         local $@;
         eval {
