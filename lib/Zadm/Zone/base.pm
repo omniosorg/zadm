@@ -197,7 +197,11 @@ my $delResource = sub {
 my $clearResources = sub {
     my $self = shift;
 
+    # TODO: there could be a case when automatically added devices are not present
+    # for now we work around w/ checking the device tree before pre-processing
+    my $hadDevice = exists $self->oldConf->{device};
     my $conf = $self->setPreProcess($self->oldConf);
+    delete $conf->{device} if !$hadDevice;
 
     $self->$delResource($_) for grep { exists $self->resmap->{$_} } keys %$conf;
 };
