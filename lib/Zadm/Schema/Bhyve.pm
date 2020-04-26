@@ -55,6 +55,13 @@ $SCHEMA = sub {
         validator   => $self->sv->elemOf(qw(i440fx q35 amd netapp none)),
         'x-attr'    => 1,
     },
+    xhci        => {
+        description => 'XHCI',
+        default     => 'on',
+        example     => '"xhci" : "off"',
+        validator   => $self->sv->elemOf(qw(on off)),
+        'x-attr'    => 1,
+    },
 
 }};
 

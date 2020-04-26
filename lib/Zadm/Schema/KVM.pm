@@ -67,6 +67,14 @@ $SCHEMA = sub {
         validator   => $self->sv->elemOf(qw(virtio ahci)),
         'x-attr'    => 1,
     },
+    extra       => {
+        optional    => 1,
+        description => 'extra parameters',
+        default     => '',
+        example     => '"extra" : "<parameters>"',
+        validator   => sub { return undef; },
+        'x-attr'    => 1,
+    },
     netif       => {
         optional    => 1,
         description => 'network type',
@@ -76,8 +84,10 @@ $SCHEMA = sub {
         'x-attr'    => 1,
     },
     ram         => {
+        optional    => 1,
         description => 'RAM',
-        example     => '"ram" : "1024"',
+        default     => '1G',
+        example     => '"ram" : "1G"',
         validator   => $self->sv->regexp(qr/^\d+[kMGTPE]?$/),
         'x-attr'    => 1,
     },
