@@ -189,6 +189,9 @@ sub zvol {
     return sub {
         my ($path, $disk) = @_;
 
+        # disk entries are indexed so there can be null elements
+        return undef if !$path;
+
         $path =~ s|^/dev/zvol/r?dsk/||;
 
         if (!-e "/dev/zvol/rdsk/$path") {
