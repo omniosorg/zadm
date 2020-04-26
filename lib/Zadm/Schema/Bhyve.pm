@@ -35,6 +35,7 @@ $SCHEMA = sub {
         },
     },
     acpi        => {
+        optional    => 1,
         description => 'ACPI',
         default     => 'on',
         example     => '"acpi" : "on"',
@@ -42,6 +43,7 @@ $SCHEMA = sub {
         'x-attr'    => 1,
     },
     bootrom     => {
+        optional    => 1,
         description => 'boot ROM',
         default     => 'BHYVE',
         example     => '"bootrom" : "BHYVE_DEBUG"',
@@ -49,6 +51,7 @@ $SCHEMA = sub {
         'x-attr'    => 1,
     },
     hostbridge  => {
+        optional    => 1,
         description => 'hostbridge',
         default     => 'i440fx',
         example     => '"hostbridge" : "i440fx"',
@@ -56,6 +59,7 @@ $SCHEMA = sub {
         'x-attr'    => 1,
     },
     xhci        => {
+        optional    => 1,
         description => 'XHCI',
         default     => 'on',
         example     => '"xhci" : "off"',
