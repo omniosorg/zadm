@@ -26,7 +26,7 @@ my %ENVARGS = map {
     $_ => [ shellwords($ENV{'__ZADM_' .  uc ($_) . '_ARGS'} // '') ]
 } keys %CMDS;
 
-my $ZPATH = ($ENV{__ZADM_ALTROOT} || '') . '/etc/zones';
+my $ZPATH = ($ENV{__ZADM_ALTROOT} // '') . '/etc/zones';
 
 # attributes
 has log => sub { Mojo::Log->new(level => 'debug') };

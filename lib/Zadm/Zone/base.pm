@@ -31,7 +31,7 @@ has template   => sub {
 
     return {
         zonename    => $name,
-        zonepath    => "/zones/$name",
+        zonepath    => ($ENV{__ZADM_ALTROOT} // '') . "/zones/$name",
         brand       => $self->brand,
         'ip-type'   => 'exclusive',
     }
