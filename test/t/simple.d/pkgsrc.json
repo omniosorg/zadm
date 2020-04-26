@@ -1,0 +1,13 @@
+{
+   "autoboot" : "false",
+   "bootargs" : "",
+   "brand" : "pkgsrc",
+   "fs-allowed" : "",
+   "hostid" : "",
+   "ip-type" : "exclusive",
+   "limitpriv" : "default",
+   "pool" : "",
+   "scheduling-class" : "",
+   "zonename" : "simple",
+   "zonepath" : "__ZADMROOT__/zones/simple"
+}

@@ -1,0 +1,60 @@
+#!/bin/ksh
+
+source lib/testenv.ksh
+
+start_environment
+
+name="bhyve"
+
+create_zone bhyve bhyve
+# This will also add default values for known attributes
+validate bhyve "initial"
+
+# XHCI attribute
+zonecfg -z bhyve <<- EOM
+	remove attr name=xhci
+	add attr; set name=xhci; set type=string; set value=off; end
+EOM
+validate bhyve "xhci attr"
+
+# Extra attribute
+zonecfg -z bhyve <<- EOM
+	remove attr name=extra
+	add attr; set name=extra; set type=string
+	  set value="-s 7,nvme,ram=1024"; end
+EOM
+validate bhyve "extra attr"
+
+# test attribute (not known to brand)
+zonecfg -z bhyve <<- EOM
+	add attr; set name=testattr; set type=string
+	  set value="not known to brand"; end
+EOM
+validate bhyve "unknown attr"
+
+# Disks
+zonecfg -z bhyve <<- EOM
+	add attr; set name=bootdisk; set type=string
+	  set value=$dataset/hdd-bhyve; end
+	add attr; set name=disk0; set type=string
+	  set value=$dataset/hdd-bhyve0; end
+	add attr; set name=disk5; set type=string
+	  set value=$dataset/hdd-bhyve5; end
+	add attr; set name=disk; set type=string
+	  set value=$dataset/hdd-bhyve1; end
+EOM
+# NB: There are deliberately no 'device' items added here to test that zadm
+#     does the right thing in this case.
+validate bhyve "disks"
+
+# Extra device
+zonecfg -z bhyve <<- EOM
+	add device; set match=/dev/zvol/rdsk/$dataset/hdd-bhyve99; end
+EOM
+validate bhyve "extra dev"
+
+zadmlist bhyve > $zadmroot/bhyve.json
+compare "$name list" $zadmroot/bhyve.json t/bhyve.d/base.json
+
+stop_environment
+

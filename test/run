@@ -1,0 +1,14 @@
+#!/bin/ksh
+
+source lib/testenv.ksh
+source lib/macro.ksh
+
+start_environment
+
+source ./t/zadmedit
+source ./t/simple
+source ./t/bhyve
+source ./t/lx
+
+stop_environment
+

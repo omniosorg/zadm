@@ -1,0 +1,14 @@
+{
+   "autoboot" : "false",
+   "bootargs" : "",
+   "brand" : "lx",
+   "fs-allowed" : "",
+   "hostid" : "",
+   "ip-type" : "exclusive",
+   "kernel-version" : "4.4",
+   "limitpriv" : "default",
+   "pool" : "",
+   "scheduling-class" : "",
+   "zonename" : "simple",
+   "zonepath" : "__ZADMROOT__/zones/simple"
+}

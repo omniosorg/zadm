@@ -1,0 +1,20 @@
+{
+   "autoboot" : "false",
+   "bootargs" : "",
+   "bootorder" : "cd",
+   "brand" : "kvm",
+   "diskif" : "virtio",
+   "fs-allowed" : "",
+   "hostid" : "",
+   "ip-type" : "exclusive",
+   "limitpriv" : "default",
+   "netif" : "virtio",
+   "pool" : "",
+   "ram" : "1G",
+   "scheduling-class" : "",
+   "type" : "generic",
+   "vcpus" : "1",
+   "vnc" : "off",
+   "zonename" : "simple",
+   "zonepath" : "__ZADMROOT__/zones/simple"
+}
