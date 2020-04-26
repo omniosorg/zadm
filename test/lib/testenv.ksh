@@ -5,8 +5,13 @@
 [ -n "$_ZADMTEST_LIB_TESTENV" ] && return
 _ZADMTEST_LIB_TESTENV=1
 
-. lib/setup.ksh
-. lib/macro.ksh
+HOME="`dirname ${.sh.file%/*}`"
+LIB=$HOME/lib
+
+cd $HOME
+
+. $LIB/setup.ksh
+. $LIB/macro.ksh
 
 nocleanup=0
 debug=0
@@ -115,6 +120,7 @@ function zone_state {
 
 function start_environment {
 	[ "`zonename`" != global ] && echo "Must be run in the GZ" && exit 1
+	[ "`id -u`" != 0 ] && echo "Must run as super-user" && exit 1
 
 	[ -z "_ZADM_ENVIRONMENT_STARTED" ] && _ZADM_ENVIRONMENT_STARTED=0
 	(( _ZADM_ENVIRONMENT_STARTED++ ))
@@ -145,16 +151,21 @@ function stop_environment {
 
 function usage {
 	cat <<- EOM
-	Usage: $0 [-dk]
+	Usage: $0 [-dek]
 	    -d	Enable debug mode
+	    -e	Enter a test environment shell
 	    -k	Keep (do not cleanup) test data (dataset, vnics etc)
 	EOM
 	exit 1
 }
 
-while getopts dk name; do
+while getopts dek name; do
 	case $name in
 	    d)		((debug++)); export __ZADMDEBUG=1 ;;
+	    e)		echo "-- Entering test environment"
+			env HOME=$HOME ENV=$HOME/.kshrc /usr/bin/ksh
+			exit 0
+			;;
 	    k)		nocleanup=1 ;;
 	    ?)		usage ;;
 	esac
