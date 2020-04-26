@@ -127,7 +127,16 @@ sub edit {
 
     while (!$cfgValid) {
         (my $mod, $json) = $self->$edit($json);
-        return 1 if !$mod && $zone->exists;
+
+        if (!$mod) {
+            return 1 if $zone->exists;
+
+            print 'You did not make any changes to the default configuration, '
+                . 'do you want to create the zone with all defaults [Y/n]? ';
+
+            chomp (my $check = <STDIN>);
+            return 0 if $check =~ /^no?$/i;
+        }
 
         local $@;
         eval {
@@ -150,8 +159,8 @@ sub edit {
             if ($check =~ /^no?$/i) {
                 # restoring the zone XML config since it was changed but something went wrong
                 if ($backmod && $backmod != (stat $zonexml)[9]) {
-		    $self->log->debug("restoring the zone config from $zonexml");
-                    Mojo::File->new($zonexml)->spurt($backcfg)
+                    $self->log->debug("restoring the zone config from $zonexml");
+                    Mojo::File->new($zonexml)->spurt($backcfg);
                 }
 
                 return 0;

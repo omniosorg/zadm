@@ -600,7 +600,7 @@ sub delete {
 }
 
 sub install {
-    my $self  = shift;
+    my $self = shift;
 
     # TODO centralise and improve this
     $ENV{__ZADM_ALTROOT} && do {
@@ -611,7 +611,7 @@ sub install {
 }
 
 sub uninstall {
-    my $self  = shift;
+    my $self = shift;
 
     # TODO centralise and improve this
     $ENV{__ZADM_ALTROOT} && do {
