@@ -131,10 +131,16 @@ sub edit {
         if (!$mod) {
             return 1 if $zone->exists;
 
-            print "You did not make any changes to the default configuration,\n"
-                . 'do you want to create the zone with all defaults [Y/n]? ';
+            my $check;
+            # TODO: is there a better way of handling this?
+            if ($ENV{__ZADMTEST}) {
+                $check = 'yes';
+            } else {
+                print "You did not make any changes to the default configuration,\n"
+                    . 'do you want to create the zone with all defaults [Y/n]? ';
+                chomp ($check = <STDIN>);
+            }
 
-            chomp (my $check = <STDIN>);
             return 0 if $check =~ /^no?$/i;
         }
 
@@ -147,7 +153,7 @@ sub edit {
         };
         if ($@) {
             my $check;
-            print $@;
+
             # TODO: is there a better way of handling this?
             if ($ENV{__ZADMTEST}) {
                 $check = 'no';
