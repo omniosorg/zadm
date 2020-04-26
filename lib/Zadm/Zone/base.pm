@@ -84,7 +84,7 @@ my $getArray = sub {
     my $val  = shift;
 
     # remove leading and trailing square brackets
-    $val =~ s/^\s*\[|\]\s*$//g;
+    $val =~ s/^\s*\[// && $val =~ s/\]\s*$//;
 
     return [ split /,/, $val ];
 };
@@ -101,7 +101,7 @@ my $getHash = sub {
     my $val  = shift;
 
     # remove leading and trailing brackets
-    $val =~ s/^\s*\(|\)\s*$//g;
+    $val =~ s/^\s*\(// && $val =~ s/\)\s*$//;
 
     return { split /[,=]/, $val };
 };
@@ -118,6 +118,9 @@ my $getVal = sub {
     my $res  = shift;
     my $prop = shift;
     my $val  = shift;
+
+    # remove leading and trailing quotes
+    $val =~ s/^\s*"// && $val =~ s/"\s*$//;
 
     return $self->$propIsArray($res, $prop) ? $self->$getArray($val)
          : $self->$propIsHash($res, $prop)  ? $self->$getHash($val)

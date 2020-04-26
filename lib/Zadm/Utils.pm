@@ -131,7 +131,7 @@ sub edit {
         if (!$mod) {
             return 1 if $zone->exists;
 
-            print 'You did not make any changes to the default configuration, '
+            print "You did not make any changes to the default configuration,\n"
                 . 'do you want to create the zone with all defaults [Y/n]? ';
 
             chomp (my $check = <STDIN>);
