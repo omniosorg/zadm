@@ -26,7 +26,7 @@ my %ENVARGS = map {
     $_ => [ shellwords($ENV{'__ZADM_' .  uc ($_) . '_ARGS'} // '') ]
 } keys %CMDS;
 
-my $ZPATH = '/etc/zones';
+my $ZPATH = ($ENV{__ZADM_ALTROOT} || '') . '/etc/zones';
 
 # attributes
 has log => sub { Mojo::Log->new(level => 'debug') };
@@ -115,7 +115,7 @@ sub edit {
     my $zonexml = "$ZPATH/" . $zone->name . '.xml';
 
     if (-r $zonexml) {
-        $self->log->debug('backing up current zone config');
+        $self->log->debug("backing up current zone config from $zonexml");
 
         $backmod = (stat $zonexml)[9];
         $backcfg = Mojo::File->new($zonexml)->slurp;
@@ -127,7 +127,7 @@ sub edit {
 
     while (!$cfgValid) {
         (my $mod, $json) = $self->$edit($json);
-        return 0 if !$mod;
+        return 1 if !$mod;
 
         local $@;
         eval {
@@ -137,16 +137,22 @@ sub edit {
             $cfgValid = $zone->setConfig(JSON::PP->new->relaxed(1)->decode($json));
         };
         if ($@) {
+            my $check;
             print $@;
             # TODO: is there a better way of handling this?
-            return 0 if $ENV{__ZADMTEST};
-            print 'Do you want to retry [Y/n]? ';
-            chomp (my $check = <STDIN>);
+            if ($ENV{__ZADMTEST}) {
+                $check = 'no';
+            } else {
+                print 'Do you want to retry [Y/n]? ';
+                chomp ($check = <STDIN>);
+            }
 
             if ($check =~ /^no?$/i) {
                 # restoring the zone XML config since it was changed but something went wrong
-                Mojo::File->new($zonexml)->spurt($backcfg)
-                    if $backmod && $backmod != (stat $zonexml)[9];
+                if ($backmod && $backmod != (stat $zonexml)[9]) {
+		    $self->log->debug("restoring the zone config from $zonexml");
+                    Mojo::File->new($zonexml)->spurt($backcfg)
+                }
 
                 return 0;
             }
