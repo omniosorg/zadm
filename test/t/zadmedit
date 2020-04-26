@@ -1,0 +1,27 @@
+#!/bin/ksh
+
+# Test that `zadmedit` is behaving as expected
+
+source lib/testenv.ksh
+
+start_environment
+
+create_zone zadmedit sparse
+
+# no change - should return 0
+name="zadmedit nosave"
+zadmedit zadmedit ":q
+" && result "$name" PASS || result "$name" FAIL
+
+# Save with no changes, expect 0
+name="zadmedit nochange"
+zadmedit zadmedit ":wq
+" && result "$name" PASS || result "$name" FAIL
+
+# break the JSON structure, expect 1
+name="zadmedit brokenjson"
+zadmedit zadmedit "/,$$
+x:wq" && result "$name" FAIL || result "$name" PASS
+
+stop_environment
+

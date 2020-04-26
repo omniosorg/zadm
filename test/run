@@ -1,0 +1,20 @@
+#!/bin/ksh
+
+source lib/testenv.ksh
+source lib/macro.ksh
+
+start_environment
+
+typeset -a tests
+tests=(zadmedit simple bhyve lx)
+
+typeset testopt="$1"
+
+for t in ${tests[*]}; do
+	[ -n "$testopt" -a "$testopt" != "$t" ] && continue
+	note "Running test $t"
+	( source ./t/$t )
+done
+
+stop_environment
+

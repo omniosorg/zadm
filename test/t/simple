@@ -1,0 +1,24 @@
+#!/bin/ksh
+
+source lib/testenv.ksh
+
+start_environment
+
+# 1. Create a simple zone for each brand
+# 2. Check that the `zadm list` output is as expected
+# 3. `zadm edit`, save with no changes and check the output again
+
+for b in $brands; do
+	name="simple brand $b"
+	create_zone simple "$b"
+	zadmlist simple > $zadmroot/simple.json
+	compare "$name" $zadmroot/simple.json t/simple.d/$b.json
+	if validate simple "brand $b"; then
+		zadmlist simple > $zadmroot/simple.json
+		compare "$name modify" $zadmroot/simple.json \
+		    t/simple.d/$b.saved.json
+	fi
+done
+
+stop_environment
+

@@ -1,0 +1,46 @@
+{
+   "acpi" : "on",
+   "attr" : [
+      {
+         "name" : "testattr",
+         "type" : "string",
+         "value" : "not known to brand"
+      }
+   ],
+   "autoboot" : "false",
+   "bootargs" : "",
+   "bootdisk" : "__DATASET__/hdd-bhyve",
+   "bootorder" : "cd",
+   "bootrom" : "BHYVE",
+   "brand" : "bhyve",
+   "device" : [
+      {
+         "match" : "/dev/zvol/rdsk/__DATASET__/hdd-bhyve99"
+      }
+   ],
+   "disk" : [
+      "__DATASET__/hdd-bhyve0",
+      "__DATASET__/hdd-bhyve1",
+      null,
+      null,
+      null,
+      "__DATASET__/hdd-bhyve5"
+   ],
+   "diskif" : "virtio",
+   "extra" : "-s 7,nvme,ram=1024",
+   "fs-allowed" : "",
+   "hostbridge" : "i440fx",
+   "hostid" : "",
+   "ip-type" : "exclusive",
+   "limitpriv" : "default",
+   "netif" : "virtio",
+   "pool" : "",
+   "ram" : "1G",
+   "scheduling-class" : "",
+   "type" : "generic",
+   "vcpus" : "1",
+   "vnc" : "off",
+   "xhci" : "off",
+   "zonename" : "bhyve",
+   "zonepath" : "__ZADMROOT__/zones/bhyve"
+}

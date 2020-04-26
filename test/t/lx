@@ -1,0 +1,36 @@
+#!/bin/ksh
+
+source lib/testenv.ksh
+
+start_environment
+
+function lx_install_img {
+	typeset zone="${1:?zone}"
+	typeset img="${2:?img}"
+
+	dlog "Installing $img to $zone"
+
+	# `zoneadm install` does not work within an alternate root
+	# This calls lx_install directly to do the work.
+	# TODO - not sure yet if this is useful for testing, `zone_state` is
+	#        probably sufficient.
+	set -e
+	zfs create $dataset/root/zones/$zone
+	typeset zr=$datasetmp/root/zones/$zone
+	chmod 0700 $zr
+	/usr/lib/brand/lx/lx_install -z $zone -R $zr -t `pwd`/../var/cache/$img
+	zone_state $z installed
+	set +e
+}
+
+name="lx"
+z=ubuntu2004
+uuid=2ceda507834a0a08ce9662257acb7dde
+
+zadmcreate -b lx -i $uuid $z
+lx_install_img $z proxmox/$uuid.tar.gz
+
+validate $z "lx ubuntu 2004"
+
+stop_environment
+
