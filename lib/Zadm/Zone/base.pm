@@ -598,11 +598,25 @@ sub delete {
 }
 
 sub install {
-    shift->$zoneCmd('install', [ @_ ]);
+    my $self  = shift;
+
+    # TODO centralise and improve this
+    $ENV{__ZADM_ALTROOT} && do {
+        $self->log->warn('Cannot install a zone inside an alternate root.');
+        return 1;
+    };
+    $self->$zoneCmd('install', [ @_ ]);
 }
 
 sub uninstall {
-    shift->$zoneCmd('uninstall');
+    my $self  = shift;
+
+    # TODO centralise and improve this
+    $ENV{__ZADM_ALTROOT} && do {
+        $self->log->warn('Cannot uninstall a zone inside an alternate root.');
+        return 1;
+    };
+    $self->$zoneCmd('uninstall');
 }
 
 sub remove {
