@@ -527,7 +527,9 @@ sub checkMandOptions {
 sub state {
     my $self = shift;
 
-    return $self->zones->list->{$self->name}->{state};
+    my $zones = $self->zones->list;
+
+    return exists $zones->{$self->name} ? $zones->{$self->name}->{state} : 'unknown';
 }
 
 sub is {
