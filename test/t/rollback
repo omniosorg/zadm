@@ -1,0 +1,85 @@
+#!/bin/ksh
+
+# Test that zone configuration rollback works properly
+
+source ${.sh.file%/*}/../lib/testenv.ksh
+
+start_environment
+
+z=rollback
+xml=$zadmroot/etc/zones/$z.xml
+
+create_zone $z sparse
+zonecfg -z $z 'add attr; set name=a; set type=string; set value=v; end'
+
+oxml=`mktemp`
+cp $xml $oxml
+osum=`digest -a sha256 $xml`
+dlog "Initial checksum $osum"
+
+function cf {
+	typeset nsum=`digest -a sha256 $xml`
+
+	if [ "$nsum" = "$osum" ]; then
+		result "$*" PASS
+	else
+		result "$*" FAIL
+		gdiff -u $oxml $xml
+		# Reset ready for next test
+		cp $oxml $xml
+	fi
+}
+
+function brk {
+	# Give zadm long enough to start up the editor
+	sleep 2
+	echo "<!-- CHANGE FROM ROLLBACK TEST -->" >> $xml
+}
+
+function reap {
+	typeset pid="$1"
+	typeset name="$2"
+
+	wait $pid
+	ret=$?
+	while read -p line; do [[ $line = *written* ]] && break; done
+	while read -p line; do echo $line; done
+	[ $ret -eq 0 ] && result "$name exit" FAIL || result "$name exit" PASS
+}
+
+name="rollback brokenjson"
+note $name
+zadmedit -n $z |&
+pid=$!
+brk
+print -p ":%s/,//
+:x"
+reap $pid "$name"
+cf "$name"
+
+name="rollback editor abort"
+note $name
+zadmedit -n $z |&
+pid=$!
+brk
+print -p ":cq"
+reap $pid "$name"
+cf "$name"
+
+# Setting the file as 'nounlink' stops `zonecfg` from being able to make
+# changes to it, while still allowing `zadm` to do its rollback.
+name="rollback zonecfg"
+note $name
+zadmedit -n $z |&
+pid=$!
+brk
+chmod S+cu $xml
+print -p ":wq"
+reap $pid "$name"
+cf "$name"
+chmod S-cu $xml
+
+rm -f $oxml
+
+stop_environment
+
