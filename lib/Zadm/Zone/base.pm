@@ -158,17 +158,6 @@ my $isProp = sub {
     return exists $self->schema->{$prop};
 };
 
-my $resourceExisted = sub {
-    my $self = shift;
-    my $res  = shift;
-    my $prop = shift || '';
-    my $val  = shift || '';
-
-    return !$prop || !$val          ? exists $self->oldConf->{$res}
-         : $self->$resIsArray($res) ? grep { $_->{$prop} eq $val } @{$self->oldConf->{$res}}
-         : $self->oldConf->{$res}->{$prop} eq $val;
-};
-
 my $addResource = sub {
     my $self  = shift;
     my $res   = shift;
@@ -197,13 +186,7 @@ my $delResource = sub {
 my $clearResources = sub {
     my $self = shift;
 
-    # TODO: there could be a case when automatically added devices are not present
-    # for now we work around w/ checking the device tree before pre-processing
-    my $hadDevice = exists $self->oldConf->{device};
-    my $conf = $self->setPreProcess($self->oldConf);
-    delete $conf->{device} if !$hadDevice;
-
-    $self->$delResource($_) for grep { exists $self->resmap->{$_} } keys %$conf;
+    $self->$delResource($_) for grep { exists $self->resmap->{$_} } keys %{$self->rawConf};
 };
 
 my $setProperty = sub {
@@ -231,6 +214,7 @@ my $clearProperty = sub {
 
 my $getConfig = sub {
     my $self = shift;
+    my $raw  = shift;
 
     my $config = {};
 
@@ -283,7 +267,7 @@ my $getConfig = sub {
             $config->{$prop} = $val;
         }
     }
-    $config = $self->getPostProcess($config);
+    $config = $self->getPostProcess($config) if !$raw;
 
     return $config;
 };
@@ -293,7 +277,7 @@ my $setConfig = sub {
     my $config = shift;
 
     # get current config so we can check for changes
-    $self->oldConf($self->$getConfig);
+    my $oldConf = $self->setPreProcess($self->config);
 
     # validate new config
     $self->validate($config) if !$self->valid;
@@ -311,7 +295,7 @@ my $setConfig = sub {
     });
 
     # clean up all existing resources
-    $self->$clearResources;
+    $self->$clearResources if $self->exists;
 
     $config = $self->setPreProcess($self->config);
 
@@ -333,10 +317,10 @@ my $setConfig = sub {
             $self->$addResource($prop, $self->config->{$prop});
         }
         else {
-            next if !$self->oldConf->{$prop} && !$self->config->{$prop}
-                || $self->oldConf->{$prop} && $self->oldConf->{$prop} eq $self->config->{$prop};
+            next if !$oldConf->{$prop} && !$self->config->{$prop}
+                || $oldConf->{$prop} && $oldConf->{$prop} eq $self->config->{$prop};
 
-            $self->log->debug("property '$prop' changed: " . ($self->oldConf->{$prop} // '(none)') . ' -> '
+            $self->log->debug("property '$prop' changed: " . ($oldConf->{$prop} // '(none)') . ' -> '
                 . ($self->config->{$prop} // '(none)'));
 
             if ($self->config->{$prop}) {
@@ -378,7 +362,7 @@ has sv      => sub { Zadm::Validator->new(log => shift->log) };
 has dp      => sub { Data::Processor->new(shift->schema) };
 has name    => sub { Mojo::Exception->throw("ERROR: zone name must be specified on instantiation.\n") };
 has config  => sub { my $self = shift; return $self->exists ? $self->$getConfig : $self->template };
-has oldConf => sub { {} };
+has rawConf => sub { my $self = shift; return $self->exists ? $self->$getConfig(1) : {} };
 #has brand  => sub { shift->config->{brand} };
 has brand   => sub { lc ((split /::/, ref shift)[-1]) };
 has socket  => sub { my $self = shift; Mojo::Exception->throw('ERROR: no socket available for brand ' . $self->brand . ".\n") };
