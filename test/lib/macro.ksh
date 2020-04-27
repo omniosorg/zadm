@@ -42,7 +42,19 @@ function zadmcreate {
 }
 
 function zadmedit {
+	typeset -i rollback=1
+
+	# Flags
+	if [[ "$1" = -* ]]; then
+		[[ $1 = *n* ]] && rollback=0
+		dlog "Rollback: $rollback"
+		shift
+	fi
+
 	typeset zone="${1:?zone}"; shift
+
+	[ ! -f $zadmroot/etc/zones/$zone.xml ] && echo "No such zone" && exit 1
+
 	typeset sf=`mktemp`
 	typeset tmpf=`mktemp`
 
@@ -54,7 +66,8 @@ function zadmedit {
 	VISUAL=/usr/bin/vim __ZADM_EDITOR_ARGS="-u NONE -n -s $sf" \
 	    $ZADM edit $zone
 	ret=$?
-	[ $ret -eq 0 ] || cp $tmpf $zadmroot/etc/zones/$zone.xml
+	[ $ret -ne 0 -a $rollback -eq 1 ] \
+	    && cp $tmpf $zadmroot/etc/zones/$zone.xml
 	rm -f $sf $tmpf
 	return $ret
 }
