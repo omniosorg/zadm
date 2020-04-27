@@ -30,8 +30,18 @@ my $getOverLink = sub {
 
 # static private methods
 my $numeric = sub {
-	return shift =~ /^\d+$/;
+    return shift =~ /^\d+$/;
 };
+
+my $calcBlkSize = sub {
+    my $blkSize = shift;
+
+    my ($val, $suf) = $blkSize =~ /^(\d+)(k?)$/i
+        or return undef;
+
+    return $suf ? $val * 1024 : $val;
+};
+
 
 # attributes
 has log   => sub { Mojo::Log->new(level => 'debug') };
@@ -153,8 +163,13 @@ sub vnic {
 
         $nic->{over} = $self->$getOverLink->[0] if !exists $nic->{over};
 
-        # TODO: add exception handling and return error string instead
-        $self->utils->exec('dladm', [ (qw(create-vnic -l), $nic->{over}, $name) ]);
+        local $@;
+        eval {
+            local $SIG{__DIE__};
+
+            $self->utils->exec('dladm', [ (qw(create-vnic -l), $nic->{over}, $name) ]);
+        };
+        return $@ if $@;
 
         delete $nic->{over};
         return undef;
@@ -189,18 +204,54 @@ sub zvol {
     return sub {
         my ($path, $disk) = @_;
 
-        # disk entries are indexed so there can be null elements
-        return undef if !$path;
-
         $path =~ s|^/dev/zvol/r?dsk/||;
 
         if (!-e "/dev/zvol/rdsk/$path") {
-            # TODO: there is no disk_size attribute. add proper disk size handling
-            my @cmd = (qw(create -p), '-V', ($disk->{disk_size} // '10G'), $path);
+            # TODO: need to re-validate block_size, disk_size and sparse here as we don't
+            # know in which order they have been validated. i.e. if they have all been
+            # validated already so it is ok to use them here
+            # for now just returning undef (i.e. successful validation) as the properties
+            # validator will return a specific error message already, but don't create a volume
+            #
+            # considering adding an option to Data::Processor to specify the validation order
+            return undef if $disk->{block_size} && $self->blockSize->($disk->{block_size})
+                || $disk->{disk_size} && $self->regexp(qr/^\d+[bkmgtpe]$/i)->($disk->{disk_size})
+                || $disk->{sparse} && $self->elemOf(qw(true false))->($disk->{sparse});
 
-            # TODO: add exception handling and return error string instead
-            $self->utils->exec('zfs', \@cmd);
+            my @cmd = (qw(create -p),
+                ($disk->{sparse} eq 'true' ? qw(-s) : ()),
+                ($disk->{block_size} ? ('-o', "volblocksize=$disk->{block_size}") : ()),
+                '-V', ($disk->{disk_size} // '10G'), $path);
+
+            local $@;
+            eval {
+                local $SIG{__DIE__};
+
+                $self->utils->exec('zfs', \@cmd);
+
+            };
+            return $@ if $@;
         }
+
+        return undef;
+    }
+}
+
+sub blockSize {
+    my $self = shift;
+
+    return sub {
+        my $blkSize = shift;
+
+        my $val = $calcBlkSize->($blkSize)
+            or return "block_size '$blkSize' not valid";
+
+        $val >= 512
+            or return "block_size '$blkSize' not valid. Must be greater or equal than 512";
+        $val <= 128 * 1024
+            or return "block_size '$blkSize' not valid. Must be less or equal than 128k";
+        ($val & ($val - 1))
+            and return "block_size '$blkSize' not valid. Must be a power of 2";
 
         return undef;
     }

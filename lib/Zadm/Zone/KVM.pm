@@ -46,6 +46,20 @@ my $queryMonitor = sub {
     return [ grep { $_ !~ /^(?:QEMU|\(qemu\))/ } split /[\r\n]+/, $recv ];
 };
 
+my $getDiskProps = sub {
+    my $self = shift;
+    my $zvol = shift;
+
+    my $props = $self->utils->getZfsProp($zvol, [ qw(volsize volblocksize refreservation) ]);
+
+    return {
+        disk_path   => $zvol,
+        disk_size   => $props->{volsize} // '10G',
+        block_size  => $props->{volblocksize} // '8K',
+        sparse      => ($props->{refreservation} // '') eq 'none' ? 'true' : 'false',
+    };
+};
+
 sub getPostProcess {
     my $self = shift;
     my $cfg  = shift;
@@ -55,14 +69,17 @@ sub getPostProcess {
     # handle disks before the default getPostProcess
     if ($cfg->{attr} && ref $cfg->{attr} eq 'ARRAY') {
         for (my $i = $#{$cfg->{attr}}; $i >= 0; $i--) {
-            my ($index) = $cfg->{attr}->[$i]->{name} =~ /^disk(\d+)?$/
+            my ($boot, $index) = $cfg->{attr}->[$i]->{name} =~ /^(boot)?disk(\d+)?$/
                 or next;
 
             if (defined $index) {
-                $cfg->{disk}->[$index] = $cfg->{attr}->[$i]->{value};
+                $cfg->{disk}->[$index] = $self->$getDiskProps($cfg->{attr}->[$i]->{value});
+            }
+            elsif (defined $boot) {
+                $cfg->{bootdisk} = $self->$getDiskProps($cfg->{attr}->[$i]->{value});
             }
             else {
-                $disk = $cfg->{attr}->[$i]->{value};
+                $disk = $self->$getDiskProps($cfg->{attr}->[$i]->{value});
             }
             splice @{$cfg->{attr}}, $i, 1;
         }
@@ -86,15 +103,15 @@ sub getPostProcess {
         if ($cfg->{cdrom} && $cfg->{fs} && ref $cfg->{fs} eq 'ARRAY');
 
     # remove device for bootdisk
-    $cfg->{device} = [ grep { $_->{match} !~ m!^(?:$ZVOLRX)?$cfg->{bootdisk}$! } @{$cfg->{device}} ]
-        if ($cfg->{bootdisk} && $cfg->{device} && ref $cfg->{device} eq 'ARRAY');
+    $cfg->{device} = [ grep { $_->{match} !~ m!^(?:$ZVOLRX)?$cfg->{bootdisk}->{disk_path}$! } @{$cfg->{device}} ]
+        if (exists $cfg->{bootdisk} && ref $cfg->{bootdisk} eq 'HASH' && $cfg->{device} && ref $cfg->{device} eq 'ARRAY');
 
     # remove device for disk
     if ($cfg->{disk} && ref $cfg->{disk} eq 'ARRAY' && $cfg->{device} && ref $cfg->{device} eq 'ARRAY') {
         for (my $i = $#{$cfg->{device}}; $i >= 0; $i--) {
             splice @{$cfg->{device}}, $i, 1
                 # disks are indexed and there might be empty slots
-                if grep { $_ && $cfg->{device}->[$i]->{match} =~ m!^(?:$ZVOLRX)?$_$! } @{$cfg->{disk}};
+                if grep { $_ && ref $_ eq 'HASH' && $cfg->{device}->[$i]->{match} =~ m!^(?:$ZVOLRX)?$_->{disk_path}$! } @{$cfg->{disk}};
         }
 
     }
@@ -119,6 +136,7 @@ sub setPreProcess {
 
     # add device for bootdisk
     if ($cfg->{bootdisk}) {
+        $cfg->{bootdisk} = $cfg->{bootdisk}->{disk_path};
         $cfg->{bootdisk} =~ s!^$ZVOLRX!!;
         push @{$cfg->{device}}, { match => "$ZVOLDEV/$cfg->{bootdisk}" };
     }
@@ -126,16 +144,17 @@ sub setPreProcess {
     # handle disks
     if ($cfg->{disk} && ref $cfg->{disk} eq 'ARRAY') {
         for (my $i = 0; $i < @{$cfg->{disk}}; $i++) {
-            next if !$cfg->{disk}->[$i];
+            next if !$cfg->{disk}->[$i] || (ref $cfg->{disk}->[$i] eq 'HASH' && !%{$cfg->{disk}->[$i]});
 
+            my $disk = $cfg->{disk}->[$i]->{disk_path};
             push @{$cfg->{attr}}, {
                 name    => "disk$i",
                 type    => 'string',
-                value   => $cfg->{disk}->[$i],
+                value   => $disk,
             };
 
-            $cfg->{disk}->[$i] =~ s!^$ZVOLRX!!;
-            push @{$cfg->{device}}, { match => "$ZVOLDEV/$cfg->{disk}->[$i]" };
+            $disk =~ s!^$ZVOLRX!!;
+            push @{$cfg->{device}}, { match => "$ZVOLDEV/$disk" };
         }
 
         delete $cfg->{disk};

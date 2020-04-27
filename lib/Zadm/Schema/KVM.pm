@@ -23,9 +23,33 @@ $SCHEMA = sub {
     bootdisk    => {
         optional    => 1,
         description => 'boot disk',
-        example     => '"bootdisk" : "rpool/hdd-bhyve0"',
-        validator   => $self->sv->zvol,
-        transformer => $self->sv->stripDev,
+        members     => {
+            disk_path   => {
+                description => 'path of zvol',
+                example     => '"bootdisk" : "rpool/hdd-bhyve0"',
+                validator   => $self->sv->zvol,
+                transformer => $self->sv->stripDev,
+            },
+            disk_size   => {
+                optional    => 1,
+                default     => '10G',
+                description => 'zvol disk size. according to zfs syntax',
+                example     => '"disk_size" : "10G"',
+                validator   => $self->sv->regexp(qr/^\d+[bkmgtpe]$/i),
+            },
+            block_size  => {
+                optional    => 1,
+                description => 'zvol block size',
+                example     => '"block_size" : "128k"',
+                validator   => $self->sv->blockSize,
+            },
+            sparse      => {
+                optional    => 1,
+                description => 'sparse zvol',
+                example     => '"sparse" : "true"',
+                validator   => $self->sv->elemOf(qw(true false)),
+            },
+        },
         'x-attr'    => 1,
     },
     bootorder   => {
@@ -53,10 +77,35 @@ $SCHEMA = sub {
     disk        => {
         optional    => 1,
         array       => 1,
+        allow_empty => 1,
         description => 'disks',
-        example     => '"disk" : "rpool/hdd_bhyve0_data"',
-        validator   => $self->sv->zvol,
-        transformer => $self->sv->stripDev,
+        members     => {
+            disk_path   => {
+                description => 'path of zvol',
+                example     => '"bootdisk" : "rpool/hdd-bhyve0"',
+                validator   => $self->sv->zvol,
+                transformer => $self->sv->stripDev,
+            },
+            disk_size   => {
+                optional    => 1,
+                default     => '10G',
+                description => 'zvol disk size. according to zfs syntax',
+                example     => '"disk_size" : "10G"',
+                validator   => $self->sv->regexp(qr/^\d+[bkmgtpe]$/i),
+            },
+            block_size  => {
+                optional    => 1,
+                description => 'zvol block size',
+                example     => '"block_size" : "128k"',
+                validator   => $self->sv->blockSize,
+            },
+            sparse      => {
+                optional    => 1,
+                description => 'sparse zvol',
+                example     => '"sparse" : "true"',
+                validator   => $self->sv->elemOf(qw(true false)),
+            },
+        },
         'x-attr'    => 1,
     },
     diskif      => {

@@ -9,7 +9,12 @@
    ],
    "autoboot" : "false",
    "bootargs" : "",
-   "bootdisk" : "__DATASET__/hdd-bhyve",
+   "bootdisk" : {
+      "block_size" : "8K",
+      "disk_path" : "__DATASET__/hdd-bhyve",
+      "disk_size" : "10G",
+      "sparse" : "false"
+   },
    "bootorder" : "cd",
    "bootrom" : "BHYVE",
    "brand" : "bhyve",
@@ -19,12 +24,27 @@
       }
    ],
    "disk" : [
-      "__DATASET__/hdd-bhyve0",
-      "__DATASET__/hdd-bhyve1",
+      {
+         "block_size" : "8K",
+         "disk_path" : "__DATASET__/hdd-bhyve0",
+         "disk_size" : "10G",
+         "sparse" : "false"
+      },
+      {
+         "block_size" : "8K",
+         "disk_path" : "__DATASET__/hdd-bhyve1",
+         "disk_size" : "10G",
+         "sparse" : "false"
+      },
       null,
       null,
       null,
-      "__DATASET__/hdd-bhyve5"
+      {
+         "block_size" : "8K",
+         "disk_path" : "__DATASET__/hdd-bhyve5",
+         "disk_size" : "10G",
+         "sparse" : "false"
+      }
    ],
    "diskif" : "virtio",
    "extra" : "-s 7,nvme,ram=1024",

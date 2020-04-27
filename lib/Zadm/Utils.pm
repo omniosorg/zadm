@@ -173,8 +173,9 @@ sub edit {
             $cfgValid = $zone->setConfig(JSON::PP->new->relaxed(1)->decode($json));
         };
         if ($@) {
-            my $check;
+            print $@;
 
+            my $check;
             # TODO: is there a better way of handling this?
             if ($ENV{__ZADMTEST}) {
                 $check = 'no';
@@ -196,6 +197,20 @@ sub edit {
     }
 
     return 1;
+}
+
+sub getZfsProp {
+    my $self = shift;
+    my $ds   = shift;
+    my $prop = shift // [];
+
+    return {} if !@$prop;
+
+    my $zfs = $self->pipe('zfs', [ qw(get -H -o value), join (',', @$prop), $ds ]);
+
+    chomp (my @vals = <$zfs>);
+
+    return { map { $prop->[$_] => $vals[$_] } (0 .. $#$prop) };
 }
 
 sub loadJSON {
