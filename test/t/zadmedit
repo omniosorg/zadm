@@ -2,7 +2,7 @@
 
 # Test that `zadmedit` is behaving as expected
 
-source lib/testenv.ksh
+source ${.sh.file%/*}/../lib/testenv.ksh
 
 start_environment
 

@@ -1,6 +1,6 @@
 #!/bin/ksh
 
-source lib/testenv.ksh
+source ${.sh.file%/*}/../lib/testenv.ksh
 
 start_environment
 
