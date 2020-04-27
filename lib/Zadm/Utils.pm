@@ -44,7 +44,18 @@ my $edit = sub {
 
     my $modified = (stat $fh->filename)[9];
 
-    $self->exec('editor', [ $fh->filename ]);
+    local $@;
+    eval {
+        local $SIG{__DIE__};
+
+        $self->exec('editor', [ $fh->filename ]);
+    };
+    if ($@) {
+        # a return value of -1 indicats the editor could not be executed
+        Mojo::Exception->throw("$@\n") if $? == -1;
+
+        return (0, $json);
+    }
 
     $json = $file->slurp;
 
@@ -129,7 +140,17 @@ sub edit {
         (my $mod, $json) = $self->$edit($json);
 
         if (!$mod) {
-            return 1 if $zone->exists;
+            if ($zone->exists) {
+                # restoring the zone XML config since it was changed but something went wrong
+                if ($backmod && $backmod != (stat $zonexml)[9]) {
+                    $self->log->warn('WARNING: restoring the zone config.');
+                    Mojo::File->new($zonexml)->spurt($backcfg);
+
+                    return 0;
+                }
+
+                return 1;
+            }
 
             my $check;
             # TODO: is there a better way of handling this?
@@ -165,7 +186,7 @@ sub edit {
             if ($check =~ /^no?$/i) {
                 # restoring the zone XML config since it was changed but something went wrong
                 if ($backmod && $backmod != (stat $zonexml)[9]) {
-                    $self->log->debug("restoring the zone config from $zonexml");
+                    $self->log->warn('WARNING: restoring the zone config.');
                     Mojo::File->new($zonexml)->spurt($backcfg);
                 }
 
