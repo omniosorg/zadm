@@ -165,7 +165,7 @@ sub vnc {
     my $self   = shift;
     my $listen = shift // '5900';
 
-    Mojo::Exception->throw('ERROR: zone ' . $self->name . " is not running\n")
+    $self->log->warn('WARNING: zone ' . $self->name . " is not running\n")
         if !$self->is('running');
     Mojo::Exception->throw('ERROR: vnc is not set-up for zone ' . $self->name . "\n")
         if !$self->config->{vnc} || $self->config->{vnc} eq 'off';
