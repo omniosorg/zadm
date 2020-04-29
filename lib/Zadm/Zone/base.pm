@@ -361,9 +361,7 @@ has image   => sub { Zadm::Image->new(log => shift->log) };
 has sv      => sub { Zadm::Validator->new(log => shift->log) };
 has dp      => sub { Data::Processor->new(shift->schema) };
 has name    => sub { Mojo::Exception->throw("ERROR: zone name must be specified on instantiation.\n") };
-has config  => sub { my $self = shift; return $self->exists ? $self->$getConfig : $self->template };
 has rawConf => sub { my $self = shift; return $self->exists ? $self->$getConfig(1) : {} };
-#has brand  => sub { shift->config->{brand} };
 has brand   => sub { lc ((split /::/, ref shift)[-1]) };
 has socket  => sub { my $self = shift; Mojo::Exception->throw('ERROR: no socket available for brand ' . $self->brand . ".\n") };
 has public  => sub { [] };
@@ -373,6 +371,17 @@ has exists  => sub { my $self = shift; $self->zones->exists($self->name) };
 # TODO: not all brands have a logfile, yet.
 has logfile => sub { shift->config->{zonepath} . '/root/tmp/init.log' };
 has valid   => sub { 0 };
+
+has config  => sub {
+    my $self = shift;
+    return $self->$getConfig if $self->exists;
+
+    return {
+        %{$self->template},
+        zonename => $self->name,
+        brand    => $self->brand,
+    }
+};
 
 has schema  => sub {
     my $self = shift;

@@ -43,7 +43,7 @@ sub main {
             $opts->{brand} or pod2usage(1);
 
             my @extraopts = $opts->{template}
-                ? (template => $zones->utils->loadJSON($opts->{template}))
+                ? (template => $zones->utils->loadTemplate($opts->{template}, $zName))
                 : ();
 
             my $zone = $zones->zone($zName, brand => $opts->{brand}, opts => $opts, @extraopts);

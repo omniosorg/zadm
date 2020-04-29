@@ -213,12 +213,17 @@ sub getZfsProp {
     return { map { $prop->[$_] => $vals[$_] } (0 .. $#$prop) };
 }
 
-sub loadJSON {
-    my $self = shift;
-    my $file = shift;
+sub loadTemplate {
+    my $self  = shift;
+    my $file  = shift;
+    my $name  = shift;
+
+    my $template = Mojo::File->new($file)->slurp;
+    # TODO: add handler for more modular transforms, for now we just support __ZONENAME__
+    $template =~ s/__ZONENAME__/$name/g if $name;
 
     # TODO: add proper error handling
-    return JSON::PP->new->relaxed(1)->decode(Mojo::File->new($file)->slurp);
+    return JSON::PP->new->relaxed(1)->decode($template);
 }
 
 sub isVirtual {
