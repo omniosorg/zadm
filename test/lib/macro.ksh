@@ -24,10 +24,10 @@ function zadm {
 	$ZADM "$@"
 }
 
-function zadmlist {
+function zadmshow {
 	typeset zone="${1:?zone}"; shift
 
-	$ZADM list $zone | tokenise
+	$ZADM show $zone | tokenise
 }
 
 function zadmcreate {

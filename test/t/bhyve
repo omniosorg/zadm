@@ -53,8 +53,8 @@ zonecfg -z bhyve <<- EOM
 EOM
 validate bhyve "extra dev"
 
-zadmlist bhyve > $zadmroot/bhyve.json
-compare "$name list" $zadmroot/bhyve.json t/bhyve.d/base.json
+zadmshow bhyve > $zadmroot/bhyve.json
+compare "$name show" $zadmroot/bhyve.json t/bhyve.d/base.json
 
 stop_environment
 
