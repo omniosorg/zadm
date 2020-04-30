@@ -54,7 +54,7 @@ my $queryMonitor = sub {
 
 my $getDiskProps = sub {
     my $self = shift;
-    my $zvol = shift;
+    my ($zvol, $serial) = split /,serial=/, shift, 2;
 
     my $props = $self->utils->getZfsProp($zvol, [ qw(volsize volblocksize refreservation) ]);
 
@@ -63,6 +63,7 @@ my $getDiskProps = sub {
         disk_size   => $props->{volsize} // '10G',
         block_size  => $props->{volblocksize} // '8K',
         sparse      => ($props->{refreservation} // '') eq 'none' ? 'true' : 'false',
+        defined $serial ? (serial => $serial) : (),
     };
 };
 
@@ -142,9 +143,11 @@ sub setPreProcess {
 
     # add device for bootdisk
     if ($cfg->{bootdisk}) {
+        my $serial = $cfg->{bootdisk}->{serial};
         $cfg->{bootdisk} = $cfg->{bootdisk}->{disk_path};
         $cfg->{bootdisk} =~ s!^$ZVOLRX!!;
         push @{$cfg->{device}}, { match => "$ZVOLDEV/$cfg->{bootdisk}" };
+        $cfg->{bootdisk} .= ",serial=$serial" if defined $serial;
     }
 
     # handle disks
@@ -152,11 +155,12 @@ sub setPreProcess {
         for (my $i = 0; $i < @{$cfg->{disk}}; $i++) {
             next if !$cfg->{disk}->[$i] || (ref $cfg->{disk}->[$i] eq 'HASH' && !%{$cfg->{disk}->[$i]});
 
-            my $disk = $cfg->{disk}->[$i]->{disk_path};
+            my $disk   = $cfg->{disk}->[$i]->{disk_path};
+            my $serial = $cfg->{disk}->[$i]->{serial};
             push @{$cfg->{attr}}, {
                 name    => "disk$i",
                 type    => 'string',
-                value   => $disk,
+                value   => $disk . (defined $serial ? ",serial=$serial" : ''),
             };
 
             $disk =~ s!^$ZVOLRX!!;
