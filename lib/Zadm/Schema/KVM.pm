@@ -159,7 +159,7 @@ $SCHEMA = sub {
         description => 'VNC',
         default     => 'off',
         example     => '"vnc" : "on"',
-        validator   => sub { return undef; },
+        validator   => $self->sv->vnc,
         'x-attr'    => 1,
     },
 }};

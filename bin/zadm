@@ -186,7 +186,7 @@ sub main {
 
             $zone->usage if !$zone->can($mainOpt) || !$zone->isPublic($mainOpt);
 
-            $zones->zone($zName)->$mainOpt(@ARGV);
+            $zone->$mainOpt(@ARGV);
             last;
         };
         #main argument invalid

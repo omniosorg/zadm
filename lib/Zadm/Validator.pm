@@ -271,6 +271,17 @@ sub stripDev {
     }
 }
 
+sub vnc {
+    my $self = shift;
+
+    return sub {
+        my $vnc = shift;
+
+        return undef if $vnc =~ m!^unix=/!;
+        return $self->elemOf(qw(on off))->($vnc);
+    }
+}
+
 1;
 
 __END__

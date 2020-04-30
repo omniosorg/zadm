@@ -14,7 +14,13 @@ my @MON_INFO = qw(block blockstats chardev cpus kvm network pci registers qtree 
 my $RCV_TMO  = 3;
 
 has socket    => sub { shift->config->{zonepath} . '/root/tmp/vm.monitor' };
-has vncsocket => sub { shift->config->{zonepath} . '/root/tmp/vm.vnc' };
+has vncsocket => sub {
+    my $self = shift;
+
+    my ($socket) = $self->config->{vnc} =~ m!^unix=(/[^, ]+)!;
+
+    return $self->config->{zonepath} . '/root' . ($socket || '/tmp/vm.vnc');
+};
 has public    => sub { [ qw(reset nmi vnc) ] };
 
 my $queryMonitor = sub {
