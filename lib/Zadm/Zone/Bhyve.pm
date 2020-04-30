@@ -42,9 +42,9 @@ where 'command' is one of the following:
     create -b <brand> [-i <image_uuid>] [-t <template_path>] <zone_name>
     delete [--purge=vnic] <zone_name>
     edit <zone_name>
-    list [zone_name]
-    status
-    list-images [-b <brand>]
+    show [zone_name]
+    list
+    list-images [--refresh] [-b <brand>]
     start <zone_name>
     stop <zone_name>
     restart <zone_name>

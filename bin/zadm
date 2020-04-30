@@ -91,7 +91,7 @@ sub main {
 
             last;
         };
-        /^list$/ && do {
+        /^show$/ && do {
             my $zName = shift @ARGV;
 
             my $list = $zName ? $zones->zone($zName)->config
@@ -101,21 +101,15 @@ sub main {
 
             last;
         };
-        /^status$/ && do {
+        /^list$/ && do {
             $zones->utils->exec('zoneadm', [ qw(list -cv) ]);
 
             last;
         };
         /^list-images$/ && do {
             my $opts = {};
-            GetOptions($opts, qw(brand|b=s));
+            GetOptions($opts, qw(brand|b=s refresh|r));
             $zones->image->dump($opts);
-
-            last;
-        };
-        /^refresh$/ && do {
-            # force download of index
-            $zones->image->fetchImages(1);
 
             last;
         };
@@ -173,8 +167,7 @@ sub main {
             pod2usage(-exitstatus => 0) if (!$opts->{brand});
 
             # TODO: make sure we don't clash with an existing zone
-            my $zone = $zones->zone('__zadm_help__', brand => $opts->{brand});
-            $zone->usage;
+            $zones->zone('__zadm_help__', brand => $opts->{brand})->usage;
 
             last;
         };
@@ -221,9 +214,9 @@ where 'command' is one of the following:
     create -b <brand> [-t <template_path>] <zone_name>
     delete [--purge=vnic] <zone_name>
     edit <zone_name>
-    list [zone_name]
-    status
-    list-images [-b <brand>]
+    show [zone_name]
+    list
+    list-images [--refresh] [-b <brand>]
     start <zone_name>
     stop <zone_name>
     restart <zone_name>
@@ -261,22 +254,18 @@ deletes a zone with the name B<zone_name>.
 modify the configuration of a zone. See the descriptions in the B<create>
 function for details.
 
-=head2 B<list>
+=head2 B<show>
 
-lists the available zones with their properties. Lists details for B<zone_name>
+shows the zones' configuration. Shows config for B<zone_name>
 if given.
 
-=head2 B<status>
+=head2 B<list>
 
 prints the status of all existing zones
 
 =head2 B<list-images>
 
 list all available images ready for download and install.
-
-=head2 B<refresh>
-
-forces image index refresh.
 
 =head2 B<start>
 

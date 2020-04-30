@@ -84,7 +84,7 @@ sub dump {
     my $self = shift;
     my $opts = shift // {};
 
-    $self->fetchImages;
+    $self->fetchImages($opts->{refresh});
 
     printf "%-10s%-10s%-8s%-36s%-16s%s\n", qw(UUID PROVIDER BRAND NAME VERSION DESCRIPTION);
     for my $prov (sort keys %{$self->images}) {
