@@ -38,7 +38,7 @@ sub main {
             $zName or pod2usage(1);
 
             my $opts = {};
-            Getopt::Long::Configure(qw(pass_through));
+            Getopt::Long::Configure(qw(permute pass_through));
             GetOptions($opts, qw(brand|b=s template|t=s)) or exit 1;
             $opts->{brand} or pod2usage(1);
 
@@ -48,7 +48,7 @@ sub main {
 
             my $zone = $zones->zone($zName, brand => $opts->{brand}, opts => $opts, @extraopts);
 
-            Getopt::Long::Configure(qw());
+            Getopt::Long::Configure(qw(no_permute no_pass_through));
             GetOptions($opts, @{$zone->getOptions('create')}) or exit 1;
             $zone->checkMandOptions('create') or $zone->usage;
 
