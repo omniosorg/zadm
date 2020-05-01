@@ -137,7 +137,9 @@ sub edit {
     my $cfgValid = 0;
 
     while (!$cfgValid) {
-        (my $mod, $json) = $self->$edit($json);
+        (my $mod, $json) = $self->isaTTY || ($ENV{__ZADMTEST} && !$ENV{__ZADM_NOTTY})
+            ? $self->$edit($json)
+            : (1, join ("\n", @{$self->getSTDIN}));
 
         if (!$mod) {
             if ($zone->exists) {
@@ -177,7 +179,7 @@ sub edit {
 
             my $check;
             # TODO: is there a better way of handling this?
-            if ($ENV{__ZADMTEST}) {
+            if (!$self->isaTTY || $ENV{__ZADMTEST}) {
                 $check = 'no';
             } else {
                 print 'Do you want to retry [Y/n]? ';
