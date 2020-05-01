@@ -17,6 +17,16 @@ my %vcpuOptions = (
     maxcpus => undef,
 );
 
+my %unitFactors = (
+    b   => 1,
+    k   => 1024,
+    m   => 1024 ** 2,
+    g   => 1024 ** 3,
+    t   => 1024 ** 4,
+    p   => 1024 ** 5,
+    e   => 1024 ** 6,
+);
+
 # private methods
 my $getOverLink = sub {
     my $self = shift;
@@ -33,13 +43,15 @@ my $numeric = sub {
     return shift =~ /^\d+$/;
 };
 
-my $calcBlkSize = sub {
-    my $blkSize = shift;
+my $toBytes = sub {
+    my $size = shift;
 
-    my ($val, $suf) = $blkSize =~ /^(\d+)(k?)$/i
-        or return undef;
+    my $suffixes = join '', keys %unitFactors;
 
-    return $suf ? $val * 1024 : $val;
+    my ($val, $suf) = $size =~ /^(\d+)([$suffixes])?$/i
+        or return 0;
+
+    return $val * $unitFactors{lc ($suf || 'b')};
 };
 
 
@@ -232,6 +244,26 @@ sub zvol {
             };
             return $@ if $@;
         }
+        else {
+            my $props = $self->utils->getZfsProp($path, [ qw(volsize volblocksize refreservation) ]);
+
+            $self->log->warn("WARNING: block_size cannot be changed for existing disk '$path'")
+                if $toBytes->($disk->{block_size}) != $toBytes->($props->{volblocksize});
+            $self->log->warn("WARNING: sparse cannot be changed for existing disk '$path'")
+                if $disk->{sparse} ne ($props->{refreservation} eq 'none' ? 'true' : 'false');
+
+            my $diskSize    = $toBytes->($props->{volsize});
+            my $newDiskSize = $toBytes->($disk->{disk_size});
+
+            if ($diskSize > $newDiskSize) {
+                $self->log->warn("WARNING: cannot shrink disk '$path'");
+            }
+            elsif ($newDiskSize > $diskSize) {
+                $self->log->debug("enlarging disk '$path' to $disk->{disk_size}");
+
+                $self->utils->exec('zfs', [ 'set', "volsize=$disk->{disk_size}", $path ]);
+            }
+        }
 
         return undef;
     }
@@ -243,7 +275,7 @@ sub blockSize {
     return sub {
         my $blkSize = shift;
 
-        my $val = $calcBlkSize->($blkSize)
+        my $val = $toBytes->($blkSize)
             or return "block_size '$blkSize' not valid";
 
         $val >= 512
