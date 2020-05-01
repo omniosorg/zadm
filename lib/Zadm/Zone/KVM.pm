@@ -56,6 +56,10 @@ my $getDiskProps = sub {
     my $self = shift;
     my ($zvol, $serial) = split /,serial=/, shift, 2;
 
+    # TODO: /dev... needs to be removed here already so zvol properties can be queried
+    # this is also done in the transformer as well as the validator
+    $zvol =~ s|^/dev/zvol/r?dsk/||;
+
     my $props = $self->utils->getZfsProp($zvol, [ qw(volsize volblocksize refreservation) ]);
 
     return {
