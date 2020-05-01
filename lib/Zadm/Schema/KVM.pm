@@ -36,6 +36,7 @@ $SCHEMA = sub {
                 description => 'zvol disk size. according to zfs syntax',
                 example     => '"disk_size" : "10G"',
                 validator   => $self->sv->regexp(qr/^\d+[bkmgtpe]$/i),
+                transformer => $self->sv->toInt,
             },
             block_size  => {
                 optional    => 1,
@@ -98,6 +99,7 @@ $SCHEMA = sub {
                 description => 'zvol disk size. according to zfs syntax',
                 example     => '"disk_size" : "10G"',
                 validator   => $self->sv->regexp(qr/^\d+[bkmgtpe]$/i),
+                transformer => $self->sv->toInt,
             },
             block_size  => {
                 optional    => 1,

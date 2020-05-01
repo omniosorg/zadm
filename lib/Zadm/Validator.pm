@@ -48,10 +48,10 @@ my $toBytes = sub {
 
     my $suffixes = join '', keys %unitFactors;
 
-    my ($val, $suf) = $size =~ /^(\d+)([$suffixes])?$/i
+    my ($val, $suf) = $size =~ /^([\d.]+)([$suffixes])?$/i
         or return 0;
 
-    return $val * $unitFactors{lc ($suf || 'b')};
+    return int ($val * $unitFactors{lc ($suf || 'b')});
 };
 
 
@@ -247,6 +247,9 @@ sub zvol {
         else {
             my $props = $self->utils->getZfsProp($path, [ qw(volsize volblocksize refreservation) ]);
 
+            # TODO: this is done in the transformer for disk_size, still we don't know about the execution order
+            $disk->{disk_size} = $self->toInt->($disk->{disk_size});
+
             $self->log->warn("WARNING: block_size cannot be changed for existing disk '$path'")
                 if $toBytes->($disk->{block_size}) != $toBytes->($props->{volblocksize});
             $self->log->warn("WARNING: sparse cannot be changed for existing disk '$path'")
@@ -300,6 +303,18 @@ sub stripDev {
         $path =~ s|/{2,}|/|g;
 
         return $path;
+    }
+}
+
+sub toInt {
+    my $self = shift;
+
+    return sub {
+        my $value = shift;
+
+        $value =~ s/\.\d+//;
+
+        return $value;
     }
 }
 
