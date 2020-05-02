@@ -24,6 +24,10 @@ sub install {
 
     my $img = $self->zones->image->getImage($self->opts->{image}, $self->brand);
 
+    $img->{_file} && -r $img->{_file} || do {
+        $self->log->warn('WARNING: no valid image path given. skipping install');
+        return;
+    };
     $self->SUPER::install($img->{_instopt} // '-t', $img->{_file});
 }
 
