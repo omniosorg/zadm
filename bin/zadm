@@ -49,8 +49,8 @@ sub main {
             my $zone = $zones->zone($zName, brand => $opts->{brand}, opts => $opts, @extraopts);
 
             Getopt::Long::Configure(qw(no_permute no_pass_through));
-            GetOptions($opts, @{$zone->getOptions('create')}) or exit 1;
-            $zone->checkMandOptions('create') or $zone->usage;
+            GetOptions($opts, @{$zone->getOptions($mainOpt)}) or exit 1;
+            $zone->checkMandOptions($mainOpt) or $zone->usage;
 
             $zones->exists($zName)
                 && die "ERROR: zone '$zName' already exists. use 'edit' to change properties\n";
@@ -60,13 +60,18 @@ sub main {
             last;
         };
         /^edit$/ && do {
-            my $zName = shift @ARGV;
+            my $zName = pop @ARGV;
             defined $zName or pod2usage(1);
 
             $zones->exists($zName)
                 || die "ERROR: zone '$zName' does not exist. use 'create' to create a zone\n";
 
-            my $zone = $zones->zone($zName);
+            my $opts = {};
+            my $zone = $zones->zone($zName, opts => $opts);
+
+            GetOptions($opts, @{$zone->getOptions($mainOpt)}) or exit 1;
+            $zone->checkMandOptions($mainOpt) or $zone->usage;
+
             ($ret = !$zones->utils->edit($zone)) || ($zone->is('configured') && $zone->install);
 
             last;

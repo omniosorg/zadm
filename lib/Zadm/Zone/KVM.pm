@@ -225,7 +225,7 @@ B<zadm> I<command> [I<options...>]
 
 where 'command' is one of the following:
 
-    create -b <brand> [-i <image_uuid>] [-t <template_path>] <zone_name>
+    create -b <brand> [-i <image_uuid|image_path>] [-t <template_path>] <zone_name>
     delete [--purge=vnic] <zone_name>
     edit <zone_name>
     show [zone_name]

@@ -10,6 +10,9 @@ has options => sub {
         getopt => 'image|i=s',
         mand   => 1,
     };
+    $options->{edit}->{image} = {
+        getopt => 'image|i=s',
+    };
 
     return $options;
 };
@@ -19,7 +22,7 @@ sub install {
 
     my $img = $self->zones->image->getImage($self->opts->{image}, $self->brand);
 
-    $self->SUPER::install($img->{_instopt}, $img->{_file});
+    $self->SUPER::install($img->{_instopt} // '-s', $img->{_file});
 }
 
 1;
@@ -32,9 +35,9 @@ B<zadm> I<command> [I<options...>]
 
 where 'command' is one of the following:
 
-    create -b <brand> -i <image_uuid> [-t <template_path>] <zone_name>
+    create -b <brand> -i <image_uuid|image_path> [-t <template_path>] <zone_name>
     delete [--purge=vnic] <zone_name>
-    edit <zone_name>
+    edit [-i <image_uuid|image_path>] <zone_name>
     show [zone_name]
     list
     list-images [--refresh] [-b <brand>]

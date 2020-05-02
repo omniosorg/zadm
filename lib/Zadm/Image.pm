@@ -11,6 +11,7 @@ my $MODPREFIX = 'Zadm::Image';
 has log      => sub { Mojo::Log->new(level => 'debug') };
 has utils    => sub { Zadm::Utils->new(log => shift->log) };
 has datadir  => sub { Mojo::Home->new->rel_file('../var')->to_string };
+has cache    => sub { shift->datadir . '/cache' };
 has images   => sub { {} };
 
 has provider => sub {
@@ -44,6 +45,23 @@ sub getImage {
     my $brand = shift;
 
     $self->fetchImages;
+
+    # check if uuid is a local absolute path to an image
+    return { _file => $uuid } if $uuid =~ m!^/! && -r $uuid;
+
+    if ($uuid =~ /^http/) {
+        $self->log->debug("downloading $uuid...");
+        my ($fileName) = $uuid =~ m!/([^/]+)$!;
+        my @cmd = ('-o', $self->cache . "/$fileName", $uuid);
+
+        $self->utils->exec('curl', \@cmd);
+        # TODO: add a check whether we got a tarball or zfs stream
+        # and not e.g. a html document
+
+        return {
+            _file => $self->cache . "/$fileName",
+        };
+    }
 
     my @imgs;
     my $provider;
