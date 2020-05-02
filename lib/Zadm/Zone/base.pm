@@ -186,7 +186,8 @@ my $delResource = sub {
 my $clearResources = sub {
     my $self = shift;
 
-    $self->$delResource($_) for grep { exists $self->resmap->{$_} } keys %{$self->rawConf};
+    # TODO: adding support for rctls (by now just aliased rctls are supported)
+    $self->$delResource($_) for grep { $_ ne 'rctl' && exists $self->resmap->{$_} } keys %{$self->rawConf};
 };
 
 my $setProperty = sub {
