@@ -13,7 +13,7 @@ my $ZVOLRX   = qr!/dev/zvol/r?dsk/!;
 my @MON_INFO = qw(block blockstats chardev cpus kvm network pci registers qtree usb version vnc);
 my $RCV_TMO  = 3;
 
-has socket    => sub { shift->config->{zonepath} . '/root/tmp/vm.monitor' };
+has monsocket => sub { shift->config->{zonepath} . '/root/tmp/vm.monitor' };
 has vncsocket => sub {
     my $self = shift;
 
@@ -21,7 +21,7 @@ has vncsocket => sub {
 
     return $self->config->{zonepath} . '/root' . ($socket || '/tmp/vm.vnc');
 };
-has public    => sub { [ qw(reset nmi vnc) ] };
+has public => sub { [ qw(reset nmi vnc monitor) ] };
 
 my $queryMonitor = sub {
     my $self   = shift;
@@ -30,7 +30,7 @@ my $queryMonitor = sub {
 
     my $socket = IO::Socket::UNIX->new(
         Type => SOCK_STREAM,
-        Peer => $self->socket,
+        Peer => $self->monsocket,
     ) or Mojo::Exception->throw("Cannot open socket $!\n");
 
     $socket->send($query);
@@ -218,6 +218,13 @@ sub vnc {
         'UNIX-CONNECT:' . $self->vncsocket ]);
 }
 
+sub monitor {
+    my $self = shift;
+
+    $self->utils->exec('nc', [ '-U', $self->monsocket ],
+        'cannot access monitor socket ' . $self->monsocket);
+}
+
 1;
 
 __END__
@@ -240,6 +247,7 @@ where 'command' is one of the following:
     poweroff <zone_name>
     reset <zone_name>
     console <zone_name>
+    monitor <zone_name>
     vnc [<[bind_addr:]port>] <zone_name>
     log <zone_name>
     help [-b <brand>]

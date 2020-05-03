@@ -20,6 +20,7 @@ my %CMDS = (
     zfs         => '/usr/sbin/zfs',
     curl        => '/usr/bin/curl',
     socat       => '/usr/bin/socat',
+    nc          => '/usr/bin/nc',
 );
 
 my %ENVARGS = map {

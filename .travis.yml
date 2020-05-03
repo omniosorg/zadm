@@ -7,7 +7,6 @@ perl:
   - "5.30"
   - "5.28"
   - "5.26"
-  - "5.24"
 
 # disable cpanm
 
@@ -31,5 +30,6 @@ script:
   - ./configure --prefix=$HOME/zadm
   - make
   - make install
-  - ./bin/zadm version
+  - cd $HOME/zadm/bin
+  - ./zadm version
 
