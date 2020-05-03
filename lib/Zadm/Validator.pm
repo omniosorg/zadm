@@ -324,7 +324,7 @@ sub vnc {
     return sub {
         my $vnc = shift;
 
-        return undef if $vnc =~ m!^unix=/!;
+        return undef if $vnc =~ m!^unix[:=]/!;
         return $self->elemOf(qw(on off))->($vnc);
     }
 }

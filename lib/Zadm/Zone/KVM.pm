@@ -17,7 +17,7 @@ has monsocket => sub { shift->config->{zonepath} . '/root/tmp/vm.monitor' };
 has vncsocket => sub {
     my $self = shift;
 
-    my ($socket) = $self->config->{vnc} =~ m!^unix=(/[^, ]+)!;
+    my ($socket) = $self->config->{vnc} =~ m!^unix[:=](/[^, ]+)!;
 
     return $self->config->{zonepath} . '/root' . ($socket || '/tmp/vm.vnc');
 };
