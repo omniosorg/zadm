@@ -157,7 +157,11 @@ sub main {
             my $zName = shift @ARGV;
             defined $zName or pod2usage(1);
 
-            print $zones->zone($zName)->logfile . "\n";
+            $zones->exists($zName)
+                || die "ERROR: zone '$zName' does not exist. use 'create' to create a zone\n";
+
+            my $zone = $zones->zone($zName);
+            $zone->utils->exec('pager', [ $zone->logfile ]);
             last;
         };
         /^man$/ && do {

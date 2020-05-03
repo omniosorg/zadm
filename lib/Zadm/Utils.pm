@@ -21,6 +21,7 @@ my %CMDS = (
     curl        => '/usr/bin/curl',
     socat       => '/usr/bin/socat',
     nc          => '/usr/bin/nc',
+    pager       => $ENV{PAGER} || '/usr/bin/less -eimnqX',
 );
 
 my %ENVARGS = map {
@@ -76,7 +77,7 @@ sub pipe {
     Mojo::Exception->throw("ERROR: command '$cmd' not defined.\n")
         if !exists $CMDS{$cmd};
 
-    my @cmd = ($CMDS{$cmd}, @{$ENVARGS{$cmd}}, @$args);
+    my @cmd = (shellwords($CMDS{$cmd}), @{$ENVARGS{$cmd}}, @$args);
     $self->log->debug("@cmd");
 
     open my $pipe, $dir, @cmd
@@ -95,7 +96,7 @@ sub exec {
     Mojo::Exception->throw("ERROR: command '$cmd' not defined.\n")
         if !exists $CMDS{$cmd};
 
-    my @cmd = ($CMDS{$cmd}, @{$ENVARGS{$cmd}}, @$args);
+    my @cmd = (shellwords($CMDS{$cmd}), @{$ENVARGS{$cmd}}, @$args);
     $self->log->debug("@cmd");
 
     if ($fork) {
