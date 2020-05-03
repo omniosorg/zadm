@@ -7,7 +7,7 @@ zadm
 
 Version: 0.1.0
 
-Date: 2020-04-19
+Date: 2020-05-03
 
 zadm is a zone admin tool.
 

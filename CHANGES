@@ -1,0 +1,353 @@
+commit 72ce42529f92b1280f818e86d2920b3870bd2b19
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sun May 3 10:37:06 2020 +0000
+
+    vnc sockets can contain colons
+
+commit 5a006d218c2341824d7bd5a77bdd25cfb4938067
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sun May 3 10:20:02 2020 +0000
+
+    page logfile
+
+commit 23cd697a75854f707b70b99c2af96c1977a320b9
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sun May 3 10:04:56 2020 +0000
+
+    add command to access qemu monitor for KVM brand
+
+commit e2392314b853e448568264d92e2940d96944791b
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sun Apr 19 17:00:56 2020 +0000
+
+    add option to send command to qemu monitor w/o waiting for response
+
+commit 62f4d3bedbeeb12b82a702b9e8babc9539138628
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sat May 2 20:21:17 2020 +0000
+
+    don't clean up rctl
+
+commit dae2f1dfe4859885556991f75908cf4bde12a579
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sat May 2 11:38:16 2020 +0000
+
+    skip install if there is no valid image path provided
+
+commit aa21d2e452eb3f88a470c5ad44143933197b136e
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sat May 2 10:39:59 2020 +0000
+
+    support installation from custom image
+
+commit a249c4b30a7bd66673a5e696f4ffe459719e7728
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Fri May 1 13:18:05 2020 +0000
+
+    fix handling non-integer disk sizes
+
+commit 86336291c8477682003bbfb4d4c4cb511f3c24a1
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Fri May 1 12:23:38 2020 +0000
+
+    enlarging zvols should be possible
+
+commit 0833fa830c111ab53a1c6cca79e8f7346b2687f7
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Fri May 1 10:59:33 2020 +0000
+
+    zvol path needs to be cleaned up early
+
+commit a6cc6a013674206d8ab3c3c9b9b6bfc7c53ac3ef
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Fri May 1 08:33:34 2020 +0000
+
+    support reading config from STDIN for create/edit
+
+commit 16ca6a578ccc6e0e777d4484f2b1d25a7229fbd6
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Thu Apr 30 22:02:02 2020 +0000
+
+    support serial for disk
+
+commit 307a5ac217196979df612cdfb2137ff551707384
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Thu Apr 30 17:12:04 2020 +0000
+
+    fix test-suite following "use more sensible commands"
+
+commit 20ad6cd39e223a708b67e48c363e36e6ba018222
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Thu Apr 30 15:56:56 2020 +0000
+
+    fix options pass-through
+
+commit 4b7de3481e9414d51b8e363c6f6c7d00343ffbfa
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Thu Apr 30 15:56:46 2020 +0000
+
+    support custom vnc socket paths
+
+commit f3474c480162abd08bc0255e4a7b9bf29e589cc1
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Thu Apr 30 15:56:29 2020 +0000
+
+    use more sensible commands
+
+commit 9d76ef75dfc74e098b584a63f06c064572b1a9cf
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Wed Apr 29 16:20:53 2020 +0000
+
+    templates should support __ZONENAME__ placeholder
+
+commit cb357429ce98a344b39c9a93121b54b85f97542c
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Mon Apr 27 16:35:59 2020 +0000
+
+    change disk handling to support volsize, volblocksize and sparse properties
+
+commit 11560c2ec3bd24e3af51054859cd2c5f6641fd23
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Mon Apr 27 15:30:58 2020 +0000
+
+    restructure resource cleanup
+
+commit 579bedc0780d33d2cfb636c0fd86206006289cd3
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Mon Apr 27 15:27:44 2020 +0000
+
+    warn if vnc is used for a non-running zone
+
+commit 402f1eab0e68900340ac091879b88264d5295257
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Mon Apr 27 15:26:49 2020 +0000
+
+    rollback config in case the editor exited with a non-zero exit value
+
+commit 24dff95d7934ba3915c5a461095c831898d3c936
+Author: Andy Fiddaman <omnios@citrus-it.co.uk>
+Date:   Mon Apr 27 10:46:17 2020 +0000
+
+    test: Test zone xml rollback
+
+commit baa6c97e4c10eed7fb9b90bf1ece0d067715cf5a
+Author: Andy Fiddaman <omnios@citrus-it.co.uk>
+Date:   Mon Apr 27 10:46:00 2020 +0000
+
+    test: fix source lines in tests
+
+commit a3d9475f5938f20cffaa49746978e587547e7e9e
+Author: Andy Fiddaman <omnios@citrus-it.co.uk>
+Date:   Mon Apr 27 10:45:38 2020 +0000
+
+    test: Allow disabling the automatic rollback in zadmedit
+
+commit fcb691450086f36282b07a4bb2de529bf26a709a
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sun Apr 26 15:49:58 2020 +0000
+
+    add handling for the rare case when automatically added devices are not present
+
+commit 788a1659a00eac0d572beda371349efc5cbb7dc3
+Author: Andy Fiddaman <omnios@citrus-it.co.uk>
+Date:   Sun Apr 26 15:26:23 2020 +0000
+
+    Add test run -e to enter a test environment shell
+
+commit 3e79a49a425f1baefab954a3f30a27c1e299d258
+Author: Andy Fiddaman <omnios@citrus-it.co.uk>
+Date:   Sun Apr 26 03:45:38 2020 +0000
+
+    Add initial test-suite
+
+commit d4e17ae462fd4888a839a3d0bc1eb683821afd3d
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sun Apr 26 14:28:41 2020 +0000
+
+    disable interactive part when testing
+
+commit 092dc14b2ed50b9ea9988b7dac6cacdb1ae4c8d8
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sun Apr 26 13:50:31 2020 +0000
+
+    disk entries are indexed; fix handling of null elements
+
+commit b1810e08a7711f5bbf3ebdeb748e43c30a2d845b
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sun Apr 26 13:39:05 2020 +0000
+
+    fix quoted string handling
+
+commit ebb9e7ae5c604e4f70c7789307c7956aac1b7e35
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sun Apr 26 13:22:28 2020 +0000
+
+    add interative part to handle the case when a new zone is created with the default template
+
+commit 7ceb9eaf8a0013b4be0329747eac882eb5dc4780
+Author: Andy Fiddaman <omnios@citrus-it.co.uk>
+Date:   Sun Apr 26 12:29:40 2020 +0000
+
+    Uninitialised value in state check
+
+commit b563a10adbdf2c757eaf64362b78027efab767df
+Author: Andy Fiddaman <omnios@citrus-it.co.uk>
+Date:   Sun Apr 26 10:57:19 2020 +0000
+
+    In an alternate root, skip install/uninstall
+
+commit c614026f0e872260cee43b51723fc106128ecaa5
+Author: Andy Fiddaman <omnios@citrus-it.co.uk>
+Date:   Sun Apr 26 10:31:19 2020 +0000
+
+    Use alternate root in zone template
+
+commit 84f6adf92963a6de7cd0283e2c87d73ba47ddcb0
+Author: Andy Fiddaman <omnios@citrus-it.co.uk>
+Date:   Sun Apr 26 10:13:38 2020 +0000
+
+    setConfig should always be called for a new zone
+
+commit eea90d636ea6bf714f00abac7e0cae1e45c6199a
+Author: Andy Fiddaman <omnios@citrus-it.co.uk>
+Date:   Sun Apr 26 03:45:21 2020 +0000
+
+    Zone XML save/restore must be alternate-root aware and work in test mode. Exit status should be 0 if the file was not modified
+
+commit 81bfb0acaf95c8502f867701b0705701fc3cf596
+Author: Andy Fiddaman <omnios@citrus-it.co.uk>
+Date:   Sun Apr 26 12:13:39 2020 +0000
+
+    All bhyve attributes are optional
+
+commit 99e8e0ea29c3fe7835b6600e4d172bcab5074e4d
+Author: Andy Fiddaman <omnios@citrus-it.co.uk>
+Date:   Sun Apr 26 03:44:22 2020 +0000
+
+    Add missing schema items, make ram optional and set default to 1G (like the init scripts)
+
+commit 94cf1582e2c50e91bc0f165dc206fb5fd2b9191a
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sat Apr 25 14:03:24 2020 +0000
+
+    recover config in case something goes wrong
+
+commit c0ac599ce28d1b236936bb3c7902e12f33cb150e
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sat Apr 25 12:59:45 2020 +0000
+
+    add support for templates
+
+commit d99a85d02e3f0a1e30537a4c7629662090d1ecd0
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sat Apr 25 12:16:27 2020 +0000
+
+    link for vnic can now be specified with 'over' property
+
+commit 225205831c9bb9e432a48ef82c149aaaf6227ed2
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sat Apr 25 11:45:40 2020 +0000
+
+    add env variable to enable debug
+
+commit 43a30dbc373c98667ae0ab4c8f1247fd902dac21
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Fri Apr 24 15:27:22 2020 +0000
+
+    handle state transition from multiple states properly
+
+commit c31b604f3dc3f29c9222a53ee948af4a02ad7a78
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Fri Apr 24 15:10:27 2020 +0000
+
+    don't access properties; use method to check if brand exists
+
+commit 3a27a0a7dfd813f31c18b456acc2515425e70dba
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Fri Apr 24 14:48:28 2020 +0000
+
+    add brand filter option for 'list-images'
+
+commit 0d82f53ffbe811c9799f9ca67d916aeb3ae0e534
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Fri Apr 24 14:17:06 2020 +0000
+
+    add initial illumos brand support
+
+commit 6e450d3c39e8e12742273792dc754ae8e2ffb4df
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Fri Apr 24 14:05:36 2020 +0000
+
+    add support for brand specific usage message
+
+commit 27a105093df18839bda3edf0043619201c56e1ca
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Fri Apr 24 14:04:32 2020 +0000
+
+    fall back to generic schema if there is no brand specific
+
+commit 35b4cc5fb0f02062cf47df7ecc76c6fe02016c4c
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Tue Apr 21 17:46:40 2020 +0000
+
+    common aliases for commands
+
+commit eb1903e513632e0faf54161889d4f7625ffb5b2a
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Mon Apr 20 16:05:03 2020 +0000
+
+    add initial VNC unix socket -> IP proxy
+
+commit 82636536f593f3d303e324ed1a428da3ac133a48
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Mon Apr 20 14:18:24 2020 +0000
+
+    some perl modules require gnu-tar to unpack
+
+commit cf59ea6852ef1bbba3f51bf9333db8be751062c2
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Mon Apr 20 14:46:33 2020 +0000
+
+    use relaxed option for JSON decoding (e.g. allow end commas)
+
+commit 0c3a48ece210d3fd7d950470340193e695a19818
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Mon Apr 20 14:35:35 2020 +0000
+
+    add `zadm log` command
+
+commit 629b6c6c51822eda677c7e45d8cd34258fe1a197
+Author: Andy Fiddaman <omnios@citrus-it.co.uk>
+Date:   Sun Apr 19 15:55:07 2020 +0000
+
+    Add some hooks to enable running inside a test harness
+
+commit b6f3874e4201093fdd91aafcbfb1293e6e9334e2
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Mon Apr 20 10:56:36 2020 +0000
+
+    vnics can also be created on etherstubs or overlays
+
+commit 64f8aff9b6875c680958eae038619273e61837fb
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Mon Apr 20 10:47:37 2020 +0000
+
+    fix disk processing
+
+commit 7b9327512db4af97c94082a7a22e3366ebd197ab
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sun Apr 19 13:30:32 2020 +0000
+
+    hand over all resource cleanup to generic method
+
+commit 4f9f4cfa600c14ba84abf9b9d327cd52695cc03a
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sun Apr 19 12:48:00 2020 +0000
+
+    make sure not to create stray entries in schema
+
+commit 98439df9ba3c2102fd4179dcf9b59119f2889f9b
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sun Apr 19 11:00:41 2020 +0000
+
+    initial commit

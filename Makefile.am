@@ -2,11 +2,11 @@
 
 AUTOMAKE_OPTIONS =  foreign
 
-SUBDIRS = thirdparty lib
+SUBDIRS = lib thirdparty
 
 BIN = bin/$(SCRIPT_NAME)
 
-PERLTESTS := $(shell find t -name "*.t")
+PERLTESTS := $(shell test -d t && find t -name "*.t")
 
 THIRDPARTY_DIR := $(shell pwd)/thirdparty
 SCHEMATA := $(shell test -d schemata && find schemata -type f -name "*.pl")
@@ -34,7 +34,6 @@ install-exec-hook:
 	cd "$(DESTDIR)$(exec_prefix)" && $(PERL) -i -p -e 's{.*# LIBDIR}{use lib qw($(libdir)); # LIBDIR}' $(BIN)
 	cd "$(DESTDIR)$(exec_prefix)" && $(PERL) -i -p -e 's{^#!.*perl.*}{#!$(PERL)};' $(BIN)
 	cd "$(DESTDIR)$(libdir)/Zadm" && $(PERL) -i -p -e 's{^my .*# DATADIR}{my \$$DATADIR = "$(localstatedir)"; # DATADIR};' Zones.pm
-	[ ! -d $(THIRDPARTY_DIR)/lib/perl5 ] || cp -fr $(THIRDPARTY_DIR)/lib/perl5/* $(DESTDIR)$(libdir)
 
 test:
 	$(PERL) "-MExtUtils::Command::MM" "-e" "test_harness(0, 'lib','thirdparty/lib/perl5')" $(PERLTESTS)

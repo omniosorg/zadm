@@ -4,12 +4,15 @@ Makefile
 *.rej
 *.orig
 *.tar.gz
+Makefile.in
+configure
 aclocal.m4
 autom4te.cache
+conftools
 config.log
 config.status
-thirdparty
 README
 var
+thirdparty/*
 !thirdparty/Makefile.am
-!thirdparty/Makefile.in
+!thirdparty/cpanfile-*.snapshot
