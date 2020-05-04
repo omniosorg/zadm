@@ -11,15 +11,14 @@ export PATH := /usr/gnu/bin:$(PATH)
 PERLTESTS := $(shell test -d t && find t -name "*.t")
 
 THIRDPARTY_DIR := $(shell pwd)/thirdparty
-SCHEMATA := $(shell test -d schemata && find schemata -type f -name "*.pl")
 
-EXTRA_DIST = VERSION COPYRIGHT README.md LICENSE CHANGES AUTHORS cpanfile $(BIN) $(PERLTESTS) $(SCHEMATA)
+EXTRA_DIST = VERSION COPYRIGHT README.md LICENSE CHANGES AUTHORS cpanfile $(BIN) $(PERLTESTS)
 
 YEAR := $(shell date +%Y)
 DATE := $(shell date +%Y-%m-%d)
 
 datadir = $(prefix)
-nobase_data_DATA = $(PUB) $(SCHEMATA)
+nobase_data_DATA = $(PUB)
 
 README.md COPYRIGHT : VERSION
 	$(PERL) -i -p -e 's/(#VERSION#|\d+\.\d+\.\d+(?:-\w+)?)/$(PACKAGE_VERSION)/g;s/(#YEAR#|20[1-4]\d)/$(YEAR)/g;s/(#DATE#|20[1-9]\d-[01]\d-[0-3]\d)/$(DATE)/g;' $@
