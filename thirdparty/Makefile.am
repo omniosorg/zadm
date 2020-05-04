@@ -1,6 +1,7 @@
 #  Copyright (C) 2019 Tobias Oetiker
 
 AUTOMAKE_OPTIONS =  foreign
+export PATH := /usr/gnu/bin:$(PATH)
 
 THIRDPARTY_DIR := $(shell pwd)
 
@@ -9,7 +10,7 @@ CPANSNAPV := cpanfile-$(shell $(PERL) -MConfig -e 'print $$Config{version}').sna
 
 #EXTRA_DIST = $(THIRDPARTY_DIST) $(wildcard bin/cpanm)
 EXTRA_DIST = bin/cpanm $(wildcard cpanfile*snapshot)
-PERL_ENV := PATH=/usr/gnu/bin:$$PATH PERL_CPANM_OPT= PERL_CPANM_HOME=$(THIRDPARTY_DIR) PERL_CARTON_PATH=$(THIRDPARTY_DIR)
+PERL_ENV := PERL_CPANM_OPT= PERL_CPANM_HOME=$(THIRDPARTY_DIR) PERL_CARTON_PATH=$(THIRDPARTY_DIR)
 
 all-local: touch
 

@@ -1,3 +1,15 @@
+commit ece5710ef0ceb82d4899d6c9e6bf08f373dce362
+Author: Tobias Oetiker <tobi@oetiker.ch>
+Date:   Mon May 4 11:30:21 2020 +0200
+
+    do not package PERL_MODULES use cpanfile instead
+
+commit d8d1aa5616ea0d50113eb744dd8b54ee2fd8eddd
+Author: Tobias Oetiker <tobi@oetiker.ch>
+Date:   Mon May 4 09:45:26 2020 +0200
+
+    add /usr/gnu/bin
+
 commit 485d78b7388e479da3b2c41dc18fc8bbaac37033
 Author: Tobias Oetiker <tobi@oetiker.ch>
 Date:   Mon May 4 09:19:16 2020 +0200
