@@ -11,7 +11,7 @@ PERLTESTS := $(shell test -d t && find t -name "*.t")
 THIRDPARTY_DIR := $(shell pwd)/thirdparty
 SCHEMATA := $(shell test -d schemata && find schemata -type f -name "*.pl")
 
-EXTRA_DIST = VERSION COPYRIGHT README.md LICENSE CHANGES AUTHORS PERL_MODULES $(BIN) $(PERLTESTS) $(SCHEMATA)
+EXTRA_DIST = VERSION COPYRIGHT README.md LICENSE CHANGES AUTHORS cpanfile $(BIN) $(PERLTESTS) $(SCHEMATA)
 
 YEAR := $(shell date +%Y)
 DATE := $(shell date +%Y-%m-%d)
