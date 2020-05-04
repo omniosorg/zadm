@@ -2,23 +2,24 @@
 
 AUTOMAKE_OPTIONS =  foreign
 
-SUBDIRS = thirdparty lib
+SUBDIRS = lib thirdparty
 
 BIN = bin/$(SCRIPT_NAME)
 
-PERLTESTS := $(shell find t -name "*.t")
+export PATH := /usr/gnu/bin:$(PATH)
+
+PERLTESTS := $(shell test -d t && find t -name "*.t")
 
 THIRDPARTY_DIR := $(shell pwd)/thirdparty
 SCHEMATA := $(shell test -d schemata && find schemata -type f -name "*.pl")
 
-EXTRA_DIST = VERSION COPYRIGHT README.md LICENSE CHANGES AUTHORS PERL_MODULES $(BIN) $(PERLTESTS) $(SCHEMATA)
+EXTRA_DIST = VERSION COPYRIGHT README.md LICENSE CHANGES AUTHORS cpanfile $(BIN) $(PERLTESTS) $(SCHEMATA)
 
 YEAR := $(shell date +%Y)
 DATE := $(shell date +%Y-%m-%d)
 
 datadir = $(prefix)
 nobase_data_DATA = $(PUB) $(SCHEMATA)
-
 
 README.md COPYRIGHT : VERSION
 	$(PERL) -i -p -e 's/(#VERSION#|\d+\.\d+\.\d+(?:-\w+)?)/$(PACKAGE_VERSION)/g;s/(#YEAR#|20[1-4]\d)/$(YEAR)/g;s/(#DATE#|20[1-9]\d-[01]\d-[0-3]\d)/$(DATE)/g;' $@
@@ -34,7 +35,6 @@ install-exec-hook:
 	cd "$(DESTDIR)$(exec_prefix)" && $(PERL) -i -p -e 's{.*# LIBDIR}{use lib qw($(libdir)); # LIBDIR}' $(BIN)
 	cd "$(DESTDIR)$(exec_prefix)" && $(PERL) -i -p -e 's{^#!.*perl.*}{#!$(PERL)};' $(BIN)
 	cd "$(DESTDIR)$(libdir)/Zadm" && $(PERL) -i -p -e 's{^my .*# DATADIR}{my \$$DATADIR = "$(localstatedir)"; # DATADIR};' Zones.pm
-	[ ! -d $(THIRDPARTY_DIR)/lib/perl5 ] || cp -fr $(THIRDPARTY_DIR)/lib/perl5/* $(DESTDIR)$(libdir)
 
 test:
 	$(PERL) "-MExtUtils::Command::MM" "-e" "test_harness(0, 'lib','thirdparty/lib/perl5')" $(PERLTESTS)
