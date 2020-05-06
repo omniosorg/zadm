@@ -57,6 +57,7 @@ $SCHEMA = sub {
                 validator   => $self->sv->regexp(qr/^[\dA-Z-]{1,20}$/),
             },
         },
+        transformer => $self->sv->toDiskStruct,
         'x-attr'    => 1,
     },
     bootorder   => {
@@ -120,6 +121,7 @@ $SCHEMA = sub {
                 validator   => $self->sv->regexp(qr/^[\dA-Z-]{1,20}$/),
             },
         },
+        transformer => $self->sv->toDiskStruct,
         'x-attr'    => 1,
     },
     diskif      => {

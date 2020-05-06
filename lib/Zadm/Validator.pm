@@ -54,6 +54,13 @@ my $toBytes = sub {
     return int ($val * $unitFactors{lc ($suf || 'b')});
 };
 
+my $toDiskStruct = sub {
+    my $disk = shift;
+
+    # transform plain disk paths into disk structures
+    return $disk && !ref $disk ? { disk_path => $disk } : $disk;
+};
+
 
 # attributes
 has log   => sub { Mojo::Log->new(level => 'debug') };
@@ -315,6 +322,18 @@ sub toInt {
         $value =~ s/\.\d+//;
 
         return $value;
+    }
+}
+
+sub toDiskStruct {
+    my $self = shift;
+
+    return sub {
+        my $disk = shift;
+
+        return ref $disk eq 'ARRAY'
+            ? [ map { $toDiskStruct->($_) } @$disk ]
+            : $toDiskStruct->($disk);
     }
 }
 
