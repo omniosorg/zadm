@@ -58,7 +58,7 @@ my $toDiskStruct = sub {
     my $disk = shift;
 
     # transform plain disk paths into disk structures
-    return $disk && !ref $disk ? { disk_path => $disk } : $disk;
+    return $disk && !ref $disk ? { path => $disk } : $disk;
 };
 
 
@@ -226,21 +226,21 @@ sub zvol {
         $path =~ s|^/dev/zvol/r?dsk/||;
 
         if (!-e "/dev/zvol/rdsk/$path") {
-            # TODO: need to re-validate block_size, disk_size and sparse here as we don't
+            # TODO: need to re-validate blocksize, size and sparse here as we don't
             # know in which order they have been validated. i.e. if they have all been
             # validated already so it is ok to use them here
             # for now just returning undef (i.e. successful validation) as the properties
             # validator will return a specific error message already, but don't create a volume
             #
             # considering adding an option to Data::Processor to specify the validation order
-            return undef if $disk->{block_size} && $self->blockSize->($disk->{block_size})
-                || $disk->{disk_size} && $self->regexp(qr/^\d+[bkmgtpe]$/i)->($disk->{disk_size})
+            return undef if $disk->{blocksize} && $self->blockSize->($disk->{blocksize})
+                || $disk->{size} && $self->regexp(qr/^\d+[bkmgtpe]$/i)->($disk->{size})
                 || $disk->{sparse} && $self->elemOf(qw(true false))->($disk->{sparse});
 
             my @cmd = (qw(create -p),
                 ($disk->{sparse} eq 'true' ? qw(-s) : ()),
-                ($disk->{block_size} ? ('-o', "volblocksize=$disk->{block_size}") : ()),
-                '-V', ($disk->{disk_size} // '10G'), $path);
+                ($disk->{blocksize} ? ('-o', "volblocksize=$disk->{blocksize}") : ()),
+                '-V', ($disk->{size} // '10G'), $path);
 
             local $@;
             eval {
@@ -254,24 +254,24 @@ sub zvol {
         else {
             my $props = $self->utils->getZfsProp($path, [ qw(volsize volblocksize refreservation) ]);
 
-            # TODO: this is done in the transformer for disk_size, still we don't know about the execution order
-            $disk->{disk_size} = $self->toInt->($disk->{disk_size});
+            # TODO: this is done in the transformer for size, still we don't know about the execution order
+            $disk->{size} = $self->toInt->($disk->{size});
 
-            $self->log->warn("WARNING: block_size cannot be changed for existing disk '$path'")
-                if $toBytes->($disk->{block_size}) != $toBytes->($props->{volblocksize});
+            $self->log->warn("WARNING: blocksize cannot be changed for existing disk '$path'")
+                if $toBytes->($disk->{blocksize}) != $toBytes->($props->{volblocksize});
             $self->log->warn("WARNING: sparse cannot be changed for existing disk '$path'")
                 if $disk->{sparse} ne ($props->{refreservation} eq 'none' ? 'true' : 'false');
 
             my $diskSize    = $toBytes->($props->{volsize});
-            my $newDiskSize = $toBytes->($disk->{disk_size});
+            my $newDiskSize = $toBytes->($disk->{size});
 
             if ($diskSize > $newDiskSize) {
                 $self->log->warn("WARNING: cannot shrink disk '$path'");
             }
             elsif ($newDiskSize > $diskSize) {
-                $self->log->debug("enlarging disk '$path' to $disk->{disk_size}");
+                $self->log->debug("enlarging disk '$path' to $disk->{size}");
 
-                $self->utils->exec('zfs', [ 'set', "volsize=$disk->{disk_size}", $path ]);
+                $self->utils->exec('zfs', [ 'set', "volsize=$disk->{size}", $path ]);
             }
         }
 
@@ -286,14 +286,14 @@ sub blockSize {
         my $blkSize = shift;
 
         my $val = $toBytes->($blkSize)
-            or return "block_size '$blkSize' not valid";
+            or return "blocksize '$blkSize' not valid";
 
         $val >= 512
-            or return "block_size '$blkSize' not valid. Must be greater or equal than 512";
+            or return "blocksize '$blkSize' not valid. Must be greater or equal than 512";
         $val <= 128 * 1024
-            or return "block_size '$blkSize' not valid. Must be less or equal than 128k";
+            or return "blocksize '$blkSize' not valid. Must be less or equal than 128k";
         ($val & ($val - 1))
-            and return "block_size '$blkSize' not valid. Must be a power of 2";
+            and return "blocksize '$blkSize' not valid. Must be a power of 2";
 
         return undef;
     }

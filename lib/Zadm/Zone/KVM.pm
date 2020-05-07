@@ -66,9 +66,9 @@ my $getDiskProps = sub {
     my $props = $self->utils->getZfsProp($zvol, [ qw(volsize volblocksize refreservation) ]);
 
     return {
-        disk_path   => $zvol,
-        disk_size   => $props->{volsize} // '10G',
-        block_size  => $props->{volblocksize} // '8K',
+        path        => $zvol,
+        size        => $props->{volsize} // '10G',
+        blocksize   => $props->{volblocksize} // '8K',
         sparse      => ($props->{refreservation} // '') eq 'none' ? 'true' : 'false',
         defined $serial ? (serial => $serial) : (),
     };
@@ -117,7 +117,7 @@ sub getPostProcess {
         if ($cfg->{cdrom} && $cfg->{fs} && ref $cfg->{fs} eq 'ARRAY');
 
     # remove device for bootdisk
-    $cfg->{device} = [ grep { $_->{match} !~ m!^(?:$ZVOLRX)?$cfg->{bootdisk}->{disk_path}$! } @{$cfg->{device}} ]
+    $cfg->{device} = [ grep { $_->{match} !~ m!^(?:$ZVOLRX)?$cfg->{bootdisk}->{path}$! } @{$cfg->{device}} ]
         if (exists $cfg->{bootdisk} && ref $cfg->{bootdisk} eq 'HASH' && $cfg->{device} && ref $cfg->{device} eq 'ARRAY');
 
     # remove device for disk
@@ -125,7 +125,7 @@ sub getPostProcess {
         for (my $i = $#{$cfg->{device}}; $i >= 0; $i--) {
             splice @{$cfg->{device}}, $i, 1
                 # disks are indexed and there might be empty slots
-                if grep { $_ && ref $_ eq 'HASH' && $cfg->{device}->[$i]->{match} =~ m!^(?:$ZVOLRX)?$_->{disk_path}$! } @{$cfg->{disk}};
+                if grep { $_ && ref $_ eq 'HASH' && $cfg->{device}->[$i]->{match} =~ m!^(?:$ZVOLRX)?$_->{path}$! } @{$cfg->{disk}};
         }
 
     }
@@ -151,7 +151,7 @@ sub setPreProcess {
     # add device for bootdisk
     if ($cfg->{bootdisk}) {
         my $serial = $cfg->{bootdisk}->{serial};
-        $cfg->{bootdisk} = $cfg->{bootdisk}->{disk_path};
+        $cfg->{bootdisk} = $cfg->{bootdisk}->{path};
         $cfg->{bootdisk} =~ s!^$ZVOLRX!!;
         push @{$cfg->{device}}, { match => "$ZVOLDEV/$cfg->{bootdisk}" };
         $cfg->{bootdisk} .= ",serial=$serial" if defined $serial;
@@ -162,7 +162,7 @@ sub setPreProcess {
         for (my $i = 0; $i < @{$cfg->{disk}}; $i++) {
             next if !$cfg->{disk}->[$i] || (ref $cfg->{disk}->[$i] eq 'HASH' && !%{$cfg->{disk}->[$i]});
 
-            my $disk   = $cfg->{disk}->[$i]->{disk_path};
+            my $disk   = $cfg->{disk}->[$i]->{path};
             my $serial = $cfg->{disk}->[$i]->{serial};
             push @{$cfg->{attr}}, {
                 name    => "disk$i",

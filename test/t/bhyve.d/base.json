@@ -10,9 +10,9 @@
    "autoboot" : "false",
    "bootargs" : "",
    "bootdisk" : {
-      "block_size" : "8K",
-      "disk_path" : "__DATASET__/hdd-bhyve",
-      "disk_size" : "10G",
+      "blocksize" : "8K",
+      "path" : "__DATASET__/hdd-bhyve",
+      "size" : "10G",
       "sparse" : "false"
    },
    "bootorder" : "cd",
@@ -25,24 +25,24 @@
    ],
    "disk" : [
       {
-         "block_size" : "8K",
-         "disk_path" : "__DATASET__/hdd-bhyve0",
-         "disk_size" : "10G",
+         "blocksize" : "8K",
+         "path" : "__DATASET__/hdd-bhyve0",
+         "size" : "10G",
          "sparse" : "false"
       },
       {
-         "block_size" : "8K",
-         "disk_path" : "__DATASET__/hdd-bhyve1",
-         "disk_size" : "10G",
+         "blocksize" : "8K",
+         "path" : "__DATASET__/hdd-bhyve1",
+         "size" : "10G",
          "sparse" : "false"
       },
       null,
       null,
       null,
       {
-         "block_size" : "8K",
-         "disk_path" : "__DATASET__/hdd-bhyve5",
-         "disk_size" : "10G",
+         "blocksize" : "8K",
+         "path" : "__DATASET__/hdd-bhyve5",
+         "size" : "10G",
          "sparse" : "false"
       }
    ],

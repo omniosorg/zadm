@@ -24,24 +24,24 @@ $SCHEMA = sub {
         optional    => 1,
         description => 'boot disk',
         members     => {
-            disk_path   => {
+            path        => {
                 description => 'path of zvol',
-                example     => '"bootdisk" : "rpool/hdd-bhyve0"',
+                example     => '"path" : "rpool/hdd-bhyve0"',
                 validator   => $self->sv->zvol,
                 transformer => $self->sv->stripDev,
             },
-            disk_size   => {
+            size        => {
                 optional    => 1,
                 default     => '10G',
                 description => 'zvol disk size. according to zfs syntax',
-                example     => '"disk_size" : "10G"',
+                example     => '"size" : "10G"',
                 validator   => $self->sv->regexp(qr/^\d+[bkmgtpe]$/i),
                 transformer => $self->sv->toInt,
             },
-            block_size  => {
+            blocksize   => {
                 optional    => 1,
                 description => 'zvol block size',
-                example     => '"block_size" : "128k"',
+                example     => '"blocksize" : "128k"',
                 validator   => $self->sv->blockSize,
             },
             sparse      => {
@@ -88,24 +88,24 @@ $SCHEMA = sub {
         allow_empty => 1,
         description => 'disks',
         members     => {
-            disk_path   => {
+            path        => {
                 description => 'path of zvol',
-                example     => '"bootdisk" : "rpool/hdd-bhyve0"',
+                example     => '"path" : "rpool/hdd-bhyve0"',
                 validator   => $self->sv->zvol,
                 transformer => $self->sv->stripDev,
             },
-            disk_size   => {
+            size        => {
                 optional    => 1,
                 default     => '10G',
                 description => 'zvol disk size. according to zfs syntax',
-                example     => '"disk_size" : "10G"',
+                example     => '"size" : "10G"',
                 validator   => $self->sv->regexp(qr/^\d+[bkmgtpe]$/i),
                 transformer => $self->sv->toInt,
             },
-            block_size  => {
+            blocksize   => {
                 optional    => 1,
                 description => 'zvol block size',
-                example     => '"block_size" : "128k"',
+                example     => '"blocksize" : "128k"',
                 validator   => $self->sv->blockSize,
             },
             sparse      => {
