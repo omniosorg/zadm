@@ -21,6 +21,92 @@ $SCHEMA = sub {
     my $self = shift;
 
     return {
+    bootdisk    => {
+        optional    => 1,
+        description => 'boot disk',
+        members     => {
+            nocache     => {
+                optional    => 1,
+                description => 'enable/disable caching',
+                example     => '"nocache" : "true"',
+                validator   => $self->sv->elemOf(qw(true false)),
+            },
+            nodelete    => {
+                optional    => 1,
+                description => 'enable/disable TRIM',
+                example     => '"nodelete" : "true"',
+                validator   => $self->sv->elemOf(qw(true false)),
+            },
+            ro          => {
+                optional    => 1,
+                description => 'set disk read-only',
+                example     => '"ro" : "true"',
+                validator   => $self->sv->elemOf(qw(true false)),
+            },
+            sync        => {
+                optional    => 1,
+                description => 'enable/disable syncing',
+                example     => '"sync" : "true"',
+                validator   => $self->sv->elemOf(qw(true false)),
+            },
+            direct      => {
+                optional    => 1,
+                description => 'enable/disable syncing',
+                example     => '"direct" : "true"',
+                validator   => $self->sv->elemOf(qw(true false)),
+            },
+            sectorsize  => {
+                optional    => 1,
+                description => 'set logical/physical sector size',
+                example     => '"sectorsize" : "512/4096"',
+                validator   => $self->sv->sectorSize,
+            },
+        },
+    },
+    disk        => {
+        optional    => 1,
+        array       => 1,
+        allow_empty => 1,
+        description => 'disks',
+        members     => {
+            nocache     => {
+                optional    => 1,
+                description => 'enable/disable caching',
+                example     => '"nocache" : "true"',
+                validator   => $self->sv->elemOf(qw(true false)),
+            },
+            nodelete    => {
+                optional    => 1,
+                description => 'enable/disable TRIM',
+                example     => '"nodelete" : "true"',
+                validator   => $self->sv->elemOf(qw(true false)),
+            },
+            ro          => {
+                optional    => 1,
+                description => 'set disk read-only',
+                example     => '"ro" : "true"',
+                validator   => $self->sv->elemOf(qw(true false)),
+            },
+            sync        => {
+                optional    => 1,
+                description => 'enable/disable syncing',
+                example     => '"sync" : "true"',
+                validator   => $self->sv->elemOf(qw(true false)),
+            },
+            direct      => {
+                optional    => 1,
+                description => 'enable/disable syncing',
+                example     => '"direct" : "true"',
+                validator   => $self->sv->elemOf(qw(true false)),
+            },
+            sectorsize  => {
+                optional    => 1,
+                description => 'set logical/physical sector size',
+                example     => '"sectorsize" : "512/4096"',
+                validator   => $self->sv->sectorSize,
+            },
+        },
+    },
     net => {
         optional    => 1,
         array       => 1,

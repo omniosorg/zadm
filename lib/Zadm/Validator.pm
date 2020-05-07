@@ -61,6 +61,24 @@ my $toDiskStruct = sub {
     return $disk && !ref $disk ? { path => $disk } : $disk;
 };
 
+my $checkBlockSize = sub {
+    my $blkSize = shift;
+    my $name    = shift;
+    my $min     = shift;
+    my $max     = shift;
+
+    my $val = $toBytes->($blkSize)
+        or return "$name '$blkSize' not valid";
+
+    $val >= $toBytes->($min)
+        or return "$name '$blkSize' not valid. Must be greater or equal than $min";
+    $val <= $toBytes->($max)
+        or return "$name '$blkSize' not valid. Must be less or equal than $max";
+    ($val & ($val - 1))
+        and return "$name '$blkSize' not valid. Must be a power of 2";
+
+    return undef;
+};
 
 # attributes
 has log   => sub { Mojo::Log->new(level => 'debug') };
@@ -283,17 +301,24 @@ sub blockSize {
     my $self = shift;
 
     return sub {
-        my $blkSize = shift;
+        return $checkBlockSize->(shift, 'blocksize', '512', '128k');
+    }
+}
 
-        my $val = $toBytes->($blkSize)
-            or return "blocksize '$blkSize' not valid";
+sub sectorSize {
+    my $self = shift;
 
-        $val >= 512
-            or return "blocksize '$blkSize' not valid. Must be greater or equal than 512";
-        $val <= 128 * 1024
-            or return "blocksize '$blkSize' not valid. Must be less or equal than 128k";
-        ($val & ($val - 1))
-            and return "blocksize '$blkSize' not valid. Must be a power of 2";
+    return sub {
+        my $secSize = shift // '';
+
+        my ($logical, $physical) = $secSize =~ m!^([^/]+)(?:/([^/]+))?$!;
+
+        # logical size must be provided
+        my $check = $checkBlockSize->($logical, 'sectorsize (logical)', '512', '16k');
+        return $check if $check;
+
+        return $checkBlockSize->($physical, 'sectorsize (physical)', '512', '16k')
+            if $physical;
 
         return undef;
     }

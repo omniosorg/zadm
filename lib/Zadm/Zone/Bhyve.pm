@@ -3,7 +3,21 @@ use Mojo::Base 'Zadm::Zone::KVM';
 
 # reset public interface as the inherited list
 # from KVM will have additional methods
-has public => sub { [ qw(reset nmi vnc) ] };
+has public   => sub { [ qw(reset nmi vnc) ] };
+# TODO: extract this info from schema instead of re-defining here
+# for now we build a hash that contains the attribut names
+# the values indicate whether the attribute is boolean or not
+has diskattr => sub {
+    {
+        serial      => 0,
+        nocache     => 1,
+        nodelete    => 1,
+        ro          => 1,
+        sync        => 1,
+        direct      => 1,
+        sectorsize  => 0,
+    }
+};
 
 my $bhyveCtl = sub {
     my $self = shift;
