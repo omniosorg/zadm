@@ -21,7 +21,11 @@ has vncsocket => sub {
 
     return $self->config->{zonepath} . '/root' . ($socket || '/tmp/vm.vnc');
 };
-has public => sub { [ qw(reset nmi vnc monitor) ] };
+has public    => sub { [ qw(reset nmi vnc monitor) ] };
+# TODO: extract this info from schema instead of re-defining here
+# for now we build a hash that contains the attribut names
+# the values indicate whether the attribute is boolean or not
+has diskattr  => sub { { serial => 0 } };
 
 my $queryMonitor = sub {
     my $self   = shift;
@@ -55,9 +59,43 @@ my $queryMonitor = sub {
     return [ grep { $_ !~ /^(?:QEMU|\(qemu\))/ } split /[\r\n]+/, $recv ];
 };
 
+my $getDiskAttr = sub {
+    my $self = shift;
+    my $attr = shift;
+
+    return {} if !$attr;
+
+    return {
+        map {
+            my ($key, $val) = split /=/, $_, 2;
+
+            $key => $val ? $val : 'true'
+        } split ',', $attr
+    };
+};
+
+my $setDiskAttr = sub {
+    my $self = shift;
+    my $disk = shift // {};
+
+    my $attrstr = '';
+
+    for my $attr (keys %{$self->diskattr}) {
+        $attrstr .= !$disk->{$attr}             ? ''
+                  # boolean attr handling
+                  : $self->diskattr->{$attr}    ? ($disk->{$attr} eq 'true' ? ",$attr" : '')
+                  # non-boolean attr handling
+                  :                               ",$attr=$disk->{$attr}";
+    }
+
+    return $attrstr;
+};
+
 my $getDiskProps = sub {
     my $self = shift;
-    my ($zvol, $serial) = split /,serial=/, shift, 2;
+    my ($zvol, $attrstr) = split /,/, shift, 2;
+
+    my $attr = $self->$getDiskAttr($attrstr);
 
     # TODO: /dev... needs to be removed here already so zvol properties can be queried
     # this is also done in the transformer as well as the validator
@@ -65,12 +103,13 @@ my $getDiskProps = sub {
 
     my $props = $self->utils->getZfsProp($zvol, [ qw(volsize volblocksize refreservation) ]);
 
+    # TODO: extract defaults from schema
     return {
         path        => $zvol,
         size        => $props->{volsize} // '10G',
         blocksize   => $props->{volblocksize} // '8K',
         sparse      => ($props->{refreservation} // '') eq 'none' ? 'true' : 'false',
-        defined $serial ? (serial => $serial) : (),
+        %$attr,
     };
 };
 
@@ -150,11 +189,12 @@ sub setPreProcess {
 
     # add device for bootdisk
     if ($cfg->{bootdisk}) {
-        my $serial = $cfg->{bootdisk}->{serial};
+        my $diskattr = $self->$setDiskAttr($cfg->{bootdisk});
+
         $cfg->{bootdisk} = $cfg->{bootdisk}->{path};
         $cfg->{bootdisk} =~ s!^$ZVOLRX!!;
         push @{$cfg->{device}}, { match => "$ZVOLDEV/$cfg->{bootdisk}" };
-        $cfg->{bootdisk} .= ",serial=$serial" if defined $serial;
+        $cfg->{bootdisk} .= $diskattr;
     }
 
     # handle disks
@@ -162,15 +202,15 @@ sub setPreProcess {
         for (my $i = 0; $i < @{$cfg->{disk}}; $i++) {
             next if !$cfg->{disk}->[$i] || (ref $cfg->{disk}->[$i] eq 'HASH' && !%{$cfg->{disk}->[$i]});
 
-            my $disk   = $cfg->{disk}->[$i]->{path};
-            my $serial = $cfg->{disk}->[$i]->{serial};
+            my $disk = $cfg->{disk}->[$i]->{path};
+            $disk =~ s!^$ZVOLRX!!;
+
             push @{$cfg->{attr}}, {
                 name    => "disk$i",
                 type    => 'string',
-                value   => $disk . (defined $serial ? ",serial=$serial" : ''),
+                value   => $disk . $self->$setDiskAttr($cfg->{disk}->[$i]),
             };
 
-            $disk =~ s!^$ZVOLRX!!;
             push @{$cfg->{device}}, { match => "$ZVOLDEV/$disk" };
         }
 
