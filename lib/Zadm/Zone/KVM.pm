@@ -69,7 +69,7 @@ my $getDiskAttr = sub {
         map {
             my ($key, $val) = split /=/, $_, 2;
 
-            $key => $val ? $val : 'true'
+            $key => $val // 'true'
         } split ',', $attr
     };
 };
