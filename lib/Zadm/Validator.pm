@@ -317,8 +317,13 @@ sub sectorSize {
         my $check = $checkBlockSize->($logical, 'sectorsize (logical)', '512', '16k');
         return $check if $check;
 
-        return $checkBlockSize->($physical, 'sectorsize (physical)', '512', '16k')
-            if $physical;
+        if ($physical) {
+            $check = $checkBlockSize->($physical, 'sectorsize (physical)', '512', '16k');
+            return $check if $check;
+
+            return "logical sectorsize ($logical) must be less or equal than physical ($physical)"
+                if $logical > $physical;
+        }
 
         return undef;
     }
@@ -344,9 +349,23 @@ sub toInt {
     return sub {
         my $value = shift;
 
+        return $value if !$value;
+
         $value =~ s/\.\d+//;
 
         return $value;
+    }
+}
+
+sub toBytes {
+    my $self = shift;
+
+    return sub {
+        my $value = shift;
+
+        return $value if !$value;
+
+        return join '/', map { my $val = $_; $toBytes->($val) || $val } split m!/!, $value;
     }
 }
 
