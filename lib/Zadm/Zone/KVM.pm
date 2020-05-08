@@ -22,10 +22,20 @@ has vncsocket => sub {
     return $self->config->{zonepath} . '/root' . ($socket || '/tmp/vm.vnc');
 };
 has public    => sub { [ qw(reset nmi vnc monitor) ] };
-# TODO: extract this info from schema instead of re-defining here
-# for now we build a hash that contains the attribut names
-# the values indicate whether the attribute is boolean or not
-has diskattr  => sub { { serial => 0 } };
+has diskattr  => sub {
+    my $self = shift;
+
+    my %diskattr;
+    for my $type (qw(disk bootdisk)) {
+        $diskattr{$type} = {
+            map  { $_ => $self->schema->{$type}->{members}->{$_}->{'x-dskattr'} }
+            grep { exists $self->schema->{$type}->{members}->{$_}->{'x-dskattr'} }
+            keys %{$self->schema->{$type}->{members}}
+        };
+    };
+
+    return \%diskattr;
+};
 
 my $queryMonitor = sub {
     my $self   = shift;
@@ -76,16 +86,17 @@ my $getDiskAttr = sub {
 
 my $setDiskAttr = sub {
     my $self = shift;
+    my $type = shift;
     my $disk = shift // {};
 
     my $attrstr = '';
 
-    for my $attr (keys %{$self->diskattr}) {
-        $attrstr .= !$disk->{$attr}             ? ''
+    for my $attr (keys %{$self->diskattr->{$type}}) {
+        $attrstr .= !$disk->{$attr}                   ? ''
                   # boolean attr handling
-                  : $self->diskattr->{$attr}    ? ($disk->{$attr} eq 'true' ? ",$attr" : '')
+                  : $self->diskattr->{$type}->{$attr} ? ($disk->{$attr} eq 'true' ? ",$attr" : '')
                   # non-boolean attr handling
-                  :                               ",$attr=$disk->{$attr}";
+                  :                                     ",$attr=$disk->{$attr}";
     }
 
     return $attrstr;
@@ -189,7 +200,7 @@ sub setPreProcess {
 
     # add device for bootdisk
     if ($cfg->{bootdisk}) {
-        my $diskattr = $self->$setDiskAttr($cfg->{bootdisk});
+        my $diskattr = $self->$setDiskAttr('bootdisk', $cfg->{bootdisk});
 
         $cfg->{bootdisk} = $cfg->{bootdisk}->{path};
         $cfg->{bootdisk} =~ s!^$ZVOLRX!!;
@@ -208,7 +219,7 @@ sub setPreProcess {
             push @{$cfg->{attr}}, {
                 name    => "disk$i",
                 type    => 'string',
-                value   => $disk . $self->$setDiskAttr($cfg->{disk}->[$i]),
+                value   => $disk . $self->$setDiskAttr('disk', $cfg->{disk}->[$i]),
             };
 
             push @{$cfg->{device}}, { match => "$ZVOLDEV/$disk" };
