@@ -1,3 +1,63 @@
+commit b769c7add6aaf11230787127dc64f0a688585e1d
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Fri May 8 14:26:45 2020 +0000
+
+    extract disk attributes information from schema
+
+commit f0495631eb2667f5cf5200731d387954470ff9a3
+Author: Andy Fiddaman <omnios@citrus-it.co.uk>
+Date:   Fri May 8 09:56:11 2020 +0000
+
+    overlays are not supported in all releases
+
+commit 95db6f260d3c6b8edb9a247e158d23577e169b60
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Thu May 7 16:10:16 2020 +0000
+
+    fix case when disk attribute value is zero
+
+commit 0d55670203508907c99f5c6e981f7a4f00b7542d
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Thu May 7 15:52:53 2020 +0000
+
+    bhyve sectorsize is in bytes
+
+commit 7dca1158d22c5096bbe071e56773ec658e21d5a0
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Thu May 7 15:48:40 2020 +0000
+
+    add extra disk attributes for bhyve brand
+
+commit e0a5ddb92ccf5ba6e7b932b38686a5eecce2d4da
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Thu May 7 15:29:26 2020 +0000
+
+    generic handler for extra disk attributes
+
+commit 043a9da7f2fd5523124986ca973fdd160a20aa76
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Thu May 7 15:25:09 2020 +0000
+
+    rename disk properties
+
+commit 7d3296a993c2c84930f0e70c18562bf1fbecd8ec
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Thu May 7 14:59:59 2020 +0000
+
+    .gitattributes can be removed following update of build system
+
+commit 24ee41fcecfce280a0e93bea45a275061b8e1a07
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Wed May 6 15:38:20 2020 +0000
+
+    transform plain disk paths into disk structures
+
+commit 338e698b476de8ea8652e2b4b70d914be9d859f2
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Mon May 4 15:50:43 2020 +0000
+
+    ready for 0.1.0-rc1
+
 commit 3977f82dc43df8ceba4963dbf5262dde2152c719
 Author: Tobias Oetiker <tobi@oetiker.ch>
 Date:   Mon May 4 17:37:27 2020 +0200
