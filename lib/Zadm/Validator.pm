@@ -31,11 +31,8 @@ my %unitFactors = (
 my $getOverLink = sub {
     my $self = shift;
 
-    chomp (my @int = map {
-        my $dladm = $self->utils->pipe('dladm', [ "show-$_", qw(-p -o link) ]); (<$dladm>)
-    } qw(phys etherstub overlay));
-
-    return \@int;
+    my $dladm = $self->utils->pipe('dladm', [ qw(show-link -p -o), 'link,class' ]);
+    return [ map { /^([^:]+):(?:phys|etherstub|overlay)/ } (<$dladm>) ];
 };
 
 # static private methods
