@@ -126,7 +126,7 @@ $SCHEMA = sub {
                 'x-dskattr' => 0,
             },
         },
-        transformer => $self->sv->toDiskStruct,
+        transformer => $self->sv->toDiskStruct(1),
         'x-attr'    => 1,
     },
     diskif      => {

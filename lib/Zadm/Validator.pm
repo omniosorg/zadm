@@ -43,6 +43,8 @@ my $numeric = sub {
 my $toBytes = sub {
     my $size = shift;
 
+    return 0 if !$size;
+
     my $suffixes = join '', keys %unitFactors;
 
     my ($val, $suf) = $size =~ /^([\d.]+)([$suffixes])?$/i
@@ -273,14 +275,14 @@ sub zvol {
             $disk->{size} = $self->toInt->($disk->{size});
 
             $self->log->warn("WARNING: blocksize cannot be changed for existing disk '$path'")
-                if $toBytes->($disk->{blocksize}) != $toBytes->($props->{volblocksize});
+                if $disk->{blocksize} && $toBytes->($disk->{blocksize}) != $toBytes->($props->{volblocksize});
             $self->log->warn("WARNING: sparse cannot be changed for existing disk '$path'")
-                if $disk->{sparse} ne ($props->{refreservation} eq 'none' ? 'true' : 'false');
+                if $disk->{sparse} && $disk->{sparse} ne ($props->{refreservation} eq 'none' ? 'true' : 'false');
 
             my $diskSize    = $toBytes->($props->{volsize});
             my $newDiskSize = $toBytes->($disk->{size});
 
-            if ($diskSize > $newDiskSize) {
+            if ($newDiskSize && $diskSize > $newDiskSize) {
                 $self->log->warn("WARNING: cannot shrink disk '$path'");
             }
             elsif ($newDiskSize > $diskSize) {
@@ -367,10 +369,11 @@ sub toBytes {
 }
 
 sub toDiskStruct {
-    my $self = shift;
+    my $self    = shift;
+    my $isarray = shift;
 
     return sub {
-        my $disk = shift;
+        my $disk = $isarray ? $self->toArray->(shift) : shift;
 
         return ref $disk eq ref []
             ? [ map { $toDiskStruct->($_) } @$disk ]
@@ -384,7 +387,7 @@ sub toArray {
     return sub {
         my $elem = shift;
 
-        return ref $elem ? $elem : [ $elem ];
+        return ref $elem eq ref [] ? $elem : [ $elem ];
     }
 }
 
