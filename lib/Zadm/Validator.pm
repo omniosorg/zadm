@@ -372,7 +372,7 @@ sub toDiskStruct {
     return sub {
         my $disk = shift;
 
-        return ref $disk eq 'ARRAY'
+        return ref $disk eq ref []
             ? [ map { $toDiskStruct->($_) } @$disk ]
             : $toDiskStruct->($disk);
     }

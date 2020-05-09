@@ -131,8 +131,8 @@ my $setVal = sub {
     my $self = shift;
     my $prop = shift;
 
-    return ref $prop eq 'ARRAY' ? $self->$setArray($prop)
-         : ref $prop eq 'HASH'  ? $self->$setHash($prop)
+    return ref $prop eq ref [] ? $self->$setArray($prop)
+         : ref $prop eq ref {}  ? $self->$setHash($prop)
          : $prop;
 };
 
@@ -307,7 +307,7 @@ my $setConfig = sub {
         # skip props that cannot be changed once the zone is installed
         next if $installed && exists $self->createpropmap->{$prop};
 
-        if (ref $self->config->{$prop} eq 'ARRAY') {
+        if (ref $self->config->{$prop} eq ref []) {
             $self->log->debug("property '$prop' is a resource array");
 
             $self->$addResource($prop, $_) for (@{$self->config->{$prop}});
@@ -435,7 +435,7 @@ sub encodeProp {
         if ($res ne 'net' || (exists $self->schema->{$res}->{members}->{$prop}
             && !$self->schema->{$res}->{members}->{$prop}->{'x-netprop'}));
 
-    $val = ref $val eq 'ARRAY' ? "(name=$prop,value=\"" . join (',', @$val) . '")'
+    $val = ref $val eq ref [] ? "(name=$prop,value=\"" . join (',', @$val) . '")'
          : "(name=$prop,value=\"$val\")";
 
     return (qw(add property), $val, ';');
@@ -479,7 +479,7 @@ sub setPreProcess {
             type => 'string',
         );
 
-        $elem{value} = ref $cfg->{$res} eq 'ARRAY'
+        $elem{value} = ref $cfg->{$res} eq ref []
                      ? join (',', @{$cfg->{$res}})
                      : $cfg->{$res};
 
