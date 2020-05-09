@@ -71,9 +71,12 @@ $SCHEMA = sub {
     },
     cdrom       => {
         optional    => 1,
+        array       => 1,
+        allow_empty => 1,
         description => 'path to iso file',
-        example     => '"cdrom" : "/tmp/omnios-bloody.iso"',
+        example     => '"cdrom" : [ "/tmp/omnios-bloody.iso" ]',
         validator   => $self->sv->file('<', 'cannot open cdrom path'),
+        transformer => $self->sv->toArray,
         'x-attr'    => 1,
     },
     console     => {

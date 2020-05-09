@@ -160,11 +160,32 @@ sub getPostProcess {
         }
     }
 
+    $cfg->{cdrom} = [];
+    # handle cdroms before the default getPostProcess
+    if ($cfg->{attr} && ref $cfg->{attr} eq 'ARRAY') {
+        for (my $i = $#{$cfg->{attr}}; $i >= 0; $i--) {
+            my ($index) = $cfg->{attr}->[$i]->{name} =~ /^cdrom(\d+)?$/
+                or next;
+
+            # TODO: this can be changed once we drop support for r30/r32
+            # since they only support a single cdrom we place the cdrom w/o index
+            # in slot 0; this could overwrite cdrom0 if it was manually added
+            $index //= 0;
+            $cfg->{cdrom}->[$index] = $cfg->{attr}->[$i]->{value};
+            splice @{$cfg->{attr}}, $i, 1;
+        }
+    }
+
     $cfg = $self->SUPER::getPostProcess($cfg);
 
     # remove cdrom lofs mount from config
-    $cfg->{fs} = [ grep { $_->{special} ne $cfg->{cdrom} } @{$cfg->{fs}} ]
-        if ($cfg->{cdrom} && $cfg->{fs} && ref $cfg->{fs} eq 'ARRAY');
+    if ($cfg->{cdrom} && ref $cfg->{cdrom} eq 'ARRAY' && $cfg->{fs} && ref $cfg->{fs} eq 'ARRAY') {
+        for (my $i = $#{$cfg->{fs}}; $i >= 0; $i--) {
+            splice @{$cfg->{fs}}, $i, 1
+                # cdroms are indexed and there might be empty slots
+                if grep { $_ && $_ eq $cfg->{fs}->[$i]->{special} } @{$cfg->{cdrom}};
+        }
+    }
 
     # remove device for bootdisk
     $cfg->{device} = [ grep { $_->{match} !~ m!^(?:$ZVOLRX)?$cfg->{bootdisk}->{path}$! } @{$cfg->{device}} ]
@@ -180,8 +201,8 @@ sub getPostProcess {
 
     }
 
-    # remove fs/device/disk if empty
-    $cfg->{$_} && ref $cfg->{$_} eq 'ARRAY' && !@{$cfg->{$_}} && delete $cfg->{$_} for qw(fs device disk);
+    # remove fs/device/disk/cdrom if empty
+    $cfg->{$_} && ref $cfg->{$_} eq 'ARRAY' && !@{$cfg->{$_}} && delete $cfg->{$_} for qw(fs device disk cdrom);
 
     return $cfg;
 }
@@ -191,12 +212,27 @@ sub setPreProcess {
     my $cfg  = shift;
 
     # add cdrom lofs mount to zone config
-    push @{$cfg->{fs}}, {
-        dir     => $cfg->{cdrom},
-        options => [ qw(ro nodevices) ],
-        special => $cfg->{cdrom},
-        type    => 'lofs',
-    } if $cfg->{cdrom};
+    if ($cfg->{cdrom} && ref $cfg->{cdrom} eq 'ARRAY') {
+        for (my $i = 0; $i < @{$cfg->{cdrom}}; $i++) {
+            next if !$cfg->{cdrom}->[$i];
+
+            push @{$cfg->{attr}}, {
+                # cdrom0 shall be just cdrom
+                name    => 'cdrom' . ($i || ''),
+                type    => 'string',
+                value   => $cfg->{cdrom}->[$i],
+            };
+
+            push @{$cfg->{fs}}, {
+                dir     => $cfg->{cdrom}->[$i],
+                options => [ qw(ro nodevices) ],
+                special => $cfg->{cdrom}->[$i],
+                type    => 'lofs',
+            };
+        }
+
+        delete $cfg->{cdrom};
+    }
 
     # add device for bootdisk
     if ($cfg->{bootdisk}) {

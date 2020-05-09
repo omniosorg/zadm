@@ -378,6 +378,16 @@ sub toDiskStruct {
     }
 }
 
+sub toArray {
+    my $self = shift;
+
+    return sub {
+        my $elem = shift;
+
+        return ref $elem ? $elem : [ $elem ];
+    }
+}
+
 sub vnc {
     my $self = shift;
 
