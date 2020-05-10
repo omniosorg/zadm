@@ -5,9 +5,9 @@ zadm
 
 [![Build Status](https://travis-ci.org/omniosorg/zadm.svg?branch=master)](https://travis-ci.org/omniosorg/zadm)
 
-Version: 0.1.0-rc2
+Version: 0.1.0-rc3
 
-Date: 2020-05-08
+Date: 2020-05-10
 
 zadm is a zone admin tool.
 

@@ -1,3 +1,27 @@
+commit 9143944c97c70136bbec17346c207233202f9534
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sat May 9 13:06:49 2020 +0000
+
+    support simple disk configuration
+
+commit 60eb29367ff351e29506914310bb70556fd0d87a
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sat May 9 12:31:16 2020 +0000
+
+    remove hardcoded reference names
+
+commit 116e2ed594bf1f723e10ab8ba4fd447f2dec3f72
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sat May 9 12:28:07 2020 +0000
+
+    support multiple cdroms
+
+commit e406a3492b16f0f7a743adf7974b157fc5ced65c
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Fri May 8 14:47:57 2020 +0000
+
+    ready for 0.1.0-rc2
+
 commit b769c7add6aaf11230787127dc64f0a688585e1d
 Author: Dominik Hassler <hadfl@omniosce.org>
 Date:   Fri May 8 14:26:45 2020 +0000
