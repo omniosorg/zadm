@@ -1,3 +1,27 @@
+commit 5fae9d7544969d2cfad87a31d736bdce57882a11
+Author: Tobias Oetiker <tobi@oetiker.ch>
+Date:   Sun May 10 13:10:52 2020 +0200
+
+    bye bye travis
+
+commit 0146c9d06ce6ac4e6fb7110cc7fc127f648806f9
+Author: Tobias Oetiker <tobi@oetiker.ch>
+Date:   Sun May 10 13:08:53 2020 +0200
+
+    make version work regardles
+
+commit d13925e44ca0bdd30da2bdaa9825b2c733b79a79
+Author: Tobias Oetiker <tobi@oetiker.ch>
+Date:   Sun May 10 13:02:11 2020 +0200
+
+    add workflow support
+
+commit dec51a42189f6d1b2786a8472ff68c91012414f3
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sun May 10 08:14:47 2020 +0000
+
+    ready for 0.1.0-rc3
+
 commit 9143944c97c70136bbec17346c207233202f9534
 Author: Dominik Hassler <hadfl@omniosce.org>
 Date:   Sat May 9 13:06:49 2020 +0000
