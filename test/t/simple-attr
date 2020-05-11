@@ -45,7 +45,7 @@ check "missing (zonecfg)" ""
 
 # Add the attribute via zadm
 zadmedit $z '/autoboot
-o"max-lwps": "3000",:wq'
+o"max-lwps": "3000",^[:wq'
 check "exists (3000)" 3000
 
 # Change the value

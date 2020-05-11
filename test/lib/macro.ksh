@@ -60,6 +60,7 @@ function zadmedit {
 
 	echo :sleep 1 > $sf
 	echo "$*" >> $sf
+	sed -i 's/\^\[//g' $sf
 
 	cp $zadmroot/etc/zones/$zone.xml $tmpf
 
