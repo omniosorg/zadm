@@ -1,0 +1,63 @@
+#!/bin/ksh
+
+source ${.sh.file%/*}/../lib/testenv.ksh
+
+start_environment
+
+z=simpleattr
+prop=max-lwps
+tn=simple-attr
+
+function check {
+	typeset tag="$1"
+	typeset val="$2"
+	typeset -i ok=1
+
+	if [ -n "$val" ]; then
+		# Check if the attribute is set to the expected value
+		zadmshow $z | egrep -s "$prop.*$val" || ok=0
+		zonecfg -z $z info | egrep -s "$prop: $val" || ok=0
+		zonecfg -z $z info | rg -qU "name: zone.$prop\n.*limit=$val" \
+		    || ok=0
+	else
+		# Check if the attribute is missing
+		zadmshow $z | egrep -s "$prop" && ok=0
+		zonecfg -z $z info | egrep -s "$prop" && ok=0
+		zonecfg -z $z info | egrep -s "name: zone.$prop" && ok=0
+
+	fi
+
+	[ "$ok" -eq 1 ] && result "$tn $tag" PASS || result "$tn $tag" FAIL
+}
+
+create_zone $z ipkg
+
+# Check that the max-lwps attribute is not present
+check "missing (fresh zone)" ""
+
+# Add the parameter via zonecfg
+zonecfg -z $z "set $prop=2000"
+check "exists (zonecfg)" 2000
+
+# Remove via zonecfg
+zonecfg -z $z "clear $prop"
+check "missing (zonecfg)" ""
+
+# Add the attribute via zadm
+zadmedit $z '/autoboot
+o"max-lwps": "3000",:wq'
+check "exists (3000)" 3000
+
+# Change the value
+zadmedit $z '/max-lwps
+:s/3000/4123/
+:wq'
+check "exists (4123)" 4123
+
+# Remove the value
+zadmedit $z '/max-lwps
+dd:wq'
+check "missing (zadm)" ""
+
+stop_environment
+
