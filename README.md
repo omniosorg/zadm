@@ -3,8 +3,7 @@
 zadm
 =========
 
-![Unit
-!Tests](https://github.com/omniosorg/zadm/workflows/Unit%20Tests/badge.svg?branch=master&event=push)
+![Unit Tests](https://github.com/omniosorg/zadm/workflows/Unit%20Tests/badge.svg?branch=master&event=push)
 
 Version: 0.1.0-rc3
 
