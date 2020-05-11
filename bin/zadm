@@ -29,7 +29,7 @@ sub main {
     my $zones = Zadm::Zones->new($ENV{__ZADMDEBUG} ? (loglvl => 'debug') : ());
 
     # check if we are in global zone
-    $zones->isGZ or die "ERROR: $PROG can only be run from global zone\n";
+    $mainOpt eq 'version' or $zones->isGZ or die "ERROR: $PROG can only be run from global zone\n";
 
     for ($mainOpt) {
         /^create$/ && do {

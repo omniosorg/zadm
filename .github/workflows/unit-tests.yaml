@@ -1,0 +1,85 @@
+name: Unit Tests
+
+on: 
+  push:
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    paths-ignore:
+      - '**.md'    
+
+jobs:
+
+  build:
+    
+    strategy:
+      matrix:
+        os:
+          # - ubuntu-16.04
+          - ubuntu-18.04
+          # no libssl on windows
+          # - windows-latest
+
+        perl:
+          # - '5.22'
+          - '5.26'
+          - '5.28'
+          - '5.30'
+        # exclude:
+          #- os: ubuntu-16.04
+          #  perl: '5.26'
+          #- os: ubuntu-16.04
+          #  perl: '5.30'
+          #- os: ubuntu-16.04
+          #  node: '13.x'
+          #- os: ubuntu-18.04
+          #  perl: '5.22'
+          #- os: windows-latest
+          #  perl: '5.22'
+          #- os: windows-latest
+          #  perl: '5.26'
+
+      fail-fast: false
+    name: perl${{ matrix.perl }}/${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v1
+
+    - name: Setup perl
+      uses: shogo82148/actions-setup-perl@v1
+      with:
+        perl-version: ${{ matrix.perl }}
+
+    - name: CPAN Cache
+      id: cpan-cache
+      uses: actions/cache@v1
+      with:
+        path: thirdparty
+        key: ${{ matrix.os }}-cpan-${{ matrix.perl }}-${{ hashFiles('**/cpanfile') }}
+
+    - name: Bootstrap
+      run: ./bootstrap
+
+    - name: Configure
+      run: ./configure --prefix=$HOME/test-install
+    
+    - name: Make
+      run: make
+     
+    - name: Check Dist
+      run: |
+        make dist
+        tar xf *-$(cat VERSION).tar.gz
+        cd *-$(cat VERSION)
+        ./configure --prefix=$HOME/test-install
+        make
+        make install
+        cd $HOME/test-install
+        ./bin/zadm version
+    - name: Cache Prep
+      run: |
+        rm thirdparty/Makefile* thirdparty/cpan*snapshot
+

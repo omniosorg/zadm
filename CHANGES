@@ -1,3 +1,29 @@
+commit 6e65cf61834953706e73c42747c6c79b9894baae
+Author: Tobias Oetiker <tobi@oetiker.ch>
+Date:   Mon May 11 17:41:13 2020 +0200
+
+    add workflow support (#3)
+    
+    add workflow support
+
+commit e085b431f5c88d1093f767007ab58d5a9453606d
+Author: Andy Fiddaman <omnios@citrus-it.co.uk>
+Date:   Mon May 11 13:20:59 2020 +0000
+
+    Specify escape as ^[ in vim scripts
+
+commit 00de01cde15706e7525d51e943b30dec58fd5c3b
+Author: Andy Fiddaman <omnios@citrus-it.co.uk>
+Date:   Mon May 11 13:09:11 2020 +0000
+
+    Add simple attribute test
+
+commit dec51a42189f6d1b2786a8472ff68c91012414f3
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Sun May 10 08:14:47 2020 +0000
+
+    ready for 0.1.0-rc3
+
 commit 9143944c97c70136bbec17346c207233202f9534
 Author: Dominik Hassler <hadfl@omniosce.org>
 Date:   Sat May 9 13:06:49 2020 +0000

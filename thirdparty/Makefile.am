@@ -6,7 +6,7 @@ export PATH := /usr/gnu/bin:$(PATH)
 THIRDPARTY_DIR := $(shell pwd)
 
 # THIRDPARTY_DIST := $(shell test -d cache && find cache -type f )
-CPANSNAPV := cpanfile-$(shell $(PERL) -MConfig -e 'print $$Config{version}').snapshot
+CPANSNAPV := cpanfile-$(shell $(PERL) -MConfig -e 'my $$v =$$Config{version}; $$v =~ s/.\d+$$//;print $$v;').snapshot
 
 #EXTRA_DIST = $(THIRDPARTY_DIST) $(wildcard bin/cpanm)
 EXTRA_DIST = bin/cpanm $(wildcard cpanfile*snapshot)
