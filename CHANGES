@@ -1,4 +1,22 @@
-commit 6e65cf61834953706e73c42747c6c79b9894baae
+commit 2a100b59b1063541e4981871f1110b119bdad1e4
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Mon May 11 15:54:27 2020 +0000
+
+    fix unit tests link
+
+commit b2ae6a68d8dabe2b69322fa7adf3a234d21c4afd
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Mon May 11 15:47:38 2020 +0000
+
+    support clearing of simple attributes
+
+commit 9f0a37a255e68400460bf3b2369a42e8420179d9
+Author: Dominik Hassler <hadfl@omniosce.org>
+Date:   Mon May 11 15:46:50 2020 +0000
+
+    handle 'zadm version' early
+
+commit 55677cefffea9c1217e3ba8539c51dab2a9ec999
 Author: Tobias Oetiker <tobi@oetiker.ch>
 Date:   Mon May 11 17:41:13 2020 +0200
 
