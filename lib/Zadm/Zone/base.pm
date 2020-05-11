@@ -183,13 +183,6 @@ my $delResource = sub {
     $self->utils->exec('zonecfg', \@cmd, "cannot delete resource '$res' from zone '$name'");
 };
 
-my $clearResources = sub {
-    my $self = shift;
-
-    # TODO: adding support for rctls (by now just aliased rctls are supported)
-    $self->$delResource($_) for grep { $_ ne 'rctl' && exists $self->resmap->{$_} } keys %{$self->rawConf};
-};
-
 my $setProperty = sub {
     my $self = shift;
     my $prop = shift;
@@ -211,6 +204,23 @@ my $clearProperty = sub {
     my @cmd = ('-z', $name, 'clear', $prop);
 
     $self->utils->exec('zonecfg', \@cmd, "cannot clear property $prop");
+};
+
+my $clearResources = sub {
+    my $self = shift;
+
+    # TODO: adding support for rctls (by now just aliased rctls are supported)
+    $self->$delResource($_) for grep {
+        $_ ne 'rctl' && exists $self->resmap->{$_}
+    } keys %{$self->rawConf};
+};
+
+my $clearSimpleAttrs = sub {
+    my $self = shift;
+
+    $self->$clearProperty($_) for grep {
+        !exists $self->resmap->{$_} && !exists $self->config->{$_}
+    } keys %{$self->rawConf};
 };
 
 my $getConfig = sub {
@@ -295,13 +305,17 @@ my $setConfig = sub {
         map { $_ => $config->{$_} } @{$self->createprop}
     });
 
-    # clean up all existing resources
-    $self->$clearResources if $self->exists;
+    if ($self->exists) {
+        # clean up all existing resources
+        $self->$clearResources;
+        # clear simple attributes which have been removed
+        $self->$clearSimpleAttrs;
+    }
 
-    $config = $self->setPreProcess($self->config);
+    $self->setPreProcess($self->config);
 
     my $installed = !$self->is('configured');
-    for my $prop (keys %$config) {
+    for my $prop (keys %{$self->config}) {
         $self->log->debug("processing property '$prop'");
 
         # skip props that cannot be changed once the zone is installed
@@ -318,18 +332,13 @@ my $setConfig = sub {
             $self->$addResource($prop, $self->config->{$prop});
         }
         else {
-            next if !$oldConf->{$prop} && !$self->config->{$prop}
-                || $oldConf->{$prop} && $oldConf->{$prop} eq $self->config->{$prop};
+            next if !$self->config->{$prop}
+                || ($oldConf->{$prop} && $oldConf->{$prop} eq $self->config->{$prop});
 
             $self->log->debug("property '$prop' changed: " . ($oldConf->{$prop} // '(none)') . ' -> '
-                . ($self->config->{$prop} // '(none)'));
+                . $self->config->{$prop});
 
-            if ($self->config->{$prop}) {
-                $self->$setProperty($prop);
-            }
-            else {
-                $self->$clearProperty($prop);
-            }
+            $self->$setProperty($prop);
         }
     }
 
