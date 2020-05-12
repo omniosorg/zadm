@@ -11,6 +11,7 @@ autom4te.cache
 conftools
 config.log
 config.status
+CHANGES
 README
 var
 man
