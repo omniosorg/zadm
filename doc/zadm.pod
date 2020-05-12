@@ -1,0 +1,119 @@
+=head1 NAME
+
+zadm - Manage OmniOS zones.
+
+=head1 SYNOPSIS
+
+B<zadm> I<command> [I<options...>]
+
+where 'command' is one of the following:
+
+    create -b <brand> [-t <template_path>] <zone_name>
+    delete [--purge=vnic] <zone_name>
+    edit <zone_name>
+    show [zone_name]
+    list
+    list-images [--refresh] [-b <brand>]
+    start <zone_name>
+    stop <zone_name>
+    restart <zone_name>
+    poweroff <zone_name>
+    console <zone_name>
+    log <zone_name>
+    help [-b <brand>]
+    man
+    version
+
+=head1 DESCRIPTION
+
+Use zadm to create/edit your zones.
+
+=head2 B<create>
+
+creates a zone with the name B<zone_name>. Create will open an editor
+where the properties can be set. vnics which do not exist will be created.
+
+zone properties are according to I<zonecfg>.
+global properties can be set as "property" : "value" pair, single
+resources as "resource" : { } hash structure and multiple resources
+as "resource" : [ { }, ... ] array of hash structures.
+
+=head2 B<import>
+
+imports a zone configuration from a file.
+
+=head2 B<delete>
+
+deletes a zone with the name B<zone_name>.
+
+=head2 B<edit>
+
+modify the configuration of a zone. See the descriptions in the B<create>
+function for details.
+
+=head2 B<show>
+
+shows the zones' configuration. Shows config for B<zone_name>
+if given.
+
+=head2 B<list>
+
+prints the status of all existing zones
+
+=head2 B<list-images>
+
+list all available images ready for download and install.
+
+=head2 B<start>
+
+starts the zone B<zone_name>
+
+=head2 B<stop>
+
+stops the zone B<zone_name>
+
+=head2 B<restart>
+
+restarts the zone B<zone_name>
+
+=head2 B<poweroff>
+
+forcefully stops the zone B<zone_name> (i.e. "unplug")
+
+=head2 B<console>
+
+attaches to the B<zone_name> zone console
+
+=head2 B<log>
+
+returns the log path for B<zone_name>
+
+=head1 COPYRIGHT
+
+Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
+
+=head1 LICENSE
+
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option)
+any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+more details.
+
+You should have received a copy of the GNU General Public License along with
+this program. If not, see L<http://www.gnu.org/licenses/>.
+
+=head1 AUTHOR
+
+S<Dominik Hassler E<lt>hadfl@omniosce.orgE<gt>>
+
+=head1 HISTORY
+
+2020-04-12 had Initial Version
+
+=cut
+

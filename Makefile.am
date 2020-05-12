@@ -6,13 +6,16 @@ SUBDIRS = lib thirdparty
 
 BIN = bin/$(SCRIPT_NAME)
 
+MAN = man/$(SCRIPT_NAME).1
+POD = doc/$(SCRIPT_NAME).pod
+
 export PATH := /usr/gnu/bin:$(PATH)
 
 PERLTESTS := $(shell test -d t && find t -name "*.t")
 
 THIRDPARTY_DIR := $(shell pwd)/thirdparty
 
-EXTRA_DIST = VERSION COPYRIGHT README.md LICENSE CHANGES AUTHORS cpanfile $(BIN) $(PERLTESTS)
+EXTRA_DIST = VERSION COPYRIGHT README.md LICENSE CHANGES AUTHORS cpanfile $(BIN) $(PERLTESTS) $(MAN)
 
 YEAR := $(shell date +%Y)
 DATE := $(shell date +%Y-%m-%d)
@@ -22,6 +25,15 @@ nobase_data_DATA = $(PUB)
 
 README.md COPYRIGHT : VERSION
 	$(PERL) -i -p -e 's/(#VERSION#|\d+\.\d+\.\d+(?:-\w+)?)/$(PACKAGE_VERSION)/g;s/(#YEAR#|20[1-4]\d)/$(YEAR)/g;s/(#DATE#|20[1-9]\d-[01]\d-[0-3]\d)/$(DATE)/g;' $@
+
+imandir = $(mandir)/man1
+iman_DATA = $(MAN)
+
+doc/%.pod: bin/% VERSION
+	$(AM_V_at)mkdir -p doc; test $(SED) = "no" || $(SED) -n '/=head1 NAME/,$$p' $< > $@
+
+man/%.1: bin/% VERSION
+	$(AM_V_at)mkdir -p man; test $(POD2MAN) = "no" || $(POD2MAN) --release=$(VERSION) --center=$(PACKAGE_NAME) $< > $@
 
 dist_bin_SCRIPTS = $(BIN)
 

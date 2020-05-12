@@ -13,6 +13,7 @@ config.log
 config.status
 README
 var
+man
 thirdparty/*
 !thirdparty/Makefile.am
 !thirdparty/cpanfile-*.snapshot
