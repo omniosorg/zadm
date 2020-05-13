@@ -149,3 +149,9 @@ DISTRIBUTIONS
       Regexp::IPv6 0.03
     requirements:
       ExtUtils::MakeMaker 0
+  String-ShellQuote-1.04
+    pathname: R/RO/ROSCH/String-ShellQuote-1.04.tar.gz
+    provides:
+      String::ShellQuote 1.04
+    requirements:
+      ExtUtils::MakeMaker 0

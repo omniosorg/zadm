@@ -66,7 +66,7 @@ sub getImage {
     my @imgs;
     my $provider;
     for my $prov (keys %{$self->images}) {
-        if (my @provimgs = grep { $_->{brand} eq $brand && $_->{uuid} =~ /$uuid/ } @{$self->images->{$prov}}) {
+        if (my @provimgs = grep { $_->{brand} =~ /^(?:$brand)$/ && $_->{uuid} =~ /$uuid/ } @{$self->images->{$prov}}) {
             push @imgs, @provimgs;
             $provider = $prov;
         }
@@ -76,7 +76,7 @@ sub getImage {
     @imgs > 1 and Mojo::Exception->throw("ERROR: more than one $brand image uuid contains '$uuid'.\n");
 
     my $img = $imgs[0];
-    $self->log->info("found $brand image '$img->{name}' from provider '$provider'");
+    $self->log->info("found $img->{brand} image '$img->{name}' from provider '$provider'");
 
     $img->{_file}    = $self->provider->{$provider}->download($img->{uuid}
         . ($img->{ext} // '.tar.gz'), $img->{img}, chksum => $img->{chksum});
@@ -112,11 +112,13 @@ sub dump {
     }
     $format .= "\n";
 
+    # TODO: for now we assume that kvm images work under bhyve and vice versa
+    my $brand = $opts->{brand} =~ /^(?:kvm|bhyve)$/ ? qr/kvm|bhyve/ : qr/$opts->{brand}/;
     printf $format, @header;
     for my $prov (sort keys %{$self->images}) {
         printf $format, substr ($_->{uuid}, length ($_->{uuid}) - 8), $prov, $_->{brand}, $_->{name}, $_->{vers}, ($opts->{verbose} ? substr ($_->{desc}, 0, 40) : ()),
             for sort { $a->{brand} cmp $b->{brand} || $a->{name} cmp $b->{name} }
-                grep { !$opts->{brand} || ($opts->{brand} eq $_->{brand}) } @{$self->images->{$prov}};
+                grep { !$opts->{brand} || $_->{brand} =~ /^(?:$brand)$/ } @{$self->images->{$prov}};
     }
 }
 

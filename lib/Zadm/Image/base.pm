@@ -28,6 +28,7 @@ my $checkChecksum = sub {
     my $checksum = shift;
 
     $self->log->debug("checking checksum of '$fileName'...");
+    print "checking image checksum...\n";
     if (Digest::SHA->new($digest)->addfile($self->cache . "/$fileName")->hexdigest
         eq $checksum) {
 

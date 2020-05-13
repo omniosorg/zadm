@@ -13,6 +13,20 @@ my $ZVOLRX   = qr!/dev/zvol/r?dsk/!;
 my @MON_INFO = qw(block blockstats chardev cpus kvm network pci registers qtree usb version vnc);
 my $RCV_TMO  = 3;
 
+has options => sub {
+    my $self = shift;
+
+    my $options = $self->SUPER::options;
+
+    $options->{create}->{image} = {
+        getopt => 'image|i=s',
+    };
+    $options->{edit}->{image} = {
+        getopt => 'image|i=s',
+    };
+
+    return $options;
+};
 has monsocket => sub { shift->config->{zonepath} . '/root/tmp/vm.monitor' };
 has vncsocket => sub {
     my $self = shift;
@@ -36,6 +50,8 @@ has diskattr  => sub {
 
     return \%diskattr;
 };
+# adding an instance specific attribute to store the bootdisk path to be used by install
+has bootdisk => sub { {} };
 
 my $queryMonitor = sub {
     my $self   = shift;
@@ -235,13 +251,22 @@ sub setPreProcess {
     }
 
     # add device for bootdisk
+    $self->bootdisk({});
     if ($cfg->{bootdisk}) {
+        my $disksize = $cfg->{bootdisk}->{size};
         my $diskattr = $self->$setDiskAttr('bootdisk', $cfg->{bootdisk});
 
         $cfg->{bootdisk} = $cfg->{bootdisk}->{path};
         $cfg->{bootdisk} =~ s!^$ZVOLRX!!;
+        $self->bootdisk(
+            {
+                path => $cfg->{bootdisk},
+                size => $disksize,
+            }
+        );
         push @{$cfg->{device}}, { match => "$ZVOLDEV/$cfg->{bootdisk}" };
         $cfg->{bootdisk} .= $diskattr;
+
     }
 
     # handle disks
@@ -265,6 +290,47 @@ sub setPreProcess {
     }
 
     return $self->SUPER::setPreProcess($cfg);
+}
+
+sub install {
+    my $self = shift;
+
+    # just install the zone if no image was provided for the bootdisk
+    return $self->SUPER::install
+        if !$self->opts->{image};
+
+    %{$self->bootdisk} || do {
+        $self->log->warn('WARNING: no bootdisk specified. Not installing image');
+        return $self->SUPER::install;
+    };
+
+    # image can be either for kvm or bhyve
+    my $img = $self->zones->image->getImage($self->opts->{image}, qr/kvm|bhyve/);
+
+    $img->{_file} && -r $img->{_file} || do {
+        $self->log->warn('WARNING: no valid image path given. Not installing image');
+        return $self->SUPER::install;
+    };
+
+    # TODO: is there a better way of handling this?
+    my $check;
+    if (!$self->utils->isaTTY || $ENV{__ZADMTEST}) {
+        $check = 'yes';
+    }
+    else {
+        print "Going to overwrite the bootdisk '" . $self->bootdisk->{path}
+            . "'\nwith the provided image. Do you want to continue [Y/n]? ";
+        chomp ($check = <STDIN>);
+    }
+
+    if ($check !~ /^no?$/i) {
+        $self->utils->zfsRecv($img->{_file}, $self->bootdisk->{path});
+        # TODO: '-x volsize' for zfs recv seems not to work so we must reset the
+        # volsize to the original value after receive
+        $self->utils->exec('zfs', [ 'set', 'volsize=' . $self->bootdisk->{size}, $self->bootdisk->{path} ]);
+
+        $self->SUPER::install;
+    }
 }
 
 sub poweroff {
@@ -324,7 +390,7 @@ where 'command' is one of the following:
 
     create -b <brand> [-i <image_uuid|image_path>] [-t <template_path>] <zone_name>
     delete [--purge=vnic] <zone_name>
-    edit <zone_name>
+    edit [-i <image_uuid|image_path>] <zone_name>
     show [zone_name]
     list
     list-images [--refresh] [--verbose] [-b <brand>]

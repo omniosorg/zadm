@@ -7,6 +7,7 @@ use JSON::PP; # for pretty encoding and 'relaxed' decoding
 use Mojo::Log;
 use File::Temp;
 use Text::ParseWords qw(shellwords);
+use String::ShellQuote qw(shell_quote);
 
 # commands
 my %CMDS = (
@@ -19,8 +20,17 @@ my %CMDS = (
     editor      => $ENV{VISUAL} || $ENV{EDITOR} || '/usr/bin/vi',
     zfs         => '/usr/sbin/zfs',
     curl        => '/usr/bin/curl',
+    cat         => '/usr/bin/cat',
     socat       => '/usr/bin/socat',
     nc          => '/usr/bin/nc',
+    pv          => '/usr/bin/pv',
+    gzip        =>  -x '/opt/ooce/bin/pigz' ? '/opt/ooce/bin/pigz' : '/usr/bin/gzip',
+    bzip2       =>  -x '/opt/ooce/bin/pbzip2' ? '/opt/ooce/bin/pbzip2' : '/usr/bin/bzip2',
+    # TODO: for now we just map suffixes to the appropriate program
+    # this should be enhanced. currently only used in zfsRecv
+    gz          =>  -x '/opt/ooce/bin/pigz' ? '/opt/ooce/bin/pigz' : '/usr/bin/gzip',
+    bz2         =>  -x '/opt/ooce/bin/pbzip2' ? '/opt/ooce/bin/pbzip2' : '/usr/bin/bzip2',
+    xz          => '/usr/bin/xz',
     pager       => $ENV{PAGER} || '/usr/bin/less -eimnqX',
 );
 
@@ -109,6 +119,28 @@ sub exec {
     else {
         system (@cmd) && Mojo::Exception->throw("ERROR: $err: $!\n");
     }
+}
+
+sub zfsRecv {
+    my $self = shift;
+    my $file = shift;
+    my $ds   = shift;
+
+    my ($suf) = $file =~ /\.([^.]+)$/;
+
+    Mojo::Exception->throw("ERROR: compression algorithm for suffix '$suf' unknown.\n")
+        if $suf && !exists $CMDS{$suf};
+
+    my $cmd = join ' ',
+        shell_quote(shellwords($CMDS{$suf // 'cat'}, $suf ? qw(-dck) : ())),
+        shell_quote($file),
+        '|', shell_quote(shellwords($CMDS{pv})), '|',
+        shell_quote(shellwords($CMDS{zfs}), qw(recv -Fv)),
+        shell_quote($ds);
+
+    $self->log->debug($cmd);
+
+    system $cmd and Mojo::Exception->throw("ERROR: receiving zfs stream: $!\n");
 }
 
 sub encodeJSON {
