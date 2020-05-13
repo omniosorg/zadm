@@ -104,10 +104,19 @@ sub dump {
 
     $self->fetchImages($opts->{refresh});
 
-    printf "%-10s%-10s%-8s%-36s%-16s%s\n", qw(UUID PROVIDER BRAND NAME VERSION DESCRIPTION);
+    my @header = qw(UUID PROVIDER BRAND NAME VERSION);
+    my $format = '%-10s%-10s%-8s%-36s%-16s';
+    if ($opts->{verbose}) {
+        push @header, 'DESCRIPTION';
+        $format .= '%s';
+    }
+    $format .= "\n";
+
+    printf $format, @header;
     for my $prov (sort keys %{$self->images}) {
-        printf "%-10s%-10s%-8s%-36s%-16s%s\n", substr ($_->{uuid}, length ($_->{uuid}) - 8), $prov, $_->{brand}, $_->{name}, $_->{vers}, $_->{desc}
-            for sort { $a->{name} cmp $b->{name} } grep { !$opts->{brand} || ($opts->{brand} eq $_->{brand}) } @{$self->images->{$prov}};
+        printf $format, substr ($_->{uuid}, length ($_->{uuid}) - 8), $prov, $_->{brand}, $_->{name}, $_->{vers}, ($opts->{verbose} ? substr ($_->{desc}, 0, 40) : ()),
+            for sort { $a->{brand} cmp $b->{brand} || $a->{name} cmp $b->{name} }
+                grep { !$opts->{brand} || ($opts->{brand} eq $_->{brand}) } @{$self->images->{$prov}};
     }
 }
 

@@ -14,19 +14,20 @@ sub postProcess {
         map { {
             uuid   => $_->{uuid},
             name   => $_->{name},
-            desc   => ($_->{description} =~ /^[^\s]+\s+(.+\.)\s+Built/)[0],
+            desc   => $_->{description},
             vers   => $_->{version},
             img    => $self->baseurl . "/$_->{uuid}/file",
-            brand  => 'lx',
+            brand  => $_->{requirements}->{brand} // 'illumos',
+            type   => $_->{type},
             comp   => $_->{files}->[0]->{compression},
-            ext    => '.tar.gz',
+            ext    => $_->{type} eq 'lx-dataset' ? '.tar.gz' : '.gz',
             kernel => $_->{tags}->{'kernel-version'},
             chksum => {
                 digest => 'sha1',
                 chksum => $_->{files}->[0]->{sha1},
-            }
+            },
         } }
-        grep { $_->{type} eq 'lx-dataset' }
+        grep { $_->{requirements}->{brand} || $_->{type} eq 'zone-dataset' }
         @$json
     ];
 }
