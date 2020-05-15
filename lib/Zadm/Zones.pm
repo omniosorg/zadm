@@ -186,21 +186,19 @@ sub config {
     my $self  = shift;
     my $zName = shift;
 
-    my $config;
-    my $err;
+    # if we want the config for a particular zone, go ahead
+    return $self->zone($zName)->config if $zName;
 
+    my $config;
     Mojo::Promise->all(
         map {
             my $name = $_;
             Mojo::IOLoop::Subprocess->new->run_p(sub { return $self->zone($name)->config })
-        } ($zName || keys %{$self->list})
+        } keys %{$self->list}
     )->then(sub { $config->{$_->[0]->{zonename}} = $_->[0] for @_ }
-    )->catch(sub { $err = shift->message }
     )->wait;
 
-    Mojo::Exception->throw($err) if $err;
-
-    return $zName ? $config->{$zName} : $config;
+    return $config;
 }
 
 1;
