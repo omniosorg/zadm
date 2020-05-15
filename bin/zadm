@@ -50,14 +50,11 @@ sub main {
                 ? (template => $zones->utils->loadTemplate($opts->{template}, $zName))
                 : ();
 
-            my $zone = $zones->zone($zName, brand => $opts->{brand}, opts => $opts, @extraopts);
+            my $zone = $zones->zone($zName, create => 1, brand => $opts->{brand}, opts => $opts, @extraopts);
 
             Getopt::Long::Configure(qw(no_permute no_pass_through));
             GetOptions($opts, @{$zone->getOptions($mainOpt)}) or exit 1;
             $zone->checkMandOptions($mainOpt) or $zone->usage;
-
-            $zones->exists($zName)
-                && die "ERROR: zone '$zName' already exists. use 'edit' to change properties\n";
 
             $zones->utils->edit($zone) && $zone->install;
 
@@ -66,9 +63,6 @@ sub main {
         /^edit$/ && do {
             my $zName = pop @ARGV;
             defined $zName or pod2usage(1);
-
-            $zones->exists($zName)
-                || die "ERROR: zone '$zName' does not exist. use 'create' to create a zone\n";
 
             my $opts = {};
             my $zone = $zones->zone($zName, opts => $opts);
@@ -161,9 +155,6 @@ sub main {
             my $zName = shift @ARGV;
             defined $zName or pod2usage(1);
 
-            $zones->exists($zName)
-                || die "ERROR: zone '$zName' does not exist. use 'create' to create a zone\n";
-
             my $zone = $zones->zone($zName);
             $zone->utils->exec('pager', [ $zone->logfile ]);
             last;
@@ -179,8 +170,7 @@ sub main {
 
             pod2usage(-exitstatus => 0) if (!$opts->{brand});
 
-            # TODO: make sure we don't clash with an existing zone
-            $zones->zone('__zadm_help__', brand => $opts->{brand})->usage;
+            $zones->zone('global', create => 1, brand => $opts->{brand})->usage;
 
             last;
         };

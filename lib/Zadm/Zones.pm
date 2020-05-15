@@ -4,6 +4,7 @@ use Mojo::Base -base;
 use Mojo::Home;
 use Mojo::File;
 use Mojo::Log;
+use Mojo::Exception;
 use File::Spec;
 use Zadm::Utils;
 use Zadm::Image;
@@ -116,6 +117,15 @@ sub brandExists {
 sub zone {
     my $self  = shift;
     my $zName = shift;
+    my %opts  = @_;
+
+    my $create = delete $opts{create};
+
+    Mojo::Exception->throw("ERROR: zone '$zName' already exists. use 'edit' to change properties\n")
+        if $create && $self->exists($zName);
+
+    Mojo::Exception->throw("ERROR: zone '$zName' does not exist. use 'create' to create a zone\n")
+        if !$create && !$self->exists($zName);
 
     return Zadm::Zone->new(
         zones => $self,
@@ -123,7 +133,7 @@ sub zone {
         utils => $self->utils,
         image => $self->image,
         name  => $zName,
-        @_
+        %opts,
     );
 }
 
