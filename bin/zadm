@@ -97,10 +97,7 @@ sub main {
         /^show$/ && do {
             my $zName = shift @ARGV;
 
-            my $list = $zName ? $zones->zone($zName)->config
-                : { map { my $z = $_; $z => $zones->zone($z)->config } keys %{$zones->list} };
-
-            print $zones->utils->encodeJSON($list);
+            print $zones->utils->encodeJSON($zones->config($zName));
 
             last;
         };

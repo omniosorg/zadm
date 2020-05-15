@@ -5,6 +5,8 @@ use Mojo::Home;
 use Mojo::File;
 use Mojo::Log;
 use Mojo::Exception;
+use Mojo::Promise;
+use Mojo::IOLoop::Subprocess;
 use File::Spec;
 use Zadm::Utils;
 use Zadm::Image;
@@ -135,6 +137,27 @@ sub zone {
         name  => $zName,
         %opts,
     );
+}
+
+sub config {
+    my $self  = shift;
+    my $zName = shift;
+
+    my $config;
+    my $err;
+
+    Mojo::Promise->all(
+        map {
+            my $name = $_;
+            Mojo::IOLoop::Subprocess->new->run_p(sub { return $self->zone($name)->config })
+        } ($zName || keys %{$self->list})
+    )->then(sub { $config->{$_->[0]->{zonename}} = $_->[0] for @_ }
+    )->catch(sub { $err = shift->message }
+    )->wait;
+
+    Mojo::Exception->throw($err) if $err;
+
+    return $zName ? $config->{$zName} : $config;
 }
 
 1;
