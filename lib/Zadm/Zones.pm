@@ -54,9 +54,27 @@ has brands  => sub {
         } glob '/usr/lib/brand/*/config.xml'
     ];
 };
-has brandmap => sub { my $self = shift; $self->utils->genmap($self->brands) };
+has brandmap    => sub { my $self = shift; $self->utils->genmap($self->brands) };
+has count       => sub { keys %{shift->list} };
+has brandExists => sub { exists shift->brandmap->{shift // ''} };
 
-has brandFilter => '';
+has list => sub {
+    my $self = shift;
+
+    my $zones = $self->utils->pipe('zoneadm', [ qw(list -cp) ]);
+
+    my %zoneList;
+    while (my $zone = <$zones>) {
+        chomp $zone;
+        my $zoneCfg = { map { $_ => (split /:/, $zone)[$ZMAP{$_}] } keys %ZMAP };
+        # ignore GZ
+        next if $zoneCfg->{zonename} eq 'global';
+
+        $zoneList{$zoneCfg->{zonename}} = $zoneCfg;
+    }
+
+    return \%zoneList;
+};
 
 has zoneName => sub {
     my $self = shift;
@@ -69,7 +87,7 @@ has zoneName => sub {
 
 has isGZ => sub { shift->zoneName eq 'global' };
 
-has modmap  => sub {
+has modmap => sub {
     my $self = shift;
 
     # base is the default module
@@ -91,42 +109,8 @@ has modmap  => sub {
 };
 
 # public methods
-sub list {
-    my $self = shift;
-
-    my $zones = $self->utils->pipe('zoneadm', [ qw(list -cp) ]);
-
-    my %zoneList;
-    while (my $zone = <$zones>) {
-        chomp $zone;
-        my $zoneCfg = { map { $_ => (split /:/, $zone)[$ZMAP{$_}] } keys %ZMAP };
-        # ignore GZ
-        next if $zoneCfg->{zonename} eq 'global';
-        # apply brand filter
-        next if $self->brandFilter && $zoneCfg->{brand} !~ /$self->brandFilter/;
-
-        $zoneList{$zoneCfg->{zonename}} = $zoneCfg;
-    }
-
-    return \%zoneList;
-}
-
-sub count {
-    return keys %{shift->list};
-}
-
 sub exists {
-    my $self  = shift;
-    my $zName = shift // '';
-
-    return exists $self->list->{$zName};
-}
-
-sub brandExists {
-    my $self  = shift;
-    my $brand = shift // '';
-
-    return exists $self->brandmap->{$brand};
+    return exists shift->list->{shift // ''};
 }
 
 sub dump {
