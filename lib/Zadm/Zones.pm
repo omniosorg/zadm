@@ -34,11 +34,11 @@ my $statecol = sub {
     my $state = shift;
 
     for ($state) {
-        /^running$/   && return colored($state, 'green');
-        /^installed$/ && return colored($state, 'ansi208');
+        /^running$/                   && return colored($state, 'green');
+        /^(?:configured|incomplete)$/ && return colored($state, 'red');
     }
 
-    return colored($state, 'red');
+    return colored($state, 'ansi208');
 };
 
 # attributes
@@ -137,7 +137,8 @@ sub dump {
     my @header = qw(NAME STATUS BRAND RAM);
 
     my $list  = $self->list;
-    my @zones = sort keys %$list;
+    # we want the running ones on top and it happens we can just reverse-sort the state
+    my @zones = sort { $list->{$b}->{state} cmp $list->{$a}->{state} || $a cmp $b } keys %$list;
 
     my $ram;
     # TODO: for now we just query 'RAM'. Once we query more attributes we should change
