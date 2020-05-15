@@ -378,6 +378,10 @@ sub monitor {
         'cannot access monitor socket ' . $self->monsocket);
 }
 
+sub ram {
+    return shift->config->{ram} // '-';
+}
+
 1;
 
 __END__

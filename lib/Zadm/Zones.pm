@@ -8,6 +8,7 @@ use Mojo::Exception;
 use Mojo::Promise;
 use Mojo::IOLoop::Subprocess;
 use File::Spec;
+use Term::ANSIColor qw(colored);
 use Zadm::Utils;
 use Zadm::Image;
 use Zadm::Zone;
@@ -28,6 +29,18 @@ my $DATADIR = Mojo::Home->new->rel_file('../var')->to_string; # DATADIR
 
 my $MODPREFIX = 'Zadm::Zone';
 
+# private static methods
+my $statecol = sub {
+    my $state = shift;
+
+    for ($state) {
+        /^running$/   && return colored($state, 'green');
+        /^installed$/ && return colored($state, 'ansi208');
+    }
+
+    return colored($state, 'red');
+};
+
 # attributes
 has loglvl  => 'warn'; # override to 'debug' for development
 has log     => sub { Mojo::Log->new(level => shift->loglvl) };
@@ -47,7 +60,7 @@ has brandFilter => '';
 
 has zoneName => sub {
     my $self = shift;
-    
+
     my $zonename = $self->utils->pipe('zonename');
     chomp (my $zone = <$zonename>);
 
@@ -114,6 +127,36 @@ sub brandExists {
     my $brand = shift // '';
 
     return exists $self->brandmap->{$brand};
+}
+
+sub dump {
+    my $self = shift;
+    my $opts = shift;
+
+    my $format = "%-18s%-11s%-9s%4s\n";
+    my @header = qw(NAME STATUS BRAND RAM);
+
+    my $list  = $self->list;
+    my @zones = sort keys %$list;
+
+    my $ram;
+    # TODO: for now we just query 'RAM'. Once we query more attributes we should change
+    # the zone interface to extraStats which returns a structure
+    Mojo::Promise->all(
+        map {
+            my $name = $_;
+            Mojo::IOLoop::Subprocess->new->run_p(sub { return $self->zone($name)->ram })
+        } @zones
+    )->then(sub { $ram->{$zones[$_]} = $_[$_]->[0] for (0 .. $#zones) }
+    )->wait;
+
+    printf $format, @header;
+    printf $format, $_,
+        # TODO: printf string length breaks with coloured strings
+        $statecol->($list->{$_}->{state}) . (' ' x (11 - length ($list->{$_}->{state}))),
+        $list->{$_}->{brand},
+        $ram->{$_},
+        for @zones;
 }
 
 sub zone {

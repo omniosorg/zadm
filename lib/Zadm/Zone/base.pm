@@ -649,6 +649,10 @@ sub remove {
     };
 }
 
+sub ram {
+    return shift->config->{'capped-memory'}->{physical} // '-';
+}
+
 sub usage {
     pod2usage(-input => pod_where({-inc => 1}, ref shift), 1);
 }

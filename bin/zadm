@@ -102,7 +102,7 @@ sub main {
             last;
         };
         /^list$/ && do {
-            $zones->utils->exec('zoneadm', [ qw(list -cv) ]);
+            $zones->dump;
 
             last;
         };
