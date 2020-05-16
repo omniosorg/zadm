@@ -27,6 +27,9 @@ sub install {
         return;
     };
     $self->SUPER::install($img->{_instopt} // '-s', $img->{_file});
+
+    $img->{_provider}->postInstall($self->brand, { zonepath => $self->config->{zonepath} })
+        if $img->{_provider};
 }
 
 1;

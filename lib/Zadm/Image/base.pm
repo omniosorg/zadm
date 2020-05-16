@@ -99,6 +99,8 @@ sub fetchImages {
     $self->images($self->postProcess(Mojo::File->new($self->cache . '/index.txt')->slurp));
 }
 
+sub postInstall {}
+
 1;
 
 __END__

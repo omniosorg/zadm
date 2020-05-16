@@ -32,6 +32,15 @@ sub postProcess {
     ];
 }
 
+sub postInstall {
+    my $self  = shift;
+    my $brand = shift;
+    my $opts  = shift // {};
+
+    return if $brand ne 'illumos';
+
+}
+
 1;
 
 __END__

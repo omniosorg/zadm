@@ -7,6 +7,29 @@ use File::Spec;
 
 my $MODPREFIX = 'Zadm::Image';
 
+# private methods
+my $getImgProv = sub {
+    my $self  = shift;
+    my $uuid  = shift;
+    my $brand = shift;
+
+    my @imgs;
+    my $provider;
+    for my $prov (keys %{$self->images}) {
+        if (my @provimgs = grep { $_->{brand} =~ /^(?:$brand)$/ && $_->{uuid} =~ /$uuid/ } @{$self->images->{$prov}}) {
+            push @imgs, @provimgs;
+            $provider = $prov;
+        }
+    }
+
+    @imgs < 1 and Mojo::Exception->throw("ERROR: $brand image UUID containing '$uuid' not found.\n");
+    @imgs > 1 and Mojo::Exception->throw("ERROR: more than one $brand image uuid contains '$uuid'.\n");
+
+    # TODO: adding provider for now for postInstall. we should not expose the provider but
+    # rework the interface so Zadm::Image can take care of postInstall
+    return { %{$imgs[0]}, _provider => $self->provider->{$provider} };
+};
+
 # attributes
 has log      => sub { Mojo::Log->new(level => 'debug') };
 has utils    => sub { Zadm::Utils->new(log => shift->log) };
@@ -63,22 +86,11 @@ sub getImage {
         };
     }
 
-    my @imgs;
-    my $provider;
-    for my $prov (keys %{$self->images}) {
-        if (my @provimgs = grep { $_->{brand} =~ /^(?:$brand)$/ && $_->{uuid} =~ /$uuid/ } @{$self->images->{$prov}}) {
-            push @imgs, @provimgs;
-            $provider = $prov;
-        }
-    }
+    my $img = $self->$getImgProv($uuid, $brand);
+    $self->log->info("found $img->{brand} image '$img->{name}' from provider '"
+        . $img->{_provider}->provider . "'");
 
-    @imgs < 1 and Mojo::Exception->throw("ERROR: $brand image UUID containing '$uuid' not found.\n");
-    @imgs > 1 and Mojo::Exception->throw("ERROR: more than one $brand image uuid contains '$uuid'.\n");
-
-    my $img = $imgs[0];
-    $self->log->info("found $img->{brand} image '$img->{name}' from provider '$provider'");
-
-    $img->{_file}    = $self->provider->{$provider}->download($img->{uuid}
+    $img->{_file} = $img->{_provider}->download($img->{uuid}
         . ($img->{ext} // '.tar.gz'), $img->{img}, chksum => $img->{chksum});
     # TODO: instopt needs rework; e.g. joyent lx images are "type" : "lx-dataset"
     # but tarballs (i.e. need -t for install). for now we don't set type for the Joyent provider
