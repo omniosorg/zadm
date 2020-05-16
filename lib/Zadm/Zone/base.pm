@@ -30,10 +30,13 @@ has template   => sub {
     my $name = $self->name;
 
     return {
-        zonename    => $name,
-        zonepath    => ($ENV{__ZADM_ALTROOT} // '') . "/zones/$name",
-        brand       => $self->brand,
-        'ip-type'   => 'exclusive',
+        zonename        => $name,
+        zonepath        => ($ENV{__ZADM_ALTROOT} // '') . "/zones/$name",
+        brand           => $self->brand,
+        'ip-type'       => 'exclusive',
+        autoboot        => 'false',
+        'cpu-shares'    => 1,
+        net             => [ { physical => "${name}0" } ],
     }
 };
 has options => sub {
