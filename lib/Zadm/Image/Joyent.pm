@@ -2,6 +2,7 @@ package Zadm::Image::Joyent;
 use Mojo::Base 'Zadm::Image::base';
 
 use Mojo::JSON qw(decode_json);
+use Mojo::File;
 
 has baseurl  => 'https://images.joyent.com/images';
 has index    => sub { shift->baseurl };
@@ -39,6 +40,27 @@ sub postInstall {
 
     return if $brand ne 'illumos';
 
+    # illumos branded images from Joyent have a different structure to that
+    # which we expect. The zone root ends up containing a number of directories
+    # including one called root/ which is the real zone root. We need to move
+    # this into place while keeping within the same filesystem to avoid
+    # unecessary copying.
+
+    my $root = Mojo::File->new($opts->{zonepath}, 'root');
+    my $newroot = $root->child('root');
+    return if !-d $newroot->path;
+
+    $root->list_tree({max_depth => 1, dir => 1})
+        ->grep(sub { $_->path ne $newroot->path })->map(sub { $_->remove_tree });
+    $newroot->move_to($newroot->sibling('__root'));
+    $newroot = $newroot->sibling('__root');
+    $newroot->list_tree({max_depth => 1, dir => 1})->map(sub {
+        my $base = $root->child($_->basename);
+        $self->log->debug("Moving $_ to $base");
+        $_->move_to($base);
+    });
+    $newroot->remove_tree;
+    $root->chmod(0755);
 }
 
 1;
