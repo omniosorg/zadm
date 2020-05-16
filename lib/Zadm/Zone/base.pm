@@ -546,6 +546,7 @@ sub is {
     my $self  = shift;
     my $state = shift // return 1;
 
+    $self->zones->refresh;
     return $self->state eq $state;
 }
 

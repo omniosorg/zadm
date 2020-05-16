@@ -41,24 +41,8 @@ my $statecol = sub {
     return colored($state, 'ansi208');
 };
 
-# attributes
-has loglvl  => 'warn'; # override to 'debug' for development
-has log     => sub { Mojo::Log->new(level => shift->loglvl) };
-has utils   => sub { Zadm::Utils->new(log => shift->log) };
-has image   => sub { my $self = shift; Zadm::Image->new(log => $self->log, datadir => $self->datadir) };
-has datadir => $DATADIR;
-has brands  => sub {
-    return [
-        map {
-            Mojo::File->new($_)->slurp =~ /<brand\s+name="([^"]+)"/
-        } glob '/usr/lib/brand/*/config.xml'
-    ];
-};
-has brandmap    => sub { my $self = shift; $self->utils->genmap($self->brands) };
-has count       => sub { keys %{shift->list} };
-has brandExists => sub { exists shift->brandmap->{shift // ''} };
-
-has list => sub {
+# private methods
+my $list = sub {
     my $self = shift;
 
     my $zones = $self->utils->pipe('zoneadm', [ qw(list -cp) ]);
@@ -75,6 +59,24 @@ has list => sub {
 
     return \%zoneList;
 };
+
+
+# attributes
+has loglvl  => 'warn'; # override to 'debug' for development
+has log     => sub { Mojo::Log->new(level => shift->loglvl) };
+has utils   => sub { Zadm::Utils->new(log => shift->log) };
+has image   => sub { my $self = shift; Zadm::Image->new(log => $self->log, datadir => $self->datadir) };
+has datadir => $DATADIR;
+has brands  => sub {
+    return [
+        map {
+            Mojo::File->new($_)->slurp =~ /<brand\s+name="([^"]+)"/
+        } glob '/usr/lib/brand/*/config.xml'
+    ];
+};
+has brandmap    => sub { my $self = shift; $self->utils->genmap($self->brands) };
+has brandExists => sub { exists shift->brandmap->{shift // ''} };
+has list        => sub { shift->$list };
 
 has zoneName => sub {
     my $self = shift;
@@ -111,6 +113,12 @@ has modmap => sub {
 # public methods
 sub exists {
     return exists shift->list->{shift // ''};
+}
+
+sub refresh {
+    my $self = shift;
+
+    $self->list($self->$list);
 }
 
 sub dump {
