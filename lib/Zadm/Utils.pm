@@ -21,15 +21,16 @@ my %CMDS = (
     zfs         => '/usr/sbin/zfs',
     curl        => '/usr/bin/curl',
     cat         => '/usr/bin/cat',
-    socat       => '/usr/bin/socat',
+    # TODO: OmniOS r30/r32 ship socat from the extra repository
+    socat       => -x '/usr/bin/socat' ? '/usr/bin/socat' : '/opt/ooce/bin/socat',
     nc          => '/usr/bin/nc',
     pv          => '/usr/bin/pv',
-    gzip        =>  -x '/opt/ooce/bin/pigz' ? '/opt/ooce/bin/pigz' : '/usr/bin/gzip',
-    bzip2       =>  -x '/opt/ooce/bin/pbzip2' ? '/opt/ooce/bin/pbzip2' : '/usr/bin/bzip2',
+    gzip        => -x '/opt/ooce/bin/pigz' ? '/opt/ooce/bin/pigz' : '/usr/bin/gzip',
+    bzip2       => -x '/opt/ooce/bin/pbzip2' ? '/opt/ooce/bin/pbzip2' : '/usr/bin/bzip2',
     # TODO: for now we just map suffixes to the appropriate program
     # this should be enhanced. currently only used in zfsRecv
-    gz          =>  -x '/opt/ooce/bin/pigz' ? '/opt/ooce/bin/pigz' : '/usr/bin/gzip',
-    bz2         =>  -x '/opt/ooce/bin/pbzip2' ? '/opt/ooce/bin/pbzip2' : '/usr/bin/bzip2',
+    gz          => -x '/opt/ooce/bin/pigz' ? '/opt/ooce/bin/pigz' : '/usr/bin/gzip',
+    bz2         => -x '/opt/ooce/bin/pbzip2' ? '/opt/ooce/bin/pbzip2' : '/usr/bin/bzip2',
     xz          => '/usr/bin/xz',
     pager       => $ENV{PAGER} || '/usr/bin/less -eimnqX',
 );
