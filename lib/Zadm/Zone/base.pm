@@ -158,21 +158,6 @@ my $isProp = sub {
     return exists $self->schema->{$prop};
 };
 
-my $addResource = sub {
-    my $self  = shift;
-    my $res   = shift;
-    my $props = shift;
-
-    my $name = $self->name;
-    my @cmd  = ('-z', $name, 'add', $res, ';');
-
-    push @cmd, $self->encodeProp($res, $_, $props->{$_}) for keys %$props;
-
-    push @cmd, qw(end);
-
-    $self->utils->exec('zonecfg', \@cmd, "cannot config zone $name");
-};
-
 my $delResource = sub {
     my $self  = shift;
     my $res   = shift;
@@ -324,12 +309,12 @@ my $setConfig = sub {
         if (ref $self->config->{$prop} eq ref []) {
             $self->log->debug("property '$prop' is a resource array");
 
-            $self->$addResource($prop, $_) for (@{$self->config->{$prop}});
+            $self->addResource($prop, $_) for (@{$self->config->{$prop}});
         }
         elsif ($self->$isRes($prop)) {
             $self->log->debug("property '$prop' is a resource");
 
-            $self->$addResource($prop, $self->config->{$prop});
+            $self->addResource($prop, $self->config->{$prop});
         }
         else {
             next if !$self->config->{$prop}
@@ -448,6 +433,21 @@ sub encodeProp {
          : "(name=$prop,value=\"$val\")";
 
     return (qw(add property), $val, ';');
+}
+
+sub addResource {
+    my $self  = shift;
+    my $res   = shift;
+    my $props = shift;
+
+    my $name = $self->name;
+    my @cmd  = ('-z', $name, 'add', $res, ';');
+
+    push @cmd, $self->encodeProp($res, $_, $props->{$_}) for keys %$props;
+
+    push @cmd, qw(end);
+
+    $self->utils->exec('zonecfg', \@cmd, "cannot config zone $name");
 }
 
 sub getPostProcess {
