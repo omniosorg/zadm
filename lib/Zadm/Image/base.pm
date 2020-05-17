@@ -82,7 +82,7 @@ sub download {
         $self->$checkChecksum($file, $opts->{chksum}->{digest}, $opts->{chksum}->{chksum}) || do {
             # re-download since checksum mismatch
             $self->log->debug("re-downloading '$file' because of checksum mismatch...");
-            $self->getFile($file, $url, $opts->{curl});
+            $self->$getFile($file, $url, $opts->{curl});
             $self->$checkChecksum($file, $opts->{chksum}->{digest}, $opts->{chksum}->{chksum})
                 or Mojo::Exception->throw("ERROR: checksum mismatch of file '$file'.\n");
         };
