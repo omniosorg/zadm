@@ -125,7 +125,9 @@ sub dump {
     $format .= "\n";
 
     # TODO: for now we assume that kvm images work under bhyve and vice versa
-    my $brand = $opts->{brand} =~ /^(?:kvm|bhyve)$/ ? qr/kvm|bhyve/ : qr/$opts->{brand}/;
+    my $brand = $opts->{brand} =~ /^(?:kvm|bhyve)$/ ? qr/kvm|bhyve/ : qr/$opts->{brand}/
+        if $opts->{brand};
+
     printf $format, @header;
     for my $prov (sort keys %{$self->images}) {
         printf $format, substr ($_->{uuid}, length ($_->{uuid}) - 8), $prov, $_->{brand}, $_->{name}, $_->{vers}, ($opts->{verbose} ? substr ($_->{desc}, 0, 40) : ()),
