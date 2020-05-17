@@ -5,6 +5,7 @@ use POSIX qw(isatty);
 use Mojo::Exception;
 use JSON::PP; # for pretty encoding and 'relaxed' decoding
 use Mojo::Log;
+use Mojo::File;
 use File::Temp;
 use Text::ParseWords qw(shellwords);
 use String::ShellQuote qw(shell_quote);
@@ -55,7 +56,7 @@ my $edit = sub {
     my $file = Mojo::File->new($fh->filename);
     $file->spurt($json);
 
-    my $modified = (stat $fh->filename)[9];
+    my $modified = $file->stat->mtime;
 
     local $@;
     eval {
@@ -72,7 +73,7 @@ my $edit = sub {
 
     $json = $file->slurp;
 
-    $modified = (stat $fh->filename)[9] != $modified;
+    $modified = $file->stat->mtime != $modified;
 
     return ($modified, $json);
 };
@@ -160,11 +161,12 @@ sub edit {
     my $backmod;
     my $zonexml = "$ZPATH/" . $zone->name . '.xml';
 
+    my $xml = Mojo::File->new($zonexml);
     if (-r $zonexml) {
         $self->log->debug("backing up current zone config from $zonexml");
 
-        $backmod = (stat $zonexml)[9];
-        $backcfg = Mojo::File->new($zonexml)->slurp;
+        $backmod = $xml->stat->mtime;
+        $backcfg = $xml->slurp
     }
 
     my $json = $self->encodeJSON($zone->config);
@@ -179,9 +181,9 @@ sub edit {
         if (!$mod) {
             if ($zone->exists) {
                 # restoring the zone XML config since it was changed but something went wrong
-                if ($backmod && $backmod != (stat $zonexml)[9]) {
+                if ($backmod && $backmod != $xml->stat->mtime) {
                     $self->log->warn('WARNING: restoring the zone config.');
-                    Mojo::File->new($zonexml)->spurt($backcfg);
+                    $xml->spurt($backcfg);
 
                     return 0;
                 }
@@ -223,7 +225,7 @@ sub edit {
 
             if ($check =~ /^no?$/i) {
                 # restoring the zone XML config since it was changed but something went wrong
-                if ($backmod && $backmod != (stat $zonexml)[9]) {
+                if ($backmod && $backmod != $xml->stat->mtime) {
                     $self->log->warn('WARNING: restoring the zone config.');
                     Mojo::File->new($zonexml)->spurt($backcfg);
                 }

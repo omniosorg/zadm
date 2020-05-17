@@ -537,6 +537,7 @@ sub checkMandOptions {
 sub state {
     my $self = shift;
 
+    $self->zones->refresh;
     my $zones = $self->zones->list;
 
     return exists $zones->{$self->name} ? $zones->{$self->name}->{state} : 'unknown';
@@ -546,7 +547,6 @@ sub is {
     my $self  = shift;
     my $state = shift // return 1;
 
-    $self->zones->refresh;
     return $self->state eq $state;
 }
 

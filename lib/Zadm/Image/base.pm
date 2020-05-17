@@ -74,7 +74,7 @@ sub download {
 
     # check if cache file has a max_age property and redownload if expired
     exists $opts->{max_age} && !$freshDl
-        && (time - stat($self->cache . "/$file")->mtime > $opts->{max_age})
+        && (time - stat ($self->cache . "/$file")->mtime > $opts->{max_age})
         && $self->$getFile($file, $url, $opts->{curl});
 
     # check checksum if chksum option is set
