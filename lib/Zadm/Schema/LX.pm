@@ -26,7 +26,7 @@ $SCHEMA = sub {
                 optional    => 1,
                 array       => 1,
                 description => 'IPs for LX zones',
-                validator   => $self->sv->cidr,
+                validator   => $self->sv->lxIP,
                 'x-netprop' => 1,
             },
             gateway     => {

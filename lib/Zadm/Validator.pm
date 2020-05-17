@@ -138,6 +138,18 @@ sub cidr {
     return shift->regexp(qr!^(?:$IPv4_re/\d{1,2}|$IPv6_re/\d{1,3})$!, 'not a valid CIDR address');
 }
 
+sub lxIP {
+    my $self = shift;
+
+    return sub {
+        my $ip = shift;
+
+        return undef if $ip eq 'dhcp';
+
+        return $self->cidr->($ip);
+    }
+}
+
 sub macaddr {
     return shift->regexp(qr/^(?:[\da-f]{1,2}:){5}[\da-f]{1,2}$/i, 'not a valid MAC address');
 }
