@@ -146,7 +146,7 @@ sub dump {
     printf $format, @header;
     printf $format, $_,
         # TODO: printf string length breaks with coloured strings
-        $statecol->($list->{$_}->{state}) . (' ' x (11 - length ($list->{$_}->{state}))),
+        $statecol->($list->{$_}->{state}) . (' ' x (11 - length (substr ($list->{$_}->{state}, 0, 10)))),
         $list->{$_}->{brand},
         $ram->{$_},
         for @zones;
