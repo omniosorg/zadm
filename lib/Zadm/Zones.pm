@@ -1,12 +1,12 @@
 package Zadm::Zones;
 use Mojo::Base -base;
 
-use Mojo::Home;
 use Mojo::File;
 use Mojo::Log;
 use Mojo::Exception;
 use Mojo::Promise;
 use Mojo::IOLoop::Subprocess;
+use FindBin;
 use File::Spec;
 use Term::ANSIColor qw(colored);
 use Zadm::Utils;
@@ -25,7 +25,7 @@ my %ZMAP = (
     debugid   => 7,
 );
 
-my $DATADIR = Mojo::Home->new->rel_file('../var')->to_string; # DATADIR
+my $DATADIR = "$FindBin::RealBin/../var"; # DATADIR
 
 my $MODPREFIX = 'Zadm::Zone';
 
