@@ -50,11 +50,12 @@ sub postInstall {
     my $newroot = $root->child('root');
     return if !-d $newroot->path;
 
-    $root->list_tree({max_depth => 1, dir => 1})
-        ->grep(sub { $_->path ne $newroot->path })->map(sub { $_->remove_tree });
+    $root->list({ dir => 1 })
+        ->grep(sub { $_->path ne $newroot->path })
+        ->map(sub { $_->remove_tree });
     $newroot->move_to($newroot->sibling('__root'));
     $newroot = $newroot->sibling('__root');
-    $newroot->list_tree({max_depth => 1, dir => 1})->map(sub {
+    $newroot->list({ dir => 1 })->map(sub {
         my $base = $root->child($_->basename);
         $self->log->debug("Moving $_ to $base");
         $_->move_to($base);
