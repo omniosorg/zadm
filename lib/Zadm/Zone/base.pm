@@ -27,16 +27,18 @@ has statemap   => sub {
 has createprop => sub { [ qw(zonename zonepath brand ip-type) ] };
 has template   => sub {
     my $self = shift;
+
     my $name = $self->name;
 
     return {
-        zonename        => $name,
-        zonepath        => ($ENV{__ZADM_ALTROOT} // '') . "/zones/$name",
-        brand           => $self->brand,
-        'ip-type'       => 'exclusive',
-        autoboot        => 'false',
-        'cpu-shares'    => 1,
-        net             => [ { physical => "${name}0" } ],
+        zonename    => $name,
+        zonepath    => ($ENV{__ZADM_ALTROOT} // '') . "/zones/$name",
+        brand       => $self->brand,
+        'ip-type'   => 'exclusive',
+        autoboot    => 'false',
+        net         => [ { physical => "${name}0" } ],
+        %{$self->utils->domain},
+        %{$self->utils->scheduler},
     }
 };
 has options => sub {

@@ -34,6 +34,8 @@ my %CMDS = (
     bz2         => -x '/opt/ooce/bin/pbzip2' ? '/opt/ooce/bin/pbzip2' : '/usr/bin/bzip2',
     xz          => '/usr/bin/xz',
     pager       => $ENV{PAGER} || '/usr/bin/less -eimnqX',
+    domainname  => '/usr/bin/domainname',
+    dispadmin   => '/usr/sbin/dispadmin',
 );
 
 my %ENVARGS = map {
@@ -250,6 +252,58 @@ sub getZfsProp {
     chomp (my @vals = <$zfs>);
 
     return { map { $prop->[$_] => $vals[$_] } (0 .. $#$prop) };
+}
+
+sub domain {
+    my $self = shift;
+
+    my %domain;
+
+    my $domainname = $self->pipe('domainname');
+    my ($domain) = <$domainname> =~ /^\s*(\S+)/;
+
+    -r '/etc/resolv.conf' && do {
+        open my $fh, '<', '/etc/resolv.conf'
+            or Mojo::Exception->throw("ERROR: cannot read /etc/resolv.conf: $!\n");
+
+        while (<$fh>) {
+            my ($key, $val) = /^\s*(\S+)\s+(\S+)/
+                or next;
+
+            for ($key) {
+                /^nameserver$/ && do {
+                    push @{$domain{resolvers}}, $val;
+
+                    last;
+                };
+                /^domain$/ && do {
+                    $domain{'dns-domain'} = $val;
+
+                    last;
+                };
+                /^search$/ && do {
+                    $domain{'dns-domain'} ||= $val;
+
+                    last;
+                };
+            }
+        }
+    };
+
+    $domain{'dns-domain'} = $domain if $domain;
+
+    return \%domain;
+}
+
+sub scheduler {
+    my $self = shift;
+
+    return {} if !-e '/etc/dispadmin.conf';
+
+    my $dispadmin = $self->pipe('dispadmin', [ qw(-d) ]);
+
+    return { 'cpu-shares' => 1 } if grep { /^FSS/ } (<$dispadmin>);
+    return {};
 }
 
 sub loadTemplate {

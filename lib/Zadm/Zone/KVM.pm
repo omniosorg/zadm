@@ -13,6 +13,27 @@ my $ZVOLRX   = qr!/dev/zvol/r?dsk/!;
 my @MON_INFO = qw(block blockstats chardev cpus kvm network pci registers qtree usb version vnc);
 my $RCV_TMO  = 3;
 
+has template => sub {
+    my $self = shift;
+    my $name = $self->name;
+
+    my $template = $self->SUPER::template;
+    # KVM and derived zones do not have 'dns-domain' or 'resolvers' properties; drop them
+    delete $template->{$_} for qw(dns-domain resolvers);
+
+    return {
+        %$template,
+        bootdisk    => {
+            path        => "rpool/$name/root",
+            size        => "10G",
+            sparse      => 'false',
+            blocksize   => '8k',
+        },
+        ram         => '2G',
+        vcpus       => '4',
+        vnc         => 'on',
+    }
+};
 has options => sub {
     my $self = shift;
 
