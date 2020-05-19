@@ -28,6 +28,7 @@ my %ZMAP = (
 my $DATADIR = "$FindBin::RealBin/../var"; # DATADIR
 
 my $MODPREFIX = 'Zadm::Zone';
+my $PKGPREFIX = 'system/zones/brand';
 
 # private static methods
 my $statecol = sub {
@@ -74,8 +75,14 @@ has brands  => sub {
         } glob '/usr/lib/brand/*/config.xml'
     ];
 };
+has availbrands => sub {
+    my $pkg = shift->utils->pipe('pkg', [ qw(list -aHv), "$PKGPREFIX/*" ]);
+    # TODO: the state of sn1/s10 brands is currently unknown
+    # while zadm can still be used to configure them we don't advertise them as available
+    return [ grep { !/^(?:sn1|s10)$/ } map { m!\Q$PKGPREFIX\E/([^@/]+)\@! } (<$pkg>) ];
+};
 has brandmap    => sub { my $self = shift; $self->utils->genmap($self->brands) };
-has brandExists => sub { exists shift->brandmap->{shift // ''} };
+has avbrandmap  => sub { my $self = shift; $self->utils->genmap($self->availbrands) };
 has list        => sub { shift->$list };
 
 has zoneName => sub {
@@ -115,6 +122,10 @@ sub exists {
     return exists shift->list->{shift // ''};
 }
 
+sub brandExists {
+    return exists shift->brandmap->{shift // ''}
+}
+
 sub refresh {
     my $self = shift;
 
@@ -150,6 +161,17 @@ sub dump {
         $list->{$_}->{brand},
         $ram->{$_},
         for @zones;
+}
+
+sub dumpBrands {
+    my $self = shift;
+
+    my $format = "%-9s%s\n";
+    my @header = qw(BRAND STATUS);
+
+    printf $format, @header;
+    printf $format, $_, $self->brandExists($_) ? colored('installed', 'green') : colored('available', 'ansi208')
+        for sort keys %{$self->avbrandmap};
 }
 
 sub zone {

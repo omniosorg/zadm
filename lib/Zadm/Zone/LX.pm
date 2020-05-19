@@ -47,6 +47,7 @@ where 'command' is one of the following:
     show [zone_name]
     list
     list-images [--refresh] [--verbose] [-b <brand>]
+    brands
     start <zone_name>
     stop <zone_name>
     restart <zone_name>

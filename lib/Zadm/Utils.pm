@@ -20,6 +20,7 @@ my %CMDS = (
     dladm       => '/usr/sbin/dladm',
     editor      => $ENV{VISUAL} || $ENV{EDITOR} || '/usr/bin/vi',
     zfs         => '/usr/sbin/zfs',
+    pkg         => '/usr/bin/pkg',
     curl        => '/usr/bin/curl',
     cat         => '/usr/bin/cat',
     # TODO: OmniOS r30/r32 ship socat from the extra repository
