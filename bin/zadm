@@ -113,6 +113,11 @@ sub main {
 
             last;
         };
+        /^brands$/ && do {
+            $zones->dumpBrands;
+
+            last;
+        };
         /^(?:start|boot)$/ && do {
             my $zName = shift @ARGV;
             defined $zName or pod2usage(1);
@@ -212,6 +217,7 @@ where 'command' is one of the following:
     show [zone_name]
     list
     list-images [--refresh] [--verbose] [-b <brand>]
+    brands
     start <zone_name>
     stop <zone_name>
     restart <zone_name>
@@ -262,6 +268,10 @@ prints the status of all existing zones
 
 list all available images ready for download and install.
 
+=head2 B<brands>
+
+list all available and installed zone brands
+
 =head2 B<start>
 
 starts the zone B<zone_name>
@@ -307,7 +317,9 @@ this program. If not, see L<http://www.gnu.org/licenses/>.
 
 =head1 AUTHOR
 
+S<Andy Fiddaman E<lt>omnios@citrus-it.co.ukE<gt>>
 S<Dominik Hassler E<lt>hadfl@omniosce.orgE<gt>>
+S<Tobias Oetiker E<lt>tobi@oetiker.chE<gt>>
 
 =head1 HISTORY
 
