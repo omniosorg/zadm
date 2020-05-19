@@ -660,12 +660,34 @@ sub ram {
 }
 
 sub usage {
-    pod2usage(-input => pod_where({-inc => 1}, ref shift), 1);
+    pod2usage(-input => pod_where({ -inc => 1 }, ref shift), 1);
 }
 
 1;
 
 __END__
+
+=head1 SYNOPSIS
+
+B<zadm> I<command> [I<options...>]
+
+where 'command' is one of the following:
+
+    create -b <brand> [-t <template_path>] <zone_name>
+    delete [--purge=vnic] <zone_name>
+    edit <zone_name>
+    show [zone_name]
+    list
+    list-images [--refresh] [--verbose] [-b <brand>]
+    start <zone_name>
+    stop <zone_name>
+    restart <zone_name>
+    poweroff <zone_name>
+    console <zone_name>
+    log <zone_name>
+    help [-b <brand>]
+    man
+    version
 
 =head1 COPYRIGHT
 
