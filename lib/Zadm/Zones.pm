@@ -136,31 +136,32 @@ sub dump {
     my $self = shift;
     my $opts = shift;
 
-    my $format = "%-18s%-11s%-9s%4s\n";
-    my @header = qw(NAME STATUS BRAND RAM);
+    my $format = "%-18s%-11s%-9s%6s%8s%8s\n";
+    my @header = qw(NAME STATUS BRAND);
+    my @zStats = qw(RAM CPUS SHARES);
 
     my $list  = $self->list;
     # we want the running ones on top and it happens we can just reverse-sort the state
     my @zones = sort { $list->{$b}->{state} cmp $list->{$a}->{state} || $a cmp $b } keys %$list;
 
-    my $ram;
-    # TODO: for now we just query 'RAM'. Once we query more attributes we should change
-    # the zone interface to extraStats which returns a structure
+    my $zStats;
     Mojo::Promise->all(
         map {
             my $name = $_;
-            Mojo::IOLoop::Subprocess->new->run_p(sub { return $self->zone($name)->ram })
+            Mojo::IOLoop::Subprocess->new->run_p(sub { return $self->zone($name)->zStats })
         } @zones
-    )->then(sub { $ram->{$zones[$_]} = $_[$_]->[0] for (0 .. $#zones) }
+    )->then(sub { $zStats->{$zones[$_]} = $_[$_]->[0] for (0 .. $#zones) }
     )->wait;
 
-    printf $format, @header;
-    printf $format, $_,
-        # TODO: printf string length breaks with coloured strings
-        $statecol->($list->{$_}->{state}) . (' ' x (11 - length (substr ($list->{$_}->{state}, 0, 10)))),
-        $list->{$_}->{brand},
-        $ram->{$_},
-        for @zones;
+    printf $format, @header, @zStats;
+    for my $zone (@zones) {
+        printf $format, $zone,
+            # TODO: printf string length breaks with coloured strings
+            $statecol->($list->{$zone}->{state})
+                . (' ' x (11 - length (substr ($list->{$zone}->{state}, 0, 10)))),
+            $list->{$zone}->{brand},
+            map { $zStats->{$zone}->{$_} } @zStats,
+    }
 }
 
 sub dumpBrands {

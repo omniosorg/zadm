@@ -13,6 +13,17 @@ my $ZVOLRX   = qr!/dev/zvol/r?dsk/!;
 my @MON_INFO = qw(block blockstats chardev cpus kvm network pci registers qtree usb version vnc);
 my $RCV_TMO  = 3;
 
+# private static methods
+my $cpuCount = sub {
+    my $vcpus = shift;
+
+    return $vcpus if !$vcpus || $vcpus =~ /^\d+$/;
+
+    my %cpu = map { /^([^=]+)=([^=]+)$/ } split ',', $vcpus;
+
+    return join '/', map { $cpu{$_} // '1' } qw(sockets cores threads);
+};
+
 has template => sub {
     my $self = shift;
     my $name = $self->name;
@@ -399,8 +410,15 @@ sub monitor {
         'cannot access monitor socket ' . $self->monsocket);
 }
 
-sub ram {
-    return shift->config->{ram} // '-';
+sub zStats {
+    my $self = shift;
+
+    return {
+        %{$self->SUPER::zStats},
+        RAM  => $self->config->{ram} // '-',
+        CPUS => $cpuCount->($self->config->{vcpus})
+            // $self->config->{'capped-cpu'}->{ncpus} // '1',
+    };
 }
 
 1;

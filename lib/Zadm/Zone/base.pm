@@ -655,8 +655,14 @@ sub remove {
     };
 }
 
-sub ram {
-    return shift->config->{'capped-memory'}->{physical} // '-';
+sub zStats {
+    my $self = shift;
+
+    return {
+        RAM    => $self->config->{'capped-memory'}->{physical} // '-',
+        CPUS   => $self->config->{'capped-cpu'}->{ncpus} // '-',
+        SHARES => $self->config->{'cpu-shares'} // '1',
+    };
 }
 
 sub usage {
