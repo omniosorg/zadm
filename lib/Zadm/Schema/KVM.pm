@@ -134,7 +134,7 @@ $SCHEMA = sub {
         description => 'disk type',
         default     => 'virtio',
         example     => '"diskif" : "virtio"',
-        validator   => $self->sv->elemOf(qw(virtio ahci)),
+        validator   => $self->sv->elemOf(qw(virtio ahci ide)),
         'x-attr'    => 1,
     },
     extra       => {
