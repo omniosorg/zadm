@@ -4,8 +4,9 @@ use Mojo::Base -base;
 use Zadm::Validator;
 use Data::Processor;
 
-has log    => sub { Mojo::Log->new(level => 'debug') };
-has sv     => sub { Zadm::Validator->new(log => shift->log) };
+has log   => sub { Mojo::Log->new(level => 'debug') };
+has sv    => sub { Zadm::Validator->new(log => shift->log) };
+has brand => sub { lc ((split /::/, ref shift)[-1]) };
 
 has schema => sub {
     my $self = shift;

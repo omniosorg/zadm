@@ -180,7 +180,7 @@ $SCHEMA = sub {
         description => 'VNC',
         default     => 'off',
         example     => '"vnc" : "on"',
-        validator   => $self->sv->vnc,
+        validator   => $self->sv->vnc($self->brand),
         'x-attr'    => 1,
     },
 }};

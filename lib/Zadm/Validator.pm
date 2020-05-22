@@ -404,13 +404,14 @@ sub toArray {
 }
 
 sub vnc {
-    my $self = shift;
+    my $self  = shift;
+    my $brand = shift;
 
     return sub {
         my $vnc = shift;
 
-        return undef if $vnc =~ m!^unix[:=]/!;
-        return $self->elemOf(qw(on off))->($vnc);
+        return undef if $vnc =~ m!(?:^|,)unix[:=]/!;
+        return $self->elemOf(qw(on off), $brand eq 'bhyve' ? qw(wait) : ())->($vnc);
     }
 }
 
