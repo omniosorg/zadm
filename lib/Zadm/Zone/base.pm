@@ -682,7 +682,7 @@ where 'command' is one of the following:
     create -b <brand> [-t <template_path>] <zone_name>
     delete [--purge=vnic] <zone_name>
     edit <zone_name>
-    show [zone_name]
+    show [zone_name [property]]
     list
     list-images [--refresh] [--verbose] [-b <brand>]
     brands

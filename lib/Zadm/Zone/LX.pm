@@ -44,7 +44,7 @@ where 'command' is one of the following:
     create -b <brand> -i <image_uuid|image_path> [-t <template_path>] <zone_name>
     delete [--purge=vnic] <zone_name>
     edit [-i <image_uuid|image_path>] <zone_name>
-    show [zone_name]
+    show [zone_name [property]]
     list
     list-images [--refresh] [--verbose] [-b <brand>]
     brands

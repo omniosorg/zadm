@@ -94,8 +94,18 @@ sub main {
         };
         /^show$/ && do {
             my $zName = shift @ARGV;
+            my $prop  = shift @ARGV;
 
-            print $zones->utils->encodeJSON($zones->config($zName));
+            my $config = $zones->config($zName);
+
+            $prop && do {
+                die "ERROR: attribute '$prop' not found in zone configuration.\n"
+                    if !exists $config->{$prop};
+
+                $config = $config->{$prop};
+            };
+
+            print $zones->utils->encodeJSON($config);
 
             last;
         };
@@ -212,7 +222,7 @@ where 'command' is one of the following:
     create -b <brand> [-t <template_path>] <zone_name>
     delete [--purge=vnic] <zone_name>
     edit <zone_name>
-    show [zone_name]
+    show [zone_name [property]]
     list
     list-images [--refresh] [--verbose] [-b <brand>]
     brands
