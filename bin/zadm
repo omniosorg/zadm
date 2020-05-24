@@ -26,10 +26,8 @@ $ENV{PERLDOC_PAGER} ||= '/usr/bin/less -rins' if -x '/usr/bin/less';
 my %delPurgeMap;
 
 sub main {
-    my $mainOpt = shift;
+    my $mainOpt = shift // 'list';
     my $ret = 0;
-
-    $mainOpt or pod2usage(1);
 
     my $zones = Zadm::Zones->new($ENV{__ZADMDEBUG} ? (loglvl => 'debug') : ());
 
@@ -56,7 +54,7 @@ sub main {
             GetOptions($opts, @{$zone->getOptions($mainOpt)}) or exit 1;
             $zone->checkMandOptions($mainOpt) or $zone->usage;
 
-            $zones->utils->edit($zone) && $zone->install;
+            ($ret = !$zones->utils->edit($zone)) || $zone->install;
 
             last;
         };
