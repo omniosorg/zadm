@@ -140,9 +140,12 @@ sub dump {
     my @header = qw(NAME STATUS BRAND);
     my @zStats = qw(RAM CPUS SHARES);
 
+    printf $format, @header, @zStats;
+
     my $list  = $self->list;
     # we want the running ones on top and it happens we can just reverse-sort the state
-    my @zones = sort { $list->{$b}->{state} cmp $list->{$a}->{state} || $a cmp $b } keys %$list;
+    my @zones = sort { $list->{$b}->{state} cmp $list->{$a}->{state} || $a cmp $b } keys %$list
+        or return;
 
     my $zStats;
     Mojo::Promise->all(
@@ -153,7 +156,6 @@ sub dump {
     )->then(sub { $zStats->{$zones[$_]} = $_[$_]->[0] for (0 .. $#zones) }
     )->wait;
 
-    printf $format, @header, @zStats;
     for my $zone (@zones) {
         printf $format, $zone,
             # TODO: printf string length breaks with coloured strings
@@ -205,12 +207,15 @@ sub config {
     # if we want the config for a particular zone, go ahead
     return $self->zone($zName)->config if $zName;
 
+    my @zones = keys %{$self->list}
+        or return {};
+
     my $config;
     Mojo::Promise->all(
         map {
             my $name = $_;
             Mojo::IOLoop::Subprocess->new->run_p(sub { return $self->zone($name)->config })
-        } keys %{$self->list}
+        } @zones
     )->then(sub { $config->{$_->[0]->{zonename}} = $_->[0] for @_ }
     )->wait;
 

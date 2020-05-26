@@ -8,7 +8,7 @@ z=xxx
 
 # Show with no zones
 name="show no zones"
-zadm show $z >/dev/null && result "$name" PASS || result "$name" FAIL
+zadm show >/dev/null && result "$name" PASS || result "$name" FAIL
 
 # Create a zone
 zadmcreate -b bhyve $z
