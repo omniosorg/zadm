@@ -1,0 +1,33 @@
+#!/bin/ksh
+
+source ${.sh.file%/*}/../lib/testenv.ksh
+
+start_environment
+
+z=xxx
+
+# Show with no zones
+name="show no zones"
+zadm show $z >/dev/null && result "$name" PASS || result "$name" FAIL
+
+# Create a zone
+zadmcreate -b bhyve $z
+zone_state $z installed
+
+name="show zone"
+zadm show $z >/dev/null && result "$name" PASS || result "$name" FAIL
+zadm show $z | egrep -s autoboot \
+    && result "$name 2" PASS || result "$name 2" FAIL
+
+# Check that a basic attributes can be shown
+name="show ram"
+zadm show $z ram | egrep -s -e '^"[0-9]+G"' \
+    && result "$name" PASS || result "$name" FAIL
+
+# Check that a more complex attribute can be shown
+name="show bootdisk"
+zadm show $z bootdisk | egrep -s -e '"size" : "[0-9]+G",' \
+    && result "$name" PASS || result "$name" FAIL
+
+stop_environment
+

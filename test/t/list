@@ -1,0 +1,23 @@
+#!/bin/ksh
+
+source ${.sh.file%/*}/../lib/testenv.ksh
+
+start_environment
+
+# List with no zones
+name="list no zones"
+zadm list >/dev/null && result "$name" PASS || result "$name" FAIL
+zadm list | egrep -s '^NAME' && result "$name 2" PASS || result "$name 2" FAIL
+[ `zadm list | wc -l` -eq 1 ] && result "$name 3" PASS || result "$name 3" FAIL
+
+# Create two zones
+create_zone fred sparse
+create_zone barney pkgsrc
+
+name="list two zones"
+zadm list >/dev/null && result "$name" PASS || result "$name" FAIL
+zadm list | egrep -s '^NAME' && result "$name 2" PASS || result "$name 2" FAIL
+[ `zadm list | wc -l` -eq 3 ] && result "$name 3" PASS || result "$name 3" FAIL
+
+stop_environment
+
