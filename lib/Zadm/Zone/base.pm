@@ -562,6 +562,16 @@ sub isPublic {
     return grep { $_ eq $method } @{$self->public};
 }
 
+sub isSimpleProp {
+    my $self = shift;
+    my $prop = shift;
+
+    $self->$isProp($prop)
+        or Mojo::Exception->throw("ERROR: property '$prop' does not exist for brand " . $self->brand . "\n");
+
+    return !$self->$isRes($prop) && !$self->$resIsArray($prop);
+}
+
 sub boot {
     shift->$zoneCmd('boot');
 }
@@ -682,6 +692,7 @@ where 'command' is one of the following:
     create -b <brand> [-t <template_path>] <zone_name>
     delete [--purge=vnic] <zone_name>
     edit <zone_name>
+    set <zone_name> <property=value>
     show [zone_name [property]]
     list
     list-images [--refresh] [--verbose] [-b <brand>]

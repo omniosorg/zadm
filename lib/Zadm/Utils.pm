@@ -158,6 +158,7 @@ sub encodeJSON {
 sub edit {
     my $self = shift;
     my $zone = shift;
+    my $prop = shift;
 
     # backup current zone XML so it can be restored when things get hairy
     my $backcfg;
@@ -172,14 +173,16 @@ sub edit {
         $backcfg = $xml->slurp
     }
 
-    my $json = $self->encodeJSON($zone->config);
+    my $json = $self->encodeJSON($zone->config)
+        if !$prop && ($self->isaTTY || ($ENV{__ZADMTEST} && !$ENV{__ZADM_NOTTY}));
 
     my $cfgValid = 0;
 
     while (!$cfgValid) {
-        (my $mod, $json) = $self->isaTTY || ($ENV{__ZADMTEST} && !$ENV{__ZADM_NOTTY})
-            ? $self->$edit($json)
-            : (1, join ("\n", @{$self->getSTDIN}));
+        (my $mod, $json) = $prop                                         ? (1, '')
+                         : $self->isaTTY
+                            || ($ENV{__ZADMTEST} && !$ENV{__ZADM_NOTTY}) ? $self->$edit($json)
+                         :                                                 (1, join ("\n", @{$self->getSTDIN}));
 
         if (!$mod) {
             if ($zone->exists) {
@@ -212,14 +215,15 @@ sub edit {
             local $SIG{__DIE__};
 
             $self->log->debug("validating config");
-            $cfgValid = $zone->setConfig(JSON::PP->new->relaxed(1)->decode($json));
+            my $cfg = $prop ? { %{$zone->config}, %$prop } : JSON::PP->new->relaxed(1)->decode($json);
+            $cfgValid = $zone->setConfig($cfg);
         };
         if ($@) {
             print $@;
 
             my $check;
             # TODO: is there a better way of handling this?
-            if (!$self->isaTTY || $ENV{__ZADMTEST}) {
+            if (!$self->isaTTY || $prop || $ENV{__ZADMTEST}) {
                 $check = 'no';
             } else {
                 print 'Do you want to retry [Y/n]? ';

@@ -36,8 +36,7 @@ sub main {
 
     for ($mainOpt) {
         /^create$/ && do {
-            my $zName = pop @ARGV;
-            $zName or pod2usage(1);
+            my $zName = pop @ARGV or pod2usage(1);
 
             my $opts = {};
             Getopt::Long::Configure(qw(permute pass_through));
@@ -58,23 +57,32 @@ sub main {
 
             last;
         };
-        /^edit$/ && do {
-            my $zName = pop @ARGV;
-            defined $zName or pod2usage(1);
+        /^(?:edit|set)$/ && do {
+            my $zName = $mainOpt eq 'set' ? $ARGV[-2] : $ARGV[-1] or pod2usage(1);
 
             my $opts = {};
             my $zone = $zones->zone($zName, opts => $opts);
 
+            my $prop;
+            if ($mainOpt eq 'set') {
+                my $set = pop @ARGV or pod2usage(1);
+                my ($key, $val) = split /=/, $set, 2;
+
+                $key && $val or die "ERROR: invalid argument. Expecting 'property=value'.\n";
+                $zone->isSimpleProp($key) or die "ERROR: set is only supported for simple properties.\n";
+
+                $prop = { $key => $val };
+            }
+
             GetOptions($opts, @{$zone->getOptions($mainOpt)}) or exit 1;
             $zone->checkMandOptions($mainOpt) or $zone->usage;
 
-            ($ret = !$zones->utils->edit($zone)) || ($zone->is('configured') && $zone->install);
+            ($ret = !$zones->utils->edit($zone, $prop)) || ($zone->is('configured') && $zone->install);
 
             last;
         };
         /^delete$/ && do {
-            my $zName = pop @ARGV;
-            defined $zName or pod2usage(1);
+            my $zName = pop @ARGV or pod2usage(1);
 
             my $opts = {};
             GetOptions($opts, qw(purge=s)) or exit 1;
@@ -127,43 +135,37 @@ sub main {
             last;
         };
         /^(?:start|boot)$/ && do {
-            my $zName = shift @ARGV;
-            defined $zName or pod2usage(1);
+            my $zName = shift @ARGV or pod2usage(1);
 
             $zones->zone($zName)->boot;
             last;
         };
         /^(?:stop|shutdown)$/ && do {
-            my $zName = shift @ARGV;
-            defined $zName or pod2usage(1);
+            my $zName = shift @ARGV or pod2usage(1);
 
             $zones->zone($zName)->shutdown;
             last;
         };
         /^(?:restart|reboot)$/ && do {
-            my $zName = shift @ARGV;
-            defined $zName or pod2usage(1);
+            my $zName = shift @ARGV or pod2usage(1);
 
             $zones->zone($zName)->reboot;
             last;
         };
         /^(?:poweroff|halt)$/ && do {
-            my $zName = shift @ARGV;
-            defined $zName or pod2usage(1);
+            my $zName = shift @ARGV or pod2usage(1);
 
             $zones->zone($zName)->poweroff;
             last;
         };
         /^console$/ && do {
-            my $zName = shift @ARGV;
-            defined $zName or pod2usage(1);
+            my $zName = shift @ARGV or pod2usage(1);
 
             $zones->zone($zName)->console;
             last;
         };
         /^log$/ && do {
-            my $zName = shift @ARGV;
-            defined $zName or pod2usage(1);
+            my $zName = shift @ARGV or pod2usage(1);
 
             my $zone = $zones->zone($zName);
             $zone->utils->exec('pager', [ $zone->logfile ]);
@@ -186,9 +188,7 @@ sub main {
         };
         # not a generic command, so we forward it to the brand specific implementation
         /^\w+$/ && do {
-            my $zName = pop @ARGV;
-
-            defined $zName or pod2usage(1);
+            my $zName = pop @ARGV or pod2usage(1);
 
             my $zone = $zones->zone($zName);
 
@@ -222,6 +222,7 @@ where 'command' is one of the following:
     create -b <brand> [-t <template_path>] <zone_name>
     delete [--purge=vnic] <zone_name>
     edit <zone_name>
+    set <zone_name> <property=value>
     show [zone_name [property]]
     list
     list-images [--refresh] [--verbose] [-b <brand>]
@@ -262,6 +263,11 @@ deletes a zone with the name B<zone_name>.
 
 modify the configuration of a zone. See the descriptions in the B<create>
 function for details.
+
+=head2 B<set>
+
+modify the configuration of a zone. See the descriptions in the B<create>
+function for details. Set only supports simple "property" : "value" pairs.
 
 =head2 B<show>
 
