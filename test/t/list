@@ -2,7 +2,7 @@
 
 source ${.sh.file%/*}/../lib/testenv.ksh
 
-start_environment
+start_environment -clean
 
 # List with no zones
 name="list no zones"

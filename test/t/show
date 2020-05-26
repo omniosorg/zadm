@@ -2,7 +2,7 @@
 
 source ${.sh.file%/*}/../lib/testenv.ksh
 
-start_environment
+start_environment -clean
 
 z=xxx
 

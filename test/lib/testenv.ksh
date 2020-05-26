@@ -125,7 +125,7 @@ function start_environment {
 	[ -z "_ZADM_ENVIRONMENT_STARTED" ] && _ZADM_ENVIRONMENT_STARTED=0
 	(( _ZADM_ENVIRONMENT_STARTED++ ))
 
-	[ "$_ZADM_ENVIRONMENT_STARTED" -gt 1 ] && return
+	[ "$_ZADM_ENVIRONMENT_STARTED" -gt 1 -a "$1" != -clean ] && return
 
 	setup_dataset
 	setup_net
