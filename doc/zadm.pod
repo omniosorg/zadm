@@ -11,6 +11,7 @@ where 'command' is one of the following:
     create -b <brand> [-t <template_path>] <zone_name>
     delete [--purge=vnic] <zone_name>
     edit <zone_name>
+    set <zone_name> <property=value>
     show [zone_name [property]]
     list
     list-images [--refresh] [--verbose] [-b <brand>]
@@ -51,6 +52,11 @@ deletes a zone with the name B<zone_name>.
 
 modify the configuration of a zone. See the descriptions in the B<create>
 function for details.
+
+=head2 B<set>
+
+modify the configuration of a zone. See the descriptions in the B<create>
+function for details. Set only supports simple "property" : "value" pairs.
 
 =head2 B<show>
 
