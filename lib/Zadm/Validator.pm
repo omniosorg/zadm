@@ -91,7 +91,7 @@ has vnicmap => sub {
 sub regexp {
     my $self = shift;
     my $rx   = shift;
-    my $msg  = shift;
+    my $msg  = shift // 'invalid value';
 
     return sub {
         my $value = shift;
