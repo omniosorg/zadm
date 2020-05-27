@@ -221,11 +221,10 @@ my $getConfig = sub {
 
     return {} if !$self->zones->exists($self->name);
 
-    my $props = $self->utils->pipe('zonecfg', ['-z', $self->name, 'info']);
+    my $props = $self->utils->readProc('zonecfg', ['-z', $self->name, 'info']);
 
     my $res;
-    while (my $line = <$props>) {
-        chomp ($line);
+    for my $line (@$props) {
         # remove square brackets at beginning and end of line
         $line =~ s/^(\s*)\[/$1/ && $line =~ s/\]\s*//;
         # drop lines ending with 'not specified'

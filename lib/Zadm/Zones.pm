@@ -46,11 +46,10 @@ my $statecol = sub {
 my $list = sub {
     my $self = shift;
 
-    my $zones = $self->utils->pipe('zoneadm', [ qw(list -cp) ]);
+    my $zones = $self->utils->readProc('zoneadm', [ qw(list -cp) ]);
 
     my %zoneList;
-    while (my $zone = <$zones>) {
-        chomp $zone;
+    for my $zone (@$zones) {
         my $zoneCfg = { map { $_ => (split /:/, $zone)[$ZMAP{$_}] } keys %ZMAP };
         # ignore GZ
         next if $zoneCfg->{zonename} eq 'global';
@@ -76,22 +75,17 @@ has brands  => sub {
     ];
 };
 has availbrands => sub {
-    my $pkg = shift->utils->pipe('pkg', [ qw(list -aHv), "$PKGPREFIX/*" ]);
+    my $pkg = shift->utils->readProc('pkg', [ qw(list -aHv), "$PKGPREFIX/*" ]);
     # TODO: the state of sn1/s10 brands is currently unknown
     # while zadm can still be used to configure them we don't advertise them as available
-    return [ grep { !/^(?:sn1|s10)$/ } map { m!\Q$PKGPREFIX\E/([^@/]+)\@! } (<$pkg>) ];
+    return [ grep { !/^(?:sn1|s10)$/ } map { m!\Q$PKGPREFIX\E/([^@/]+)\@! } @$pkg ];
 };
 has brandmap    => sub { my $self = shift; $self->utils->genmap($self->brands) };
 has avbrandmap  => sub { my $self = shift; $self->utils->genmap($self->availbrands) };
 has list        => sub { shift->$list };
 
 has zoneName => sub {
-    my $self = shift;
-
-    my $zonename = $self->utils->pipe('zonename');
-    chomp (my $zone = <$zonename>);
-
-    return $zone;
+    return shift->utils->readProc('zonename')->[0];
 };
 
 has isGZ => sub { shift->zoneName eq 'global' };
