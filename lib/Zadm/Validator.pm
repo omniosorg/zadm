@@ -31,8 +31,8 @@ my %unitFactors = (
 my $getOverLink = sub {
     my $self = shift;
 
-    my $dladm = $self->utils->pipe('dladm', [ qw(show-link -p -o), 'link,class' ]);
-    return [ map { /^([^:]+):(?:phys|etherstub|overlay)/ } (<$dladm>) ];
+    my $dladm = $self->utils->readProc('dladm', [ qw(show-link -p -o), 'link,class' ]);
+    return [ map { /^([^:]+):(?:phys|etherstub|overlay)/ } @$dladm ];
 };
 
 # static private methods
@@ -190,11 +190,10 @@ sub vnic {
         return $name =~ /^\w+\d+$/ ? undef : 'not a valid vnic name'
             if $nic->{'global-nic'};
 
-        my $dladm = $self->utils->pipe('dladm', [ (qw(show-vnic -p -o), join (',', @VNICATTR)) ]);
+        my $dladm = $self->utils->readProc('dladm', [ (qw(show-vnic -p -o), join (',', @VNICATTR)) ]);
 
         my $vnicmap = $self->vnicmap;
-        while (my $vnic = <$dladm>) {
-            chomp $vnic;
+        for my $vnic (@$dladm) {
             my %nicProps = map { $_ => (split /:/, $vnic, scalar keys %$vnicmap)[$vnicmap->{$_}] } @VNICATTR;
             next if $nicProps{link} ne $name;
 

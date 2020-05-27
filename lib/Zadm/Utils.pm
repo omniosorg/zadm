@@ -6,6 +6,8 @@ use Mojo::Exception;
 use JSON::PP; # for pretty encoding and 'relaxed' decoding
 use Mojo::Log;
 use Mojo::File;
+use IPC::Open3;
+use File::Spec;
 use File::Temp;
 use Text::ParseWords qw(shellwords);
 use String::ShellQuote qw(shell_quote);
@@ -82,12 +84,10 @@ my $edit = sub {
 };
 
 # public methods
-sub pipe {
+sub readProc {
     my $self = shift;
     my $cmd  = shift;
     my $args = shift || [];
-    my $err  = shift || "executing '$cmd'";
-    my $dir  = shift || '-|';
 
     Mojo::Exception->throw("ERROR: command '$cmd' not defined.\n")
         if !exists $CMDS{$cmd};
@@ -95,10 +95,14 @@ sub pipe {
     my @cmd = (shellwords($CMDS{$cmd}), @{$ENVARGS{$cmd}}, @$args);
     $self->log->debug("@cmd");
 
-    open my $pipe, $dir, @cmd
-        or Mojo::Exception->throw("ERROR: $err: $!\n");
+    open my $devnull, '>', File::Spec->devnull;
+    my $pid = open3(undef, my $stdout, $devnull, @cmd);
 
-    return $pipe;
+    chomp (my @read = <$stdout>);
+
+    waitpid $pid, 0;
+
+    return \@read;
 }
 
 sub exec {
@@ -252,11 +256,9 @@ sub getZfsProp {
 
     return {} if !@$prop;
 
-    my $zfs = $self->pipe('zfs', [ qw(get -H -o value), join (',', @$prop), $ds ]);
+    my $vals = $self->readProc('zfs', [ qw(get -H -o value), join (',', @$prop), $ds ]);
 
-    chomp (my @vals = <$zfs>);
-
-    return { map { $prop->[$_] => $vals[$_] } (0 .. $#$prop) };
+    return { map { $prop->[$_] => $vals->[$_] } (0 .. $#$prop) };
 }
 
 sub domain {
@@ -264,8 +266,7 @@ sub domain {
 
     my %domain;
 
-    my $domainname = $self->pipe('domainname');
-    my ($domain) = <$domainname> =~ /^\s*(\S+)/;
+    my ($domain) = $self->readProc('domainname')->[0] =~ /^\s*(\S+)/;
 
     -r '/etc/resolv.conf' && do {
         open my $fh, '<', '/etc/resolv.conf'
@@ -303,11 +304,9 @@ sub domain {
 sub scheduler {
     my $self = shift;
 
-    return {} if !-e '/etc/dispadmin.conf';
+    my $dispadmin = $self->readProc('dispadmin', [ qw(-d) ]);
 
-    my $dispadmin = $self->pipe('dispadmin', [ qw(-d) ]);
-
-    return { 'cpu-shares' => 1 } if grep { /^FSS/ } (<$dispadmin>);
+    return { 'cpu-shares' => 1 } if grep { /^FSS/ } @$dispadmin;
     return {};
 }
 
