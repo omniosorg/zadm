@@ -24,6 +24,10 @@ name="show ram"
 zadm show $z ram | egrep -s -e '^"[0-9]+G"' \
     && result "$name" PASS || result "$name" FAIL
 
+name="show hostbridge"
+zadm show $z hostbridge | egrep -s -e '^"i440fx' \
+    && result "$name" PASS || result "$name" FAIL
+
 # Check that a more complex attribute can be shown
 name="show bootdisk"
 zadm show $z bootdisk | egrep -s -e '"size" : "[0-9]+G",' \

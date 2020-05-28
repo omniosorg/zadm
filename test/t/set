@@ -1,0 +1,35 @@
+#!/bin/ksh
+
+source ${.sh.file%/*}/../lib/testenv.ksh
+
+start_environment
+
+z=settest
+
+# Create a zone
+zadmcreate -b bhyve $z
+zone_state $z installed
+
+name="set ram"
+zadm set $z ram=123M && result "$name" PASS || result "$name" FAIL
+name="show $name"
+zadm show $z ram | egrep -s -e '^"123M"' \
+    && result "$name" PASS || result "$name" FAIL
+
+# Add an extra device to test that it is pre-processed properly during
+# the set operation
+zonecfg -z $z <<- EOM
+	add device; set match="/dev/zvol/rdsk/rpool/$z/wilbur" ; end
+EOM
+
+zonecfg -z $z info
+zadm show $z
+
+name="set hostbridge"
+zadm set $z hostbridge=q35 && result "$name" PASS || result "$name" FAIL
+name="show $name"
+zadm show $z hostbridge | egrep -s -e '^"q35' \
+    && result "$name" PASS || result "$name" FAIL
+
+stop_environment
+
