@@ -14,16 +14,7 @@ use Zadm::Image;
 use Zadm::Zone;
 
 # constants
-my %ZMAP = (
-    zoneid    => 0,
-    zonename  => 1,
-    state     => 2,
-    zonepath  => 3,
-    uuid      => 4,
-    brand     => 5,
-    'ip-type' => 6,
-    debugid   => 7,
-);
+my @ZONEATTR = qw(zoneid zonename state zonepath uuid brand ip-type debugid);
 
 my $DATADIR = "$FindBin::RealBin/../var"; # DATADIR
 
@@ -50,7 +41,8 @@ my $list = sub {
 
     my %zoneList;
     for my $zone (@$zones) {
-        my $zoneCfg = { map { $_ => (split /:/, $zone)[$ZMAP{$_}] } keys %ZMAP };
+        my @zoneattr = split /:/, $zone, scalar @ZONEATTR;
+        my $zoneCfg  = { map { $_ => $zoneattr[$self->zonemap->{$_}] } @ZONEATTR };
         # ignore GZ
         next if $zoneCfg->{zonename} eq 'global';
 
@@ -109,6 +101,11 @@ has modmap => sub {
     }
 
     return \%modmap;
+};
+
+has zonemap => sub {
+    my $i = 0;
+    return { map { $_ => $i++ } @ZONEATTR };
 };
 
 # public methods

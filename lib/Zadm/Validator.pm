@@ -192,9 +192,9 @@ sub vnic {
 
         my $dladm = $self->utils->readProc('dladm', [ (qw(show-vnic -p -o), join (',', @VNICATTR)) ]);
 
-        my $vnicmap = $self->vnicmap;
         for my $vnic (@$dladm) {
-            my %nicProps = map { $_ => (split /:/, $vnic, scalar keys %$vnicmap)[$vnicmap->{$_}] } @VNICATTR;
+            my @vnicattr = split /:/, $vnic, scalar @VNICATTR;
+            my %nicProps = map { $_ => $vnicattr[$self->vnicmap->{$_}] } @VNICATTR;
             next if $nicProps{link} ne $name;
 
             $nic->{over} && $nic->{over} ne $nicProps{over}
