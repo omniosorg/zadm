@@ -323,6 +323,13 @@ sub loadTemplate {
     return JSON::PP->new->relaxed(1)->decode($template);
 }
 
+sub getOverLink {
+    my $self = shift;
+
+    my $dladm = $self->readProc('dladm', [ qw(show-link -p -o), 'link,class' ]);
+    return [ map { /^([^:]+):(?:phys|etherstub|overlay)/ } @$dladm ];
+}
+
 sub isVirtual {
     my $method = (caller(1))[3];
 

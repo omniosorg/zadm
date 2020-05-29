@@ -37,7 +37,10 @@ has template   => sub {
         brand       => $self->brand,
         'ip-type'   => 'exclusive',
         autoboot    => 'false',
-        net         => [ { physical => "${name}0" } ],
+        net         => [{
+            physical     => "${name}0",
+            'global-nic' => $self->utils->getOverLink->[0],
+        }],
         %{$self->utils->domain},
         %{$self->utils->scheduler},
     }

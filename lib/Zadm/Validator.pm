@@ -27,14 +27,6 @@ my %unitFactors = (
     e   => 1024 ** 6,
 );
 
-# private methods
-my $getOverLink = sub {
-    my $self = shift;
-
-    my $dladm = $self->utils->readProc('dladm', [ qw(show-link -p -o), 'link,class' ]);
-    return [ map { /^([^:]+):(?:phys|etherstub|overlay)/ } @$dladm ];
-};
-
 # static private methods
 my $numeric = sub {
     return shift =~ /^\d+$/;
@@ -175,7 +167,7 @@ sub globalNic {
         return $net->{'allowed-address'} ? undef : 'allowed-address must be set when global-nic is auto'
             if $nic eq 'auto';
 
-        return (grep { $_ eq $nic } @{$self->$getOverLink}) ? undef
+        return (grep { $_ eq $nic } @{$self->utils->getOverLink}) ? undef
             : "link '$nic' does not exist or is wrong type";
     }
 }
@@ -208,7 +200,7 @@ sub vnic {
         # only reach here if vnic does not exist
         # get first global link if over is not given
 
-        $nic->{over} = $self->$getOverLink->[0] if !exists $nic->{over};
+        $nic->{over} = $self->utils->getOverLink->[0] if !exists $nic->{over};
 
         local $@;
         eval {
