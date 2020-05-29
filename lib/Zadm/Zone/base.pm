@@ -6,6 +6,7 @@ use Mojo::Log;
 use Data::Processor;
 use Pod::Usage;
 use Pod::Find qw(pod_where);
+use Storable qw(dclone);
 use Zadm::Zones;
 use Zadm::Utils;
 use Zadm::Image;
@@ -199,23 +200,22 @@ my $clearProperty = sub {
 my $clearResources = sub {
     my $self = shift;
 
-    # TODO: adding support for rctls (by now just aliased rctls are supported)
+    # TODO: adding support for rctls (for now just aliased rctls are supported)
     $self->$delResource($_) for grep {
-        $_ ne 'rctl' && exists $self->resmap->{$_}
-    } keys %{$self->rawConf};
+        $_ ne 'rctl' && $self->$isRes($_)
+    } @{$self->oldres};
 };
 
 my $clearSimpleAttrs = sub {
     my $self = shift;
 
     $self->$clearProperty($_) for grep {
-        !exists $self->resmap->{$_} && !exists $self->config->{$_}
-    } keys %{$self->rawConf};
+        !$self->$isRes($_) && !exists $self->config->{$_}
+    } @{$self->oldres};
 };
 
 my $getConfig = sub {
     my $self = shift;
-    my $raw  = shift;
 
     my $config = {};
 
@@ -267,9 +267,9 @@ my $getConfig = sub {
             $config->{$prop} = $val;
         }
     }
-    $config = $self->getPostProcess($config) if !$raw;
+    $self->oldres([ keys %$config ]) if !$self->oldres;
 
-    return $config;
+    return $self->getPostProcess($config);
 };
 
 my $setConfig = sub {
@@ -277,7 +277,12 @@ my $setConfig = sub {
     my $config = shift;
 
     # get current config so we can check for changes
-    my $oldConf = $self->setPreProcess($self->config);
+    # deep cloning the data structure since pre-process changes in-place
+    # although we are setting a new config, both data structures
+    # might share common elements resulting in pre-processing
+    # the same data twice
+    my $oldConf = dclone($self->config);
+    $self->setPreProcess($oldConf);
 
     # validate new config
     $self->validate($config) if !$self->valid;
@@ -360,7 +365,7 @@ has image   => sub { Zadm::Image->new(log => shift->log) };
 has sv      => sub { Zadm::Validator->new(log => shift->log) };
 has dp      => sub { Data::Processor->new(shift->schema) };
 has name    => sub { Mojo::Exception->throw("ERROR: zone name must be specified on instantiation.\n") };
-has rawConf => sub { my $self = shift; return $self->exists ? $self->$getConfig(1) : {} };
+has oldres  => sub { 0 };
 has brand   => sub { lc ((split /::/, ref shift)[-1]) };
 has socket  => sub { my $self = shift; Mojo::Exception->throw('ERROR: no socket available for brand ' . $self->brand . ".\n") };
 has public  => sub { [] };
@@ -474,7 +479,7 @@ sub getPostProcess {
     # check if attr is empty. if so remove it
     delete $cfg->{attr} if !@{$cfg->{attr}};
 
-    # TODO: adding support for rctls (by now just aliased rctls are supported)
+    # TODO: adding support for rctls (for now just aliased rctls are supported)
     delete $cfg->{rctl};
 
     return $cfg;
