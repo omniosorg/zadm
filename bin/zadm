@@ -40,7 +40,10 @@ sub main {
 
             my $opts = {};
             Getopt::Long::Configure(qw(permute pass_through));
-            GetOptions($opts, qw(brand|b=s template|t=s)) or exit 1;
+            {
+                local $SIG{__WARN__} = sub { };
+                GetOptions($opts, qw(brand|b=s template|t=s)) or pod2usage(1);
+            }
             $opts->{brand} or pod2usage(1);
 
             my @extraopts = $opts->{template}
@@ -50,7 +53,10 @@ sub main {
             my $zone = $zones->zone($zName, create => 1, brand => $opts->{brand}, opts => $opts, @extraopts);
 
             Getopt::Long::Configure(qw(no_permute no_pass_through));
-            GetOptions($opts, @{$zone->getOptions($mainOpt)}) or exit 1;
+            {
+                local $SIG{__WARN__} = sub { };
+                GetOptions($opts, @{$zone->getOptions($mainOpt)}) or $zone->usage;
+            }
             $zone->checkMandOptions($mainOpt) or $zone->usage;
 
             ($ret = !$zones->utils->edit($zone)) || $zone->install;
@@ -74,7 +80,10 @@ sub main {
                 $prop = { $key => $val };
             }
 
-            GetOptions($opts, @{$zone->getOptions($mainOpt)}) or exit 1;
+            {
+                local $SIG{__WARN__} = sub { };
+                GetOptions($opts, @{$zone->getOptions($mainOpt)}) or $zone->usage;
+            }
             $zone->checkMandOptions($mainOpt) or $zone->usage;
 
             ($ret = !$zones->utils->edit($zone, $prop)) || ($zone->is('configured') && $zone->install);
@@ -85,7 +94,10 @@ sub main {
             my $zName = pop @ARGV or pod2usage(1);
 
             my $opts = {};
-            GetOptions($opts, qw(purge=s)) or exit 1;
+            {
+                local $SIG{__WARN__} = sub { };
+                GetOptions($opts, qw(purge=s)) or pod2usage(1);
+            }
             #split all features into individual options
             if ($opts->{purge}) {
                 for my $purge (split /,/, $opts->{purge}) {
@@ -124,7 +136,10 @@ sub main {
         };
         /^list-images$/ && do {
             my $opts = {};
-            GetOptions($opts, qw(brand|b=s refresh|r verbose|v));
+            {
+                local $SIG{__WARN__} = sub { };
+                GetOptions($opts, qw(brand|b=s refresh|r verbose|v)) or pod2usage(1);
+            }
             $zones->image->dump($opts);
 
             last;
@@ -178,7 +193,10 @@ sub main {
         };
         /^help$/ && do {
             my $opts = {};
-            GetOptions($opts, qw(brand|b=s));
+            {
+                local $SIG{__WARN__} = sub { };
+                GetOptions($opts, qw(brand|b=s)) or pod2usage(1);
+            }
 
             pod2usage(-exitstatus => 0) if (!$opts->{brand});
 
