@@ -352,7 +352,8 @@ my $zoneCmd = sub {
 
     $self->statemap->{$cmd} && !(grep { $self->is($_) } @{$self->statemap->{$cmd}}) && do {
         $self->log->warn("WARNING: cannot '$cmd' $name. "
-            . "$name is not " . join (' or ', @{$self->statemap->{$cmd}}) . '.');
+            . "$name is " . $self->state . ' and '
+            . 'not ' . join (' or ', @{$self->statemap->{$cmd}}) . '.');
         return 0;
     };
 
