@@ -150,9 +150,14 @@ sub main {
             last;
         };
         /^(?:start|boot)$/ && do {
+            my $opts = {};
+            {
+                local $SIG{__WARN__} = sub { };
+                GetOptions($opts, qw(console|c)) or pod2usage(1);
+            }
             my $zName = shift @ARGV or pod2usage(1);
 
-            $zones->zone($zName)->boot;
+            $zones->zone($zName)->boot($opts);
             last;
         };
         /^(?:stop|shutdown)$/ && do {
@@ -245,7 +250,7 @@ where 'command' is one of the following:
     list
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     brands
-    start <zone_name>
+    start <zone_name> [-c]
     stop <zone_name>
     restart <zone_name>
     poweroff <zone_name>
@@ -306,7 +311,7 @@ list all available and installed zone brands
 
 =head2 B<start>
 
-starts the zone B<zone_name>
+starts the zone B<zone_name>. Attaches to the console if B<-c> is given.
 
 =head2 B<stop>
 

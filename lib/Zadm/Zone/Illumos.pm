@@ -67,7 +67,7 @@ where 'command' is one of the following:
     list
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     brands
-    start <zone_name>
+    start <zone_name> [-c]
     stop <zone_name>
     restart <zone_name>
     poweroff <zone_name>

@@ -581,7 +581,13 @@ sub isSimpleProp {
 }
 
 sub boot {
-    shift->$zoneCmd('boot');
+    my $self = shift;
+    my $opts = shift;
+
+    # fork boot to the bg if we are about to attach to the console
+    $self->$zoneCmd('boot', undef, $opts->{console});
+
+    $self->console if $opts->{console};
 }
 
 sub shutdown {
@@ -705,7 +711,7 @@ where 'command' is one of the following:
     list
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     brands
-    start <zone_name>
+    start <zone_name> [-c]
     stop <zone_name>
     restart <zone_name>
     poweroff <zone_name>
