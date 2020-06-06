@@ -14,9 +14,9 @@ where 'command' is one of the following:
     set <zone_name> <property=value>
     show [zone_name [property]]
     list
-    list-images [--refresh] [--verbose] [-b <brand>]
+    list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     brands
-    start <zone_name>
+    start <zone_name> [-c]
     stop <zone_name>
     restart <zone_name>
     poweroff <zone_name>
@@ -77,7 +77,7 @@ list all available and installed zone brands
 
 =head2 B<start>
 
-starts the zone B<zone_name>
+starts the zone B<zone_name>. Attaches to the console if B<-c> is given.
 
 =head2 B<stop>
 
