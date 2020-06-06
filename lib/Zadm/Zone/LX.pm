@@ -47,7 +47,7 @@ where 'command' is one of the following:
     set [-i <image_uuid|image_path>] <zone_name> <property=value>
     show [zone_name [property]]
     list
-    list-images [--refresh] [--verbose] [-b <brand>]
+    list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     brands
     start <zone_name>
     stop <zone_name>

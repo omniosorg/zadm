@@ -129,7 +129,7 @@ sub dump {
         if $opts->{brand};
 
     printf $format, @header;
-    for my $prov (sort keys %{$self->images}) {
+    for my $prov (grep { !$opts->{provider} || $_ eq $opts->{provider} } sort keys %{$self->images}) {
         printf $format, substr ($_->{uuid}, length ($_->{uuid}) - 8), $prov, $_->{brand}, $_->{name}, $_->{vers}, ($opts->{verbose} ? substr ($_->{desc}, 0, 40) : ()),
             for sort { $a->{brand} cmp $b->{brand} || $a->{name} cmp $b->{name} }
                 grep { !$opts->{brand} || $_->{brand} =~ /^(?:$brand)$/ } @{$self->images->{$prov}};
