@@ -27,7 +27,8 @@ my $loadModule = sub {
     my $brand = $self->brand;
 
     $self->zones->brandExists($brand)
-        or Mojo::Exception->throw("ERROR: brand '$brand' is not available.\n");
+        or Mojo::Exception->throw("ERROR: brand '$brand' is not "
+            . ($self->zones->brandAvail($brand) ? "installed.\n" : "available.\n"));
 
     my $module = $self->zones->modmap->{$brand};
 

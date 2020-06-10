@@ -117,6 +117,10 @@ sub brandExists {
     return exists shift->brandmap->{shift // ''}
 }
 
+sub brandAvail {
+    return exists shift->avbrandmap->{shift // ''}
+}
+
 sub refresh {
     my $self = shift;
 
@@ -165,7 +169,7 @@ sub dumpBrands {
 
     printf $format, @header;
     printf $format, $_, $self->brandExists($_) ? colored('installed', 'green') : colored('available', 'ansi208')
-        for sort keys %{$self->avbrandmap};
+        for sort @{$self->availbrands};
 }
 
 sub zone {
