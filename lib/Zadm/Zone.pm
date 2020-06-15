@@ -26,9 +26,15 @@ my $loadModule = sub {
 
     my $brand = $self->brand;
 
-    $self->zones->brandExists($brand)
-        or Mojo::Exception->throw("ERROR: brand '$brand' is not "
-            . ($self->zones->brandAvail($brand) ? "installed.\n" : "available.\n"));
+    if (!$self->zones->brandExists($brand)) {
+        Mojo::Exception->throw("ERROR: brand '$brand' is not available.\n")
+            if !$self->zones->brandAvail($brand);
+
+        $self->zones->installBrand($brand);
+
+        # create a new instance of Zadm::Zones as the list of installed brands has changed
+        $self->zones(Zadm::Zones->new(log => $self->log));
+    }
 
     my $module = $self->zones->modmap->{$brand};
 

@@ -121,6 +121,19 @@ sub brandAvail {
     return exists shift->avbrandmap->{shift // ''}
 }
 
+sub installBrand {
+    my $self  = shift;
+    my $brand = shift;
+
+    print "Brand '$brand' is not installed. Do you want to install it [Y/n]? ";
+    chomp (my $check = <STDIN>);
+
+    # if brand is not installed and the user does not want zadm to install it, exit
+    exit 1 if $check =~ /^no?$/i;
+
+    $self->utils->exec('pkg', [ 'install', "$PKGPREFIX/$brand" ]);
+}
+
 sub refresh {
     my $self = shift;
 
