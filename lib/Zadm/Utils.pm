@@ -229,7 +229,8 @@ sub edit {
             # TODO: is there a better way of handling this?
             if (!$self->isaTTY || $prop || $ENV{__ZADMTEST}) {
                 $check = 'no';
-            } else {
+            }
+            else {
                 print 'Do you want to retry [Y/n]? ';
                 chomp ($check = <STDIN>);
             }

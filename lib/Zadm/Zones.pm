@@ -125,8 +125,14 @@ sub installBrand {
     my $self  = shift;
     my $brand = shift;
 
-    print "Brand '$brand' is not installed. Do you want to install it [Y/n]? ";
-    chomp (my $check = <STDIN>);
+    my $check;
+    if (!$self->utils->isaTTY || $ENV{__ZADMTEST}) {
+        $check = 'yes';
+    }
+    else {
+        print "Brand '$brand' is not installed. Do you want to install it [Y/n]? ";
+        chomp ($check = <STDIN>);
+    }
 
     # if brand is not installed and the user does not want zadm to install it, exit
     exit 1 if $check =~ /^no?$/i;
