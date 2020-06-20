@@ -581,13 +581,14 @@ sub isSimpleProp {
 }
 
 sub boot {
-    my $self = shift;
-    my $opts = shift;
+    my $self  = shift;
+    my $opts  = shift;
+    my $cOpts = shift;
 
     # fork boot to the bg if we are about to attach to the console
     $self->$zoneCmd('boot', undef, $opts->{console});
 
-    $self->console if $opts->{console};
+    $self->console($cOpts) if $opts->{console};
 }
 
 sub shutdown {
@@ -615,10 +616,11 @@ sub nmi {
 }
 
 sub console {
-    my $self = shift;
+    my $self  = shift;
+    my $cOpts = shift // [];
 
     my $name = $self->name;
-    $self->utils->exec('zlogin', [ '-C', $name ],
+    $self->utils->exec('zlogin', [ '-C', @$cOpts, $name ],
         "cannot attach to $name zone console");
 }
 
@@ -711,11 +713,11 @@ where 'command' is one of the following:
     list
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     brands
-    start <zone_name> [-c]
+    start [-c [extra_args]] <zone_name>
     stop <zone_name>
     restart <zone_name>
     poweroff <zone_name>
-    console <zone_name>
+    console [extra_args] <zone_name>
     log <zone_name>
     help [-b <brand>]
     man

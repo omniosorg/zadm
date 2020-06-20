@@ -51,13 +51,13 @@ where 'command' is one of the following:
     list
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     brands
-    start <zone_name> [-c]
+    start [-c [extra_args]] <zone_name>
     stop <zone_name>
     restart <zone_name>
     poweroff <zone_name>
     reset <zone_name>
     nmi <zone_name>
-    console <zone_name>
+    console [extra_args] <zone_name>
     vnc [<[bind_addr:]port>] <zone_name>
     log <zone_name>
     help [-b <brand>]
