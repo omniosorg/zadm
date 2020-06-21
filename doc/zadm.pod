@@ -40,10 +40,6 @@ global properties can be set as "property" : "value" pair, single
 resources as "resource" : { } hash structure and multiple resources
 as "resource" : [ { }, ... ] array of hash structures.
 
-=head2 B<import>
-
-imports a zone configuration from a file.
-
 =head2 B<delete>
 
 deletes a zone with the name B<zone_name>.
@@ -99,7 +95,7 @@ B<extra_args> will be passed to B<zlogin(1)>.
 
 =head2 B<log>
 
-returns the log path for B<zone_name>
+displays the boot log for B<zone_name>
 
 =head1 COPYRIGHT
 
