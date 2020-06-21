@@ -16,11 +16,11 @@ where 'command' is one of the following:
     list
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     brands
-    start <zone_name> [-c]
+    start [-c [extra_args]] <zone_name>
     stop <zone_name>
     restart <zone_name>
     poweroff <zone_name>
-    console <zone_name>
+    console [extra_args] <zone_name>
     log <zone_name>
     help [-b <brand>]
     man
@@ -78,6 +78,7 @@ list all available and installed zone brands
 =head2 B<start>
 
 starts the zone B<zone_name>. Attaches to the console if B<-c> is given.
+B<extra_args> will be passed to B<zlogin(1)>.
 
 =head2 B<stop>
 
@@ -93,7 +94,8 @@ forcefully stops the zone B<zone_name> (i.e. "unplug")
 
 =head2 B<console>
 
-attaches to the B<zone_name> zone console
+attaches to the B<zone_name> zone console.
+B<extra_args> will be passed to B<zlogin(1)>.
 
 =head2 B<log>
 
