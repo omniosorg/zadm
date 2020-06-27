@@ -3,9 +3,10 @@ use Mojo::Base -base;
 
 use Mojo::File;
 use Mojo::Log;
+use Mojo::Home;
+use Mojo::Util qw(class_to_path);
 use Data::Processor;
 use Pod::Usage;
-use Pod::Find qw(pod_where);
 use Storable qw(dclone);
 use Zadm::Zones;
 use Zadm::Utils;
@@ -692,7 +693,10 @@ sub zStats {
 }
 
 sub usage {
-    pod2usage(-input => pod_where({ -inc => 1 }, ref shift), 1);
+    my $mod = ref shift;
+
+    pod2usage(-input => Mojo::File->new(Mojo::Home->new->detect($mod),
+        'lib', class_to_path($mod))->to_abs->to_string, 1);
 }
 
 1;
