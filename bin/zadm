@@ -80,13 +80,37 @@ sub main {
                 $prop = { $key => $val };
             }
 
+            $ret = !$zones->utils->edit($zone, $prop);
+
+            last;
+        };
+        /^install$/ && do {
+            my $zName = pop @ARGV or pod2usage(1);
+
+            my $opts = {};
+            Getopt::Long::Configure(qw(permute pass_through));
+            {
+                local $SIG{__WARN__} = sub { };
+                GetOptions($opts, qw(force|f)) or pod2usage(1);
+            }
+
+            my $zone = $zones->zone($zName, opts => $opts);
+
+            Getopt::Long::Configure(qw(no_permute no_pass_through));
             {
                 local $SIG{__WARN__} = sub { };
                 GetOptions($opts, @{$zone->getOptions($mainOpt)}) or $zone->usage;
             }
             $zone->checkMandOptions($mainOpt) or $zone->usage;
 
-            ($ret = !$zones->utils->edit($zone, $prop)) || ($zone->is('configured') && $zone->install);
+            if (!$zone->is('configured')) {
+                die "ERROR: zone '$zName' is not in 'configured' state. Use '-f' to uninstall the zone first.\n"
+                    if !$opts->{force};
+
+                $zone->uninstall;
+            }
+
+            $zone->install;
 
             last;
         };
@@ -247,6 +271,7 @@ where 'command' is one of the following:
     delete [--purge=vnic] <zone_name>
     edit <zone_name>
     set <zone_name> <property=value>
+    install [-f] <zone_name>
     show [zone_name [property]]
     list
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
@@ -288,6 +313,11 @@ function for details.
 
 modify the configuration of a zone. See the descriptions in the B<create>
 function for details. Set only supports simple "property" : "value" pairs.
+
+=head2 B<install>
+
+installs a zone. Uninstalls it first if the zone is not in the configured
+state if B<-f> is given.
 
 =head2 B<show>
 

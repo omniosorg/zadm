@@ -53,7 +53,7 @@ has options => sub {
     $options->{create}->{image} = {
         getopt => 'image|i=s',
     };
-    $options->{edit}->{image} = {
+    $options->{install}->{image} = {
         getopt => 'image|i=s',
     };
 
@@ -433,8 +433,9 @@ where 'command' is one of the following:
 
     create -b <brand> [-i <image_uuid|image_path>] [-t <template_path>] <zone_name>
     delete [--purge=vnic] <zone_name>
-    edit [-i <image_uuid|image_path>] <zone_name>
-    set [-i <image_uuid|image_path>] <zone_name> <property=value>
+    edit <zone_name>
+    set <zone_name> <property=value>
+    install [-i <image_uuid|image_path>] [-f] <zone_name>
     show [zone_name [property]]
     list
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
