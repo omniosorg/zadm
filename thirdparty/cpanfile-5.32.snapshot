@@ -14,8 +14,8 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 0
       perl 5.008005
-  Mojolicious-8.55
-    pathname: S/SR/SRI/Mojolicious-8.55.tar.gz
+  Mojolicious-8.56
+    pathname: S/SR/SRI/Mojolicious-8.56.tar.gz
     provides:
       Mojo undef
       Mojo::Asset undef
@@ -84,7 +84,7 @@ DISTRIBUTIONS
       Mojo::UserAgent::Transactor undef
       Mojo::Util undef
       Mojo::WebSocket undef
-      Mojolicious 8.55
+      Mojolicious 8.56
       Mojolicious::Command undef
       Mojolicious::Command::Author::cpanify undef
       Mojolicious::Command::Author::generate undef
@@ -106,7 +106,6 @@ DISTRIBUTIONS
       Mojolicious::Lite undef
       Mojolicious::Plugin undef
       Mojolicious::Plugin::Config undef
-      Mojolicious::Plugin::Config::Sandbox undef
       Mojolicious::Plugin::DefaultHelpers undef
       Mojolicious::Plugin::EPLRenderer undef
       Mojolicious::Plugin::EPRenderer undef
