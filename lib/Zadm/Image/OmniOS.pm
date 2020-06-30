@@ -20,7 +20,7 @@ sub postProcess {
             brand  => $_->{brand},
             type   => $_->{type},
             comp   => $_->{comp},
-            ext    => ".$_->{comp}",
+            ext    => ($_->{brand} eq 'lx' ? '.tar.' : '.') . $_->{comp},
             chksum => {
                 digest => 'sha256',
                 chksum => $_->{sha256},

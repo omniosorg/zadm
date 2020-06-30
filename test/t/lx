@@ -25,10 +25,10 @@ function lx_install_img {
 
 name="lx"
 z=ubuntu2004
-uuid=2ceda507834a0a08ce9662257acb7dde
+uuid=acdc99fb-05a5-4ef5-e64c-f8d6632ef3fc
 
 zadmcreate -b lx -i $uuid $z
-lx_install_img $z proxmox/$uuid.tar.gz
+lx_install_img $z omnios/$uuid.tar.xz
 
 validate $z "lx ubuntu 2004"
 
