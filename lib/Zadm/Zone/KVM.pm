@@ -46,18 +46,18 @@ has template => sub {
     }
 };
 has options => sub {
-    my $self = shift;
-
-    my $options = $self->SUPER::options;
-
-    $options->{create}->{image} = {
-        getopt => 'image|i=s',
-    };
-    $options->{install}->{image} = {
-        getopt => 'image|i=s',
-    };
-
-    return $options;
+    {
+        create  => {
+            image => {
+                getopt => 'image|i=s',
+            },
+        },
+        install => {
+            image => {
+                getopt => 'image|i=s',
+            },
+        },
+    }
 };
 has monsocket => sub { shift->config->{zonepath} . '/root/tmp/vm.monitor' };
 has vncsocket => sub {

@@ -2,20 +2,20 @@ package Zadm::Zone::Illumos;
 use Mojo::Base 'Zadm::Zone::base';
 
 has options => sub {
-    my $self = shift;
-
-    my $options = $self->SUPER::options;
-
-    $options->{create}->{image} = {
-        getopt => 'image|i=s',
-        mand   => 1,
-    };
-    $options->{install}->{image} = {
-        getopt => 'image|i=s',
-        mand   => 1,
-    };
-
-    return $options;
+    {
+        create  => {
+            image => {
+                getopt => 'image|i=s',
+                mand   => 1,
+            },
+        },
+        install => {
+            image => {
+                getopt => 'image|i=s',
+                mand   => 1,
+            },
+        },
+    }
 };
 
 sub install {

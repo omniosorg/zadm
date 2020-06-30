@@ -46,16 +46,7 @@ has template   => sub {
         %{$self->utils->scheduler},
     }
 };
-has options => sub {
-    {
-        create  => {
-            brand => {
-                getopt => 'brand|b=s',
-                mand   => 1,
-            },
-        },
-    }
-};
+has options => sub { {} };
 
 # private methods
 my $resIsArray = sub {
