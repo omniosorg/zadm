@@ -37,14 +37,13 @@ my $statecol = sub {
 my $list = sub {
     my $self = shift;
 
-    my $zones = $self->utils->readProc('zoneadm', [ qw(list -cp) ]);
+    # ignore GZ
+    my $zones = $self->utils->readProc('zoneadm', [ qw(list -cpn) ]);
 
     my %zoneList;
     for my $zone (@$zones) {
         my @zoneattr = split /:/, $zone, scalar @ZONEATTR;
         my $zoneCfg  = { map { $_ => $zoneattr[$self->zonemap->{$_}] } @ZONEATTR };
-        # ignore GZ
-        next if $zoneCfg->{zonename} eq 'global';
 
         $zoneList{$zoneCfg->{zonename}} = $zoneCfg;
     }
