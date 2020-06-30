@@ -156,7 +156,8 @@ sub dump {
 
     printf $format, @header, @zStats;
 
-    my $list  = $self->list;
+    # copy zone references not to pollute $self->list with 'global'
+    my $list  = { %{$self->list} };
     # we want the running ones on top and it happens we can just reverse-sort the state
     my @zones = sort { $list->{$b}->{state} cmp $list->{$a}->{state} || $a cmp $b } keys %$list
         or return;
@@ -169,6 +170,19 @@ sub dump {
         } @zones
     )->then(sub { $zStats->{$zones[$_]} = $_[$_]->[0] for (0 .. $#zones) }
     )->wait;
+
+    # adding stats for global zone
+    unshift @zones, 'global';
+    $list->{global} = {
+        state   => 'running',
+        brand   => 'ipkg',
+    };
+    $zStats->{global} = {
+        RAM     => $self->utils->getPhysMem,
+        CPUS    => $self->utils->readProc('getconf', [ qw(NPROCESSORS_ONLN) ])->[0] || '-',
+        SHARES  => (($self->utils->readProc('zonecfg', [ qw(-z global info cpu-shares) ])->[0] // '')
+            =~ /cpu-shares:\s+(\d+)/)[0] // '1',
+    };
 
     for my $zone (@zones) {
         printf $format, $zone,

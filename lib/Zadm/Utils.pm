@@ -11,6 +11,7 @@ use File::Spec;
 use File::Temp;
 use Text::ParseWords qw(shellwords);
 use String::ShellQuote qw(shell_quote);
+use Sun::Solaris::Kstat;
 
 # commands
 my %CMDS = (
@@ -40,6 +41,8 @@ my %CMDS = (
     pager       => $ENV{PAGER} || '/usr/bin/less -eimnqX',
     domainname  => '/usr/bin/domainname',
     dispadmin   => '/usr/sbin/dispadmin',
+    getconf     => '/usr/bin/getconf',
+    pagesize    => '/usr/bin/pagesize',
 );
 
 my %ENVARGS = map {
@@ -50,6 +53,16 @@ my $ZPATH = ($ENV{__ZADM_ALTROOT} // '') . '/etc/zones';
 
 # attributes
 has log => sub { Mojo::Log->new(level => 'debug') };
+
+# private static methods
+my $prettySize = sub {
+    my $size = shift;
+
+    my @units = qw(B K M G T P E);
+    my $i     = $size <= 0 ? 0 : int (log ($size) / log (1024.0));
+
+    return sprintf("%.0f%s", $size / 1024 ** $i, $units[$i]);
+};
 
 # private methods
 my $edit = sub {
@@ -312,6 +325,14 @@ sub scheduler {
 
     return { 'cpu-shares' => 1 } if grep { /^FSS/ } @$dispadmin;
     return {};
+}
+
+sub getPhysMem {
+    my $self = shift;
+
+    my $kstat = Sun::Solaris::Kstat->new;
+    return $prettySize->($kstat->{unix}->{0}->{system_pages}->{physmem}
+        * ($self->readProc('pagesize')->[0] // 4096));
 }
 
 sub loadTemplate {
