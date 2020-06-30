@@ -36,6 +36,7 @@ my %CMDS = (
     gz          => -x '/opt/ooce/bin/pigz' ? '/opt/ooce/bin/pigz' : '/usr/bin/gzip',
     bz2         => -x '/opt/ooce/bin/pbzip2' ? '/opt/ooce/bin/pbzip2' : '/usr/bin/bzip2',
     xz          => '/usr/bin/xz',
+    zstd        => '/opt/ooce/bin/zstd',
     pager       => $ENV{PAGER} || '/usr/bin/less -eimnqX',
     domainname  => '/usr/bin/domainname',
     dispadmin   => '/usr/sbin/dispadmin',
@@ -135,13 +136,15 @@ sub zfsRecv {
     my $file = shift;
     my $ds   = shift;
 
+    # TODO: should we add 'comp' from the provider metadata as an argument to zfsRecv?
+    # or even use 'file' to determine the compression type
     my ($suf) = $file =~ /\.([^.]+)$/;
 
     Mojo::Exception->throw("ERROR: compression algorithm for suffix '$suf' unknown.\n")
         if $suf && !exists $CMDS{$suf};
 
     my $cmd = join ' ',
-        shell_quote(shellwords($CMDS{$suf // 'cat'}, $suf ? qw(-dck) : ())),
+        shell_quote(shellwords($CMDS{$suf // 'cat'}, $suf ? qw(-dc) : ())),
         shell_quote($file),
         '|', shell_quote(shellwords($CMDS{pv})), '|',
         shell_quote(shellwords($CMDS{zfs}), qw(recv -Fv)),
