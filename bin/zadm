@@ -103,14 +103,21 @@ sub main {
             }
             $zone->checkMandOptions($mainOpt) or $zone->usage;
 
+            die "ERROR: zone '$zName' is 'running'. Shut it down first.\n"
+                if $zone->is('running');
+
             if (!$zone->is('configured')) {
-                die "ERROR: zone '$zName' is not in 'configured' state. Use '-f' to uninstall the zone first.\n"
+                die "ERROR: zone '$zName' state is '" . $zone->state . "'.\n" .
+                    "       Add the '-f' option to overwrite this zone.\n"
                     if !$opts->{force};
 
                 $zone->uninstall;
             }
 
-            $zone->install;
+            # The uninstall command may have failed or been aborted by the
+            # user. Only proceed with the installation if the zone is now
+            # in the 'configured' state.
+            $zone->install if $zone->is('configured');
 
             last;
         };
