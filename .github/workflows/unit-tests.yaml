@@ -73,13 +73,14 @@ jobs:
     - name: Check Dist
       run: |
         make dist
+        dir=$(pwd)
         tar xf *-$(cat VERSION).tar.gz
         cd *-$(cat VERSION)
         ./configure --prefix=$HOME/test-install
         make
         make install
         cd $HOME/test-install
-        PERL5LIB=./test/lib/perl5 ./bin/zadm version
+        PERL5LIB=$dir/test/lib/perl5 ./bin/zadm version
     - name: Cache Prep
       run: |
         rm thirdparty/Makefile* thirdparty/cpan*snapshot
