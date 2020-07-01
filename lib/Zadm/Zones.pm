@@ -156,33 +156,39 @@ sub dump {
 
     printf $format, @header, @zStats;
 
-    # copy zone references not to pollute $self->list with 'global'
-    my $list  = { %{$self->list} };
+    my $list  = {
+        %{$self->list},
+        global  => {
+            state   => 'running',
+            brand   => 'ipkg',
+        },
+    };
+
     # we want the running ones on top and it happens we can just reverse-sort the state
-    my @zones = sort { $list->{$b}->{state} cmp $list->{$a}->{state} || $a cmp $b } keys %$list
-        or return;
+    # also using the original list which does not contain global so we can put it on top
+    my @zones = (
+        'global',
+        sort { $list->{$b}->{state} cmp $list->{$a}->{state} || $a cmp $b } keys %{$self->list}
+    );
 
     my $zStats;
     Mojo::Promise->all(
+        # global zone stats
+        Mojo::IOLoop::Subprocess->new->run_p(sub {
+            return {
+                RAM     => $self->utils->getPhysMem,
+                CPUS    => $self->utils->readProc('getconf', [ qw(NPROCESSORS_ONLN) ])->[0] || '-',
+                SHARES  => (($self->utils->readProc('zonecfg', [ qw(-z global info cpu-shares) ])->[0] // '')
+                    =~ /cpu-shares:\s+(\d+)/)[0] // '1',
+            }
+        }),
+        # non-global zone stats
         map {
             my $name = $_;
             Mojo::IOLoop::Subprocess->new->run_p(sub { return $self->zone($name)->zStats })
-        } @zones
-    )->then(sub { $zStats->{$zones[$_]} = $_[$_]->[0] for (0 .. $#zones) }
+        } @zones[1 .. $#zones]
+    )->then(sub { $zStats = { map { $zones[$_] => $_[$_]->[0] } (0 .. $#zones) } }
     )->wait;
-
-    # adding stats for global zone
-    unshift @zones, 'global';
-    $list->{global} = {
-        state   => 'running',
-        brand   => 'ipkg',
-    };
-    $zStats->{global} = {
-        RAM     => $self->utils->getPhysMem,
-        CPUS    => $self->utils->readProc('getconf', [ qw(NPROCESSORS_ONLN) ])->[0] || '-',
-        SHARES  => (($self->utils->readProc('zonecfg', [ qw(-z global info cpu-shares) ])->[0] // '')
-            =~ /cpu-shares:\s+(\d+)/)[0] // '1',
-    };
 
     for my $zone (@zones) {
         printf $format, $zone,
