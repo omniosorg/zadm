@@ -172,7 +172,7 @@ sub globalNic {
     }
 }
 
-sub vnic {
+sub zoneNic {
     my $self = shift;
 
     return sub {
@@ -182,7 +182,11 @@ sub vnic {
         return $name =~ /^\w+\d+$/ ? undef : 'not a valid vnic name'
             if $nic->{'global-nic'};
 
-        my $dladm = $self->utils->readProc('dladm', [ (qw(show-vnic -p -o), join (',', @VNICATTR)) ]);
+        # physical links are ok
+        my $dladm = $self->utils->readProc('dladm', [ qw(show-phys -p -o link) ]);
+        return undef if grep { $_ eq $nic } @$dladm;
+
+        $dladm = $self->utils->readProc('dladm', [ (qw(show-vnic -p -o), join (',', @VNICATTR)) ]);
 
         for my $vnic (@$dladm) {
             my @vnicattr = split /:/, $vnic, scalar @VNICATTR;

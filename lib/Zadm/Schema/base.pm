@@ -240,7 +240,7 @@ has schema => sub {
             },
             physical    => {
                 description => 'network interface',
-                validator   => $self->sv->vnic,
+                validator   => $self->sv->zoneNic,
             },
             defrouter   => {
                 optional    => 1,

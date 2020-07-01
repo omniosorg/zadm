@@ -356,7 +356,7 @@ sub getOverLink {
 }
 
 sub isVirtual {
-    my $method = (caller(1))[3];
+    my $method = (caller (1))[3];
 
     Mojo::Exception->throw("ERROR: '$method' is a pure virtual method and must be implemented in a derived class.\n");
 }
