@@ -79,7 +79,7 @@ jobs:
         make
         make install
         cd $HOME/test-install
-        ./bin/zadm version
+        PERL5LIB=./test/lib/perl5 ./bin/zadm version
     - name: Cache Prep
       run: |
         rm thirdparty/Makefile* thirdparty/cpan*snapshot

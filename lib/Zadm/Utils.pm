@@ -11,6 +11,7 @@ use File::Spec;
 use File::Temp;
 use Text::ParseWords qw(shellwords);
 use String::ShellQuote qw(shell_quote);
+use Sun::Solaris::Kstat;
 
 # commands
 my %CMDS = (
@@ -328,9 +329,6 @@ sub scheduler {
 
 sub getPhysMem {
     my $self = shift;
-
-    # dynamically loading the module so GitHub actions don't fail
-    require Sun::Solaris::Kstat;
 
     my $kstat = Sun::Solaris::Kstat->new;
     return $prettySize->($kstat->{unix}->{0}->{system_pages}->{physmem}
