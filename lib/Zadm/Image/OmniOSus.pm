@@ -2,7 +2,11 @@ package Zadm::Image::OmniOSus;
 use Mojo::Base 'Zadm::Image::OmniOS';
 
 has baseurl  => 'https://us-west.mirror.omniosce.org/downloads/media';
-has index    => sub { shift->SUPER::baseurl . '/img-us-west.json' };
+# if we call shift->SUPER::baseurl here we'll initialise baseurl in the
+# base class. if we don't explicitly call baseurl on the inherited class,
+# postProcess (implemented in the base class) will pick up baseurl from
+# the base class. bypass this by creating a new instance to get the baseurl.
+has index    => sub { Zadm::Image::OmniOS->new->baseurl . '/img-us-west.json' };
 # overriding the provider as perl does not allow hyphens in package names
 has provider => 'omnios-us';
 

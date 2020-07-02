@@ -13,7 +13,7 @@ my $MAX_AGE = 24 * 60 * 60;
 # attributes
 has log      => sub { Mojo::Log->new(level => 'debug') };
 has utils    => sub { Zadm::Utils->new(log => shift->log) };
-has datadir  => sub { Mojo::Home->new->rel_file('../var')->to_string };
+has datadir  => sub { Mojo::Home->new->detect(__PACKAGE__)->rel_file('var')->to_string };
 has provider => sub { lc ((split /::/, ref shift)[-1]) };
 has cache    => sub { my $self = shift; $self->datadir . '/cache/' . $self->provider };
 has baseurl  => sub { Mojo::Exception->throw("ERROR: baseurl must be specified in derived class.\n") };

@@ -3,6 +3,7 @@ use Mojo::Base -base;
 
 use Mojo::Home;
 use Mojo::Exception;
+use Mojo::File;
 use File::Spec;
 
 my $MODPREFIX = 'Zadm::Image';
@@ -33,7 +34,7 @@ my $getImgProv = sub {
 # attributes
 has log      => sub { Mojo::Log->new(level => 'debug') };
 has utils    => sub { Zadm::Utils->new(log => shift->log) };
-has datadir  => sub { Mojo::Home->new->rel_file('../var')->to_string };
+has datadir  => sub { Mojo::Home->new->detect(__PACKAGE__)->rel_file('var')->to_string };
 has cache    => sub { shift->datadir . '/cache' };
 has images   => sub { {} };
 
@@ -53,13 +54,12 @@ has provider => sub {
             my $mod = do {
                 eval "require $module";
                 $module->new(log => $self->log, utils => $self->utils, datadir => $self->datadir);
-            };
-            $provider{$mod->provider} = $mod if $mod;
+            } or next;
+            $provider{$mod->provider} = $mod;
         }
     }
 
     return \%provider;
-
 };
 
 sub getImage {
@@ -69,8 +69,9 @@ sub getImage {
 
     $self->fetchImages;
 
-    # check if uuid is a local absolute path to an image
-    return { _file => $uuid } if $uuid =~ m!^/! && -r $uuid;
+    # check if uuid points to a local image
+    my $abspath = Mojo::File->new($uuid)->to_abs;
+    return { _file => $abspath } if -r $abspath;
 
     if ($uuid =~ /^http/) {
         $self->log->debug("downloading $uuid...");
