@@ -55,6 +55,7 @@ where 'command' is one of the following:
     stop <zone_name>
     restart <zone_name>
     poweroff <zone_name>
+    reset <zone_name>
     console [extra_args] <zone_name>
     log <zone_name>
     help [-b <brand>]

@@ -67,7 +67,7 @@ has vncsocket => sub {
 
     return $self->config->{zonepath} . '/root' . ($socket || '/tmp/vm.vnc');
 };
-has public    => sub { [ qw(reset nmi vnc monitor) ] };
+has public    => sub { [ qw(nmi vnc monitor) ] };
 has diskattr  => sub {
     my $self = shift;
 

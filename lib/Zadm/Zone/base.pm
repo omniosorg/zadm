@@ -599,12 +599,9 @@ sub poweroff {
 
 sub reset {
     my $self = shift;
-    Mojo::Exception->throw('reset not available for brand ' . $self->brand . "\n");
-}
 
-sub nmi {
-    my $self = shift;
-    Mojo::Exception->throw('nmi not available for brand ' . $self->brand . "\n");
+    $self->poweroff;
+    $self->boot;
 }
 
 sub console {
@@ -713,6 +710,7 @@ where 'command' is one of the following:
     stop <zone_name>
     restart <zone_name>
     poweroff <zone_name>
+    reset <zone_name>
     console [extra_args] <zone_name>
     log <zone_name>
     help [-b <brand>]

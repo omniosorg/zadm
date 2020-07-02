@@ -3,7 +3,7 @@ use Mojo::Base 'Zadm::Zone::KVM';
 
 # reset public interface as the inherited list
 # from KVM will have additional methods
-has public => sub { [ qw(reset nmi vnc) ] };
+has public => sub { [ qw(nmi vnc) ] };
 
 my $bhyveCtl = sub {
     my $self = shift;
