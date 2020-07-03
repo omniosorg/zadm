@@ -1,17 +1,17 @@
 name: Unit Tests
 
-on: 
+on:
   push:
     paths-ignore:
       - '**.md'
   pull_request:
     paths-ignore:
-      - '**.md'    
+      - '**.md'
 
 jobs:
 
   build:
-    
+
     strategy:
       matrix:
         os:
@@ -66,10 +66,10 @@ jobs:
 
     - name: Configure
       run: ./configure --prefix=$HOME/test-install
-    
+
     - name: Make
       run: make
-     
+
     - name: Check Dist
       run: |
         make dist

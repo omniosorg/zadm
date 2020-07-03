@@ -1,0 +1,75 @@
+name: Publish Release
+
+on:
+  push:
+    tags:
+    - 'v*'
+
+jobs:
+  build:
+    name: Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Build version string
+      id: version
+      run: |
+         echo "GITHUB_REPOSITORY = $GITHUB_REPOSITORY"
+         echo "GITHUB_REF = $GITHUB_REF"
+         echo "::set-output name=ver::${GITHUB_REF##*/v}"
+         echo "::set-output name=tar::zadm-${GITHUB_REF##*/v}.tar"
+
+    - name: Check VERSION file
+      run: |
+         echo "Expecting version ${{ steps.version.outputs.ver }}"
+         echo "VERSION file contains `cat VERSION`"
+         # workflow shells always run with set -e -o pipefail
+         [[ `cat VERSION` == ${{ steps.version.outputs.ver }} ]]
+
+    - name: Bootstrap
+      run: ./bootstrap
+
+    - name: Configure
+      run: ./configure
+
+    - name: Create archives
+      run: make dist-gzip
+
+    - name: Create checksums
+      run: |
+           sha256sum ${{ steps.version.outputs.tar }}.gz > ${{ steps.version.outputs.tar }}.gz.sha256
+
+    - name: Create release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.version.outputs.ver }}
+        release_name: v${{ steps.version.outputs.ver }}
+        draft: false
+        prerelease: true
+
+    - name: Upload gz
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ steps.version.outputs.tar }}.gz
+        asset_name: ${{ steps.version.outputs.tar }}.gz
+        asset_content_type: application/gzip
+
+    - name: Upload gz checksum
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ steps.version.outputs.tar }}.gz.sha256
+        asset_name: ${{ steps.version.outputs.tar }}.gz.sha256
+        asset_content_type: text/plain
+
