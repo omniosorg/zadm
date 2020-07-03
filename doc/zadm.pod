@@ -21,6 +21,7 @@ where 'command' is one of the following:
     stop <zone_name>
     restart <zone_name>
     poweroff <zone_name>
+    reset <zone_name>
     console [extra_args] <zone_name>
     log <zone_name>
     help [-b <brand>]
@@ -93,6 +94,10 @@ restarts the zone B<zone_name>
 =head2 B<poweroff>
 
 forcefully stops the zone B<zone_name> (i.e. "unplug")
+
+=head2 B<reset>
+
+forcefully stops the zone B<zone_name> (i.e. "unplug"); then boots the zone.
 
 =head2 B<console>
 
