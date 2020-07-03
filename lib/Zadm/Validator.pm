@@ -262,7 +262,7 @@ sub zvol {
                 || $disk->{sparse} && $self->elemOf(qw(true false))->($disk->{sparse});
 
             my @cmd = (qw(create -p),
-                ($disk->{sparse} eq 'true' ? qw(-s) : ()),
+                ($disk->{sparse} && $disk->{sparse} eq 'true' ? qw(-s) : ()),
                 ($disk->{blocksize} ? ('-o', "volblocksize=$disk->{blocksize}") : ()),
                 '-V', ($disk->{size} // '10G'), $path);
 
