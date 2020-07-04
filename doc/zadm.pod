@@ -28,6 +28,113 @@ where 'command' is one of the following:
     man
     version
 
+=head1 BHYVE BRAND SYNOPSIS
+
+B<zadm> I<command> [I<options...>]
+
+where 'command' is one of the following:
+
+    create -b <brand> [-i <image_uuid|image_path>] [-t <template_path>] <zone_name>
+    delete [--purge=vnic] <zone_name>
+    edit <zone_name>
+    set <zone_name> <property=value>
+    install [-i <image_uuid|image_path>] [-f] <zone_name>
+    show [zone_name [property]]
+    list
+    list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
+    brands
+    start [-c [extra_args]] <zone_name>
+    stop <zone_name>
+    restart <zone_name>
+    poweroff <zone_name>
+    reset <zone_name>
+    nmi <zone_name>
+    console [extra_args] <zone_name>
+    vnc [<[bind_addr:]port>] <zone_name>
+    log <zone_name>
+    help [-b <brand>]
+    man
+    version
+
+=head1 ILLUMOS BRAND SYNOPSIS
+
+B<zadm> I<command> [I<options...>]
+
+where 'command' is one of the following:
+
+    create -b <brand> -i <image_uuid|image_path> [-t <template_path>] <zone_name>
+    delete [--purge=vnic] <zone_name>
+    edit <zone_name>
+    set <zone_name> <property=value>
+    install -i <image_uuid|image_path> [-f] <zone_name>
+    show [zone_name [property]]
+    list
+    list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
+    brands
+    start [-c [extra_args]] <zone_name>
+    stop <zone_name>
+    restart <zone_name>
+    poweroff <zone_name>
+    console [extra_args] <zone_name>
+    log <zone_name>
+    help [-b <brand>]
+    man
+    version
+
+=head1 KVM BRAND SYNOPSIS
+
+B<zadm> I<command> [I<options...>]
+
+where 'command' is one of the following:
+
+    create -b <brand> [-i <image_uuid|image_path>] [-t <template_path>] <zone_name>
+    delete [--purge=vnic] <zone_name>
+    edit <zone_name>
+    set <zone_name> <property=value>
+    install [-i <image_uuid|image_path>] [-f] <zone_name>
+    show [zone_name [property]]
+    list
+    list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
+    brands
+    start [-c [extra_args]] <zone_name>
+    stop <zone_name>
+    restart <zone_name>
+    poweroff <zone_name>
+    reset <zone_name>
+    console [extra_args] <zone_name>
+    monitor <zone_name>
+    vnc [<[bind_addr:]port>] <zone_name>
+    log <zone_name>
+    help [-b <brand>]
+    man
+    version
+
+=head1 LX BRAND SYNOPSIS
+
+B<zadm> I<command> [I<options...>]
+
+where 'command' is one of the following:
+
+    create -b <brand> -i <image_uuid|image_path> [-t <template_path>] <zone_name>
+    delete [--purge=vnic] <zone_name>
+    edit <zone_name>
+    set <zone_name> <property=value>
+    install -i <image_uuid|image_path> [-f] <zone_name>
+    show [zone_name [property]]
+    list
+    list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
+    brands
+    start [-c [extra_args]] <zone_name>
+    stop <zone_name>
+    restart <zone_name>
+    poweroff <zone_name>
+    reset <zone_name>
+    console [extra_args] <zone_name>
+    log <zone_name>
+    help [-b <brand>]
+    man
+    version
+
 =head1 DESCRIPTION
 
 Use zadm to create/edit your zones.
