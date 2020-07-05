@@ -25,7 +25,7 @@ function lx_install_img {
 
 name="lx"
 z=ubuntu2004
-uuid=acdc99fb-05a5-4ef5-e64c-f8d6632ef3fc
+uuid=79b2cc7a-7637-c3a2-cb20-b90dcf821538
 
 zadmcreate -b lx -i $uuid $z
 lx_install_img $z omnios/$uuid.tar.xz
