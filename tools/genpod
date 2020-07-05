@@ -1,0 +1,88 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+
+use FindBin;
+use File::Basename qw(basename);
+
+my $basedir = "$FindBin::RealBin/../";
+my $libdir  = 'lib/Zadm/Zone';
+
+die 'usage: ' . basename($0) . " <bin> <pod>\n" if @ARGV != 2;
+
+sub getSynopsis {
+    my $path = shift;
+
+    open my $mod, '<', $path or die "ERROR: cannot open $path: $!\n";
+
+    my @pod;
+    while (<$mod>) {
+        next if !/^=head1 SYNOPSIS/;
+
+        my $name = basename($path);
+        $name =~ s/\.pm$//;
+        $name = uc $name;
+
+        push @pod, "=head1 $name BRAND SYNOPSIS\n";
+
+        while (<$mod>) {
+            last if /^=head1 COPYRIGHT/;
+            push @pod, $_;
+        }
+
+        last;
+    }
+
+    return @pod;
+}
+
+open my $pod, '>', "$basedir$ARGV[1]" or die "ERROR: cannot open $ARGV[1]: $!\n";
+open my $bin, '<', "$basedir$ARGV[0]" or die "ERROR: cannot open $ARGV[0]: $!\n";
+
+my $line;
+while ($line = <$bin>) {
+    last if $line =~ /^=head1 NAME/;
+}
+print $pod $line;
+
+while ($line = <$bin>) {
+    last if $line =~ /^=head1 DESCRIPTION/;
+    print $pod $line;
+}
+
+/base\.pm$/ || print $pod getSynopsis($_) for (sort glob ("$basedir$libdir/*.pm"));
+
+print $pod $line;
+print $pod $_ while (<$bin>);
+
+1;
+
+__END__
+
+=head1 COPYRIGHT
+
+Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
+
+=head1 LICENSE
+
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option)
+any later version.
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+more details.
+You should have received a copy of the GNU General Public License along with
+this program. If not, see L<http://www.gnu.org/licenses/>.
+
+=head1 AUTHOR
+
+S<Dominik Hassler E<lt>hadfl@omniosce.orgE<gt>>
+
+=head1 HISTORY
+
+2020-07-04 had Initial Version
+
+=cut
