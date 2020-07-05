@@ -2,6 +2,8 @@ package Zadm::Validator;
 use Mojo::Base -base;
 
 use Mojo::Log;
+use Mojo::Exception;
+use File::Basename qw(dirname);
 use Regexp::IPv4 qw($IPv4_re);
 use Regexp::IPv6 qw($IPv6_re);
 
@@ -300,6 +302,27 @@ sub zvol {
         }
 
         return undef;
+    }
+}
+
+sub zonePath {
+    my $self = shift;
+
+    return sub {
+        my $path   = shift // '';
+        my $parent = dirname $path;
+
+        open my $fh, '<', '/etc/mnttab'
+            or Mojo::Exception->throw("ERROR: opening '/etc/mnttab' for reading: $!\n");
+
+        while (<$fh>) {
+            my (undef, $mnt, $type) = split /\s+/;
+            next if $type ne 'zfs';
+
+            return undef if $parent eq $mnt;
+        }
+
+        return "could not find parent dataset for '$path'. Make sure that '$parent' is a ZFS dataset";
     }
 }
 

@@ -19,7 +19,7 @@ has schema => sub {
     zonepath    => {
         description => 'path to zone root',
         example     => '"zonepath" : "/zones/mykvm"',
-        validator   => $self->sv->regexp(qr/^\/[-.\w\/]+$/, 'zonepath is not a valid path'),
+        validator   => $self->sv->zonePath,
     },
     autoboot    => {
         optional    => 1,
