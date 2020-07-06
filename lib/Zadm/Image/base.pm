@@ -45,9 +45,7 @@ my $getFile = sub {
     my $opts     = shift // [];
 
     $self->log->debug("downloading $url...");
-    my @cmd = (@$opts, '-o', $self->cache . "/$fileName", $url);
-
-    $self->utils->exec('curl', \@cmd);
+    $self->utils->curl($self->cache . "/$fileName", $url, $opts);
 };
 
 sub postProcess {

@@ -559,7 +559,7 @@ sub isPublic {
     my $self   = shift;
     my $method = shift;
 
-    return grep { $_ eq $method } @{$self->public};
+    return !!grep { $_ eq $method } @{$self->public};
 }
 
 sub isSimpleProp {

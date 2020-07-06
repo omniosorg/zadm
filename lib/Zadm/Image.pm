@@ -78,7 +78,7 @@ sub getImage {
         my ($fileName) = $uuid =~ m!/([^/]+)$!;
         my @cmd = ('-o', $self->cache . "/$fileName", $uuid);
 
-        $self->utils->exec('curl', \@cmd);
+        $self->utils->curl($self->cache . "/$fileName", $uuid);
         # TODO: add a check whether we got a tarball or zfs stream
         # and not e.g. a html document
 

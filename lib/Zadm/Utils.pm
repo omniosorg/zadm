@@ -6,6 +6,9 @@ use Mojo::Exception;
 use JSON::PP; # for pretty encoding and 'relaxed' decoding
 use Mojo::Log;
 use Mojo::File;
+use Mojo::JSON qw(decode_json);
+use Mojo::Message::Response;
+use Mojo::Util qw(unquote);
 use IPC::Open3;
 use File::Spec;
 use File::Temp;
@@ -142,6 +145,28 @@ sub exec {
     else {
         system (@cmd) && Mojo::Exception->throw("ERROR: $err: $!\n");
     }
+}
+
+sub curl {
+    my $self = shift;
+    my $file = shift;
+    my $url  = shift;
+    my $opts = shift // [];
+
+    my @cmd = ($CMDS{curl}, @$opts, qw(-L -w "%{json}" -o), $file, $url);
+
+    open my $curl, '-|', @cmd
+        or Mojo::Exception->throw("ERROR: executing 'curl': $!\n");
+
+    # curl returns the json object quoted
+    my $status = decode_json(unquote(<$curl>)) // {};
+
+    my $res = Mojo::Message::Response->new;
+    $res->code($status->{http_code});
+
+    Mojo::Exception->throw("ERROR: Failed to download file from $url - "
+        . $res->code . ' ' . $res->default_message . "\n")
+            if !$res->is_success;
 }
 
 sub zfsRecv {
