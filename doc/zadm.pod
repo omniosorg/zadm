@@ -13,6 +13,7 @@ where 'command' is one of the following:
     edit <zone_name>
     set <zone_name> <property=value>
     install [-f] <zone_name>
+    uninstall <zone_name>
     show [zone_name [property]]
     list
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
@@ -39,6 +40,7 @@ where 'command' is one of the following:
     edit <zone_name>
     set <zone_name> <property=value>
     install [-i <image_uuid|image_path>] [-f] <zone_name>
+    uninstall <zone_name>
     show [zone_name [property]]
     list
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
@@ -67,6 +69,7 @@ where 'command' is one of the following:
     edit <zone_name>
     set <zone_name> <property=value>
     install -i <image_uuid|image_path> [-f] <zone_name>
+    uninstall <zone_name>
     show [zone_name [property]]
     list
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
@@ -92,6 +95,7 @@ where 'command' is one of the following:
     edit <zone_name>
     set <zone_name> <property=value>
     install [-i <image_uuid|image_path>] [-f] <zone_name>
+    uninstall <zone_name>
     show [zone_name [property]]
     list
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
@@ -120,6 +124,7 @@ where 'command' is one of the following:
     edit <zone_name>
     set <zone_name> <property=value>
     install -i <image_uuid|image_path> [-f] <zone_name>
+    uninstall <zone_name>
     show [zone_name [property]]
     list
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
@@ -167,6 +172,10 @@ function for details. Set only supports simple "property" : "value" pairs.
 
 installs a zone. Uninstalls it first if the zone is not in the configured
 state if B<-f> is given.
+
+=head2 B<uninstall>
+
+uninstalls a zone.
 
 =head2 B<show>
 
