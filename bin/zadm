@@ -121,6 +121,18 @@ sub main {
 
             last;
         };
+        /^uninstall$/ && do {
+            my $zName = pop @ARGV or pod2usage(1);
+
+            my $zone = $zones->zone($zName);
+
+            die "ERROR: zone '$zName' is 'running'. Shut it down first.\n"
+                if $zone->is('running');
+
+            $zone->uninstall;
+
+            last;
+        };
         /^delete$/ && do {
             my $zName = pop @ARGV or pod2usage(1);
 
@@ -285,6 +297,7 @@ where 'command' is one of the following:
     edit <zone_name>
     set <zone_name> <property=value>
     install [-f] <zone_name>
+    uninstall <zone_name>
     show [zone_name [property]]
     list
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
@@ -332,6 +345,10 @@ function for details. Set only supports simple "property" : "value" pairs.
 
 installs a zone. Uninstalls it first if the zone is not in the configured
 state if B<-f> is given.
+
+=head2 B<uninstall>
+
+uninstalls a zone.
 
 =head2 B<show>
 
