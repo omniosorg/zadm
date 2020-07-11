@@ -136,7 +136,7 @@ has schema => sub {
         members     => {
             ncpus       => {
                 description => 'sets the limit on the amount of CPU time. value is the percentage of a single CPU',
-                validator   => $self->sv->regexp(qr/^(?:\d*\.\d+|\d+\.\d*)$/, 'ncpus value not valid. check man zonecfg'),
+                validator   => $self->sv->regexp(qr/^(?:\d*\.\d+|\d+\.?\d*)$/, 'ncpus value not valid. check man zonecfg'),
             },
         },
     },
