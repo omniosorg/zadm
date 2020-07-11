@@ -5,9 +5,9 @@ zadm
 
 [![Unit Tests](https://github.com/omniosorg/zadm/workflows/Unit%20Tests/badge.svg?branch=master&event=push)](https://github.com/omniosorg/zadm/actions?query=workflow%3A%22Unit+Tests%22)
 
-Version: 0.1.19
+Version: 0.1.20
 
-Date: 2020-07-07
+Date: 2020-07-11
 
 zadm is a zone admin tool.
 
