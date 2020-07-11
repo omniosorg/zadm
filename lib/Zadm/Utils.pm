@@ -28,8 +28,7 @@ my %CMDS = (
     pkg         => '/usr/bin/pkg',
     curl        => '/usr/bin/curl',
     cat         => '/usr/bin/cat',
-    # TODO: OmniOS r30/r32 ship socat from the extra repository
-    socat       => -x '/usr/bin/socat' ? '/usr/bin/socat' : '/opt/ooce/bin/socat',
+    socat       => '/usr/bin/socat',
     nc          => '/usr/bin/nc',
     pv          => '/usr/bin/pv',
     gzip        => -x '/opt/ooce/bin/pigz' ? '/opt/ooce/bin/pigz' : '/usr/bin/gzip',
