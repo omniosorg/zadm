@@ -5,6 +5,7 @@ use Mojo::File;
 use Mojo::Log;
 use Mojo::Home;
 use Mojo::Util qw(class_to_path);
+use Data::Compare;
 use Data::Processor;
 use Pod::Usage;
 use Storable qw(dclone);
@@ -193,12 +194,21 @@ my $clearProperty = sub {
 };
 
 my $clearResources = sub {
-    my $self = shift;
+    my $self    = shift;
+    my $oldConf = shift;
 
     # TODO: adding support for rctls (for now just aliased rctls are supported)
-    $self->$delResource($_) for grep {
-        $_ ne 'rctl' && $self->$isRes($_)
-    } @{$self->oldres};
+    for my $res (@{$self->oldres}) {
+        next if $res eq 'rctl' || !$self->$isRes($res);
+
+        if (!$self->config->{$res} || $self->$resIsArray($res)
+            || !Compare($oldConf->{$res}, $self->config->{$res})) {
+            $self->$delResource($res);
+        }
+        else {
+            delete $self->config->{$res};
+        }
+    }
 };
 
 my $clearSimpleAttrs = sub {
@@ -289,19 +299,17 @@ my $setConfig = sub {
 
     # set new config
     $self->config($config);
-
-    $self->exists || $self->create({
-        map { $_ => $config->{$_} } @{$self->createprop}
-    });
+    $self->setPreProcess($self->config);
 
     if ($self->exists) {
         # clean up all existing resources
-        $self->$clearResources;
+        $self->$clearResources($oldConf);
         # clear simple attributes which have been removed
         $self->$clearSimpleAttrs;
     }
-
-    $self->setPreProcess($self->config);
+    else {
+        $self->create({ map { $_ => $config->{$_} } @{$self->createprop} });
+    }
 
     my $installed = !$self->is('configured');
     for my $prop (keys %{$self->config}) {
