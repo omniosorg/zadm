@@ -74,7 +74,9 @@ zadmedit -n $z |&
 pid=$!
 brk
 chmod S+cu $xml
-print -p ":wq"
+print -p "/autoboot
+:s/false/true
+:wq"
 reap $pid "$name"
 cf "$name"
 chmod S-cu $xml
