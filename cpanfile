@@ -1,4 +1,3 @@
-requires 'Data::Compare', '== 1.27';
 requires 'Data::Processor', '== 1.0.6';
 requires 'Mojolicious', '== 8.56';
 requires 'Regexp::IPv4', '== 0.003';

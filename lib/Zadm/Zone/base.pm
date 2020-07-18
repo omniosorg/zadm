@@ -5,10 +5,9 @@ use Mojo::File;
 use Mojo::Log;
 use Mojo::Home;
 use Mojo::Util qw(class_to_path);
-use Data::Compare;
 use Data::Processor;
 use Pod::Usage;
-use Storable qw(dclone);
+use Storable qw(dclone freeze);
 use Zadm::Zones;
 use Zadm::Utils;
 use Zadm::Image;
@@ -197,12 +196,14 @@ my $clearResources = sub {
     my $self    = shift;
     my $oldConf = shift;
 
+    # using Storable which is in core for a deep compare
+    # make sure the hash keys are sorted for serialisation
+    $Storable::canonical = 1;
     # TODO: adding support for rctls (for now just aliased rctls are supported)
     for my $res (@{$self->oldres}) {
         next if $res eq 'rctl' || !$self->$isRes($res);
 
-        if (!$self->config->{$res} || $self->$resIsArray($res)
-            || !Compare($oldConf->{$res}, $self->config->{$res})) {
+        if (!$self->config->{$res} || freeze($oldConf->{$res}) ne freeze($self->config->{$res})) {
             $self->$delResource($res);
         }
         else {

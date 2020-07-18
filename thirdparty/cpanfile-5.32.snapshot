@@ -1,23 +1,5 @@
 # carton snapshot format: version 1.0
 DISTRIBUTIONS
-  Clone-0.45
-    pathname: A/AT/ATOOMIC/Clone-0.45.tar.gz
-    provides:
-      Clone 0.45
-    requirements:
-      ExtUtils::MakeMaker 0
-  Data-Compare-1.27
-    pathname: D/DC/DCANTRELL/Data-Compare-1.27.tar.gz
-    provides:
-      Data::Compare 1.27
-      Data::Compare::Plugins::Scalar::Properties 1.25
-    requirements:
-      Clone 0.43
-      ExtUtils::MakeMaker 6.48
-      File::Find::Rule 0.1
-      Scalar::Util 0
-      Test::More 0.88
-      perl 5.006
   Data-Processor-1.0.6
     pathname: M/MB/MBP/Data-Processor-1.0.6.tar.gz
     provides:
@@ -32,18 +14,6 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 0
       perl 5.008005
-  File-Find-Rule-0.34
-    pathname: R/RC/RCLAMP/File-Find-Rule-0.34.tar.gz
-    provides:
-      File::Find::Rule 0.34
-      File::Find::Rule::Test::ATeam undef
-    requirements:
-      ExtUtils::MakeMaker 0
-      File::Find 0
-      File::Spec 0
-      Number::Compare 0
-      Test::More 0
-      Text::Glob 0.07
   Mojolicious-8.56
     pathname: S/SR/SRI/Mojolicious-8.56.tar.gz
     provides:
@@ -136,6 +106,7 @@ DISTRIBUTIONS
       Mojolicious::Lite undef
       Mojolicious::Plugin undef
       Mojolicious::Plugin::Config undef
+      Mojolicious::Plugin::Config::Sandbox undef
       Mojolicious::Plugin::DefaultHelpers undef
       Mojolicious::Plugin::EPLRenderer undef
       Mojolicious::Plugin::EPRenderer undef
@@ -161,13 +132,6 @@ DISTRIBUTIONS
       IO::Socket::IP 0.37
       Sub::Util 1.41
       perl 5.016
-  Number-Compare-0.03
-    pathname: R/RC/RCLAMP/Number-Compare-0.03.tar.gz
-    provides:
-      Number::Compare 0.03
-    requirements:
-      ExtUtils::MakeMaker 0
-      Test::More 0
   Regexp-IPv4-0.003
     pathname: P/PE/PERLANCAR/Regexp-IPv4-0.003.tar.gz
     provides:
@@ -189,12 +153,3 @@ DISTRIBUTIONS
       String::ShellQuote 1.04
     requirements:
       ExtUtils::MakeMaker 0
-  Text-Glob-0.11
-    pathname: R/RC/RCLAMP/Text-Glob-0.11.tar.gz
-    provides:
-      Text::Glob 0.11
-    requirements:
-      Exporter 0
-      ExtUtils::MakeMaker 0
-      constant 0
-      perl 5.00503
