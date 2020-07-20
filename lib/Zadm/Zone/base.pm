@@ -377,9 +377,14 @@ has public  => sub { [] };
 has opts    => sub { {} };
 has smod    => sub { my $mod = ref shift; $mod =~ s/Zone/Schema/; $mod };
 has exists  => sub { my $self = shift; $self->zones->exists($self->name) };
-# TODO: not all brands have a logfile, yet.
-has logfile => sub { shift->config->{zonepath} . '/root/tmp/init.log' };
 has valid   => sub { 0 };
+
+has logfile => sub {
+    my $self = shift;
+
+    my $zlog = $self->config->{zonepath} . '/root/tmp/init.log';
+    return -r $zlog ? $zlog : $self->config->{zonepath} . '/log/zone.log';
+};
 
 has config  => sub {
     my $self = shift;
