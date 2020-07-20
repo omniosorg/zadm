@@ -15,7 +15,7 @@ use Zadm::Zones;
 my $VERSION = '0.dev'; # VERSION
 my $PROG    = basename $0;
 
-if ($#ARGV >= 0 && $ARGV[0] eq 'version') {
+if ($#ARGV >= 0 && $ARGV[0] =~ /^(?:--)?version$/) {
     print "$PROG $VERSION\n";
     exit 0;
 }
@@ -246,7 +246,7 @@ sub main {
 
             last;
         };
-        /^help$/ && do {
+        /^(?:--)?help$/ && do {
             my $opts = {};
             {
                 local $SIG{__WARN__} = sub { };

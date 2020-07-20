@@ -372,7 +372,6 @@ has dp      => sub { Data::Processor->new(shift->schema) };
 has name    => sub { Mojo::Exception->throw("ERROR: zone name must be specified on instantiation.\n") };
 has oldres  => sub { 0 };
 has brand   => sub { lc ((split /::/, ref shift)[-1]) };
-has socket  => sub { my $self = shift; Mojo::Exception->throw('ERROR: no socket available for brand ' . $self->brand . ".\n") };
 has public  => sub { [] };
 has opts    => sub { {} };
 has smod    => sub { my $mod = ref shift; $mod =~ s/Zone/Schema/; $mod };
