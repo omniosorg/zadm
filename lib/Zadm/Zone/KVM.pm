@@ -83,7 +83,13 @@ has diskattr  => sub {
     return \%diskattr;
 };
 # adding an instance specific attribute to store the bootdisk path to be used by install
-has bootdisk => sub { {} };
+has bootdisk => sub {
+    my $self = shift;
+
+    return ref $self->config->{bootdisk} eq ref {}
+        ? { map { $_ => $self->config->{bootdisk}->{$_} } qw(path size) }
+        : {};
+};
 
 my $queryMonitor = sub {
     my $self   = shift;
