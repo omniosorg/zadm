@@ -26,6 +26,7 @@ where 'command' is one of the following:
     console [extra_args] <zone_name>
     log <zone_name>
     help [-b <brand>]
+    doc [-b <brand>] [-a <attribute>]
     man
     version
 
@@ -55,6 +56,7 @@ where 'command' is one of the following:
     vnc [<[bind_addr:]port>] <zone_name>
     log <zone_name>
     help [-b <brand>]
+    doc [-b <brand>] [-a <attribute>]
     man
     version
 
@@ -81,6 +83,7 @@ where 'command' is one of the following:
     console [extra_args] <zone_name>
     log <zone_name>
     help [-b <brand>]
+    doc [-b <brand>] [-a <attribute>]
     man
     version
 
@@ -110,6 +113,7 @@ where 'command' is one of the following:
     vnc [<[bind_addr:]port>] <zone_name>
     log <zone_name>
     help [-b <brand>]
+    doc [-b <brand>] [-a <attribute>]
     man
     version
 
@@ -137,6 +141,7 @@ where 'command' is one of the following:
     console [extra_args] <zone_name>
     log <zone_name>
     help [-b <brand>]
+    doc [-b <brand>] [-a <attribute>]
     man
     version
 
@@ -230,7 +235,13 @@ Any B<extra_args> will be passed to B<zlogin(1)>.
 
 =head2 B<log>
 
-displays the boot log for B<zone_name>
+displays the boot log for B<zone_name>.
+
+=head2 B<doc>
+
+displays information on the available attributes for a particular zone brand.
+If the optional B<-a> B<E<lt>attributeE<gt>> argument is provided then only
+that attribute is shown.
 
 =head1 COPYRIGHT
 

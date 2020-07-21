@@ -6,6 +6,7 @@ use Mojo::Log;
 use Mojo::Home;
 use Mojo::Util qw(class_to_path);
 use Data::Processor;
+use Pod::Text;
 use Pod::Usage;
 use Storable qw(dclone freeze);
 use Zadm::Zones;
@@ -362,6 +363,42 @@ my $zoneCmd = sub {
         "cannot $cmd zone $name", $fork);
 };
 
+# private static methods
+
+# not using pod_write from Data::Processor as we want a different formatting
+my $genDoc;
+$genDoc = sub {
+    my $schema = shift;
+    my $over   = shift // 0;
+
+    my @doc;
+    for my $attr (sort {
+        # mandatory attributes first
+        ($schema->{$a}->{optional} // 0) <=> ($schema->{$b}->{optional} // 0)
+        ||
+        $a cmp $b
+    } keys %$schema) {
+        my $str = $attr;
+        $str .= ' (optional)' if $schema->{$attr}->{optional};
+        $str .= ':';
+        $str .= ' array of' if $schema->{$attr}->{array};
+        $str .= exists $schema->{$attr}->{members}
+            ? ' resource containing the following attributes:'
+            : ' ' . ($schema->{$attr}->{description} || '<description missing>');
+
+        push @doc, $over ? "  $str" : ($str, '');
+
+        if (exists $schema->{$attr}->{members}) {
+            push @doc, ('', '=over', '');
+            push @doc, @{$genDoc->($schema->{$attr}->{members}, 1)};
+            push @doc, ('', '=back', '');
+
+        }
+    };
+
+    return \@doc;
+};
+
 # attributes
 has log     => sub { Mojo::Log->new(level => 'debug') };
 has zones   => sub { Zadm::Zones->new(log => shift->log) };
@@ -700,6 +737,35 @@ sub usage {
         'lib', class_to_path($mod))->to_abs->to_string, 1);
 }
 
+sub doc {
+    my $self = shift;
+    my $opts = shift;
+
+    my $schema;
+    my $header;
+    if ($opts->{attr}) {
+        Mojo::Exception->throw("ERROR: attribute '" . $opts->{attr}
+            . "' does not exist for brand '" . $self->brand . "'.\n")
+            if !exists $self->schema->{$opts->{attr}};
+
+        $schema = { $opts->{attr} => $self->schema->{$opts->{attr}} };
+        $header = '=head1 ' . $self->brand . ' brand ' . $opts->{attr} . ' attribute';
+    }
+    else {
+        $schema = $self->schema;
+        $header = '=head1 ' . $self->brand . ' brand attributes';
+    }
+
+    my $pod = Pod::Text->new;
+
+    $pod->parse_lines(
+        $header,
+        '',
+        @{$genDoc->($schema)},
+        undef
+    );
+}
+
 1;
 
 __END__
@@ -728,6 +794,7 @@ where 'command' is one of the following:
     console [extra_args] <zone_name>
     log <zone_name>
     help [-b <brand>]
+    doc [-b <brand>] [-a <attribute>]
     man
     version
 

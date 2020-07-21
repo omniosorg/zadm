@@ -264,7 +264,7 @@ has schema => sub {
             },
             over        => {
                 optional    => 1,
-                description => 'link where vnic traffic goes over',
+                description => 'global link',
                 example     => '"over" : "igb0"',
                 validator   => $self->sv->globalNic,
             },
