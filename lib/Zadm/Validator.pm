@@ -283,9 +283,9 @@ sub zvol {
             # TODO: this is done in the transformer for size, still we don't know about the execution order
             $disk->{size} = $self->toInt->($disk->{size});
 
-            $self->log->warn("WARNING: blocksize cannot be changed for existing disk '$path'")
+            $self->log->warn("WARNING: block size cannot be changed for existing disk '$path'")
                 if $disk->{blocksize} && $toBytes->($disk->{blocksize}) != $toBytes->($props->{volblocksize});
-            $self->log->warn("WARNING: sparse cannot be changed for existing disk '$path'")
+            $self->log->warn("WARNING: sparse attribute cannot be changed for existing disk '$path'")
                 if $disk->{sparse} && $disk->{sparse} ne ($props->{refreservation} eq 'none' ? 'true' : 'false');
 
             my $diskSize    = $toBytes->($props->{volsize});

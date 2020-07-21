@@ -338,7 +338,7 @@ sub install {
         if !$self->opts->{image};
 
     %{$self->bootdisk} || do {
-        $self->log->warn('WARNING: no bootdisk specified. Not installing image');
+        $self->log->warn('WARNING: no bootdisk attribute specified. Not installing image');
         return $self->SUPER::install;
     };
 
@@ -356,7 +356,7 @@ sub install {
         $check = 'yes';
     }
     else {
-        print "Going to overwrite the bootdisk '" . $self->bootdisk->{path}
+        print "Going to overwrite the boot disk '" . $self->bootdisk->{path}
             . "'\nwith the provided image. Do you want to continue [Y/n]? ";
         chomp ($check = <STDIN>);
     }
@@ -394,7 +394,7 @@ sub vnc {
 
     $self->log->warn('WARNING: zone ' . $self->name . " is not running\n")
         if !$self->is('running');
-    Mojo::Exception->throw('ERROR: vnc is not set-up for zone ' . $self->name . "\n")
+    Mojo::Exception->throw('ERROR: vnc is not set up for zone ' . $self->name . "\n")
         if !$self->config->{vnc} || $self->config->{vnc} eq 'off';
 
     my ($ip, $port) = $listen =~ /^(?:($IPv4_re|$IPv6_re):)?(\d+)$/;
