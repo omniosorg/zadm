@@ -33,10 +33,6 @@ my %CMDS = (
     pv          => '/usr/bin/pv',
     gzip        => -x '/opt/ooce/bin/pigz' ? '/opt/ooce/bin/pigz' : '/usr/bin/gzip',
     bzip2       => -x '/opt/ooce/bin/pbzip2' ? '/opt/ooce/bin/pbzip2' : '/usr/bin/bzip2',
-    # TODO: for now we just map suffixes to the appropriate program
-    # this should be enhanced. currently only used in zfsRecv
-    gz          => -x '/opt/ooce/bin/pigz' ? '/opt/ooce/bin/pigz' : '/usr/bin/gzip',
-    bz2         => -x '/opt/ooce/bin/pbzip2' ? '/opt/ooce/bin/pbzip2' : '/usr/bin/bzip2',
     xz          => '/usr/bin/xz',
     zstd        => '/opt/ooce/bin/zstd',
     pager       => $ENV{PAGER} || '/usr/bin/less -eimnqX',
@@ -44,6 +40,7 @@ my %CMDS = (
     dispadmin   => '/usr/sbin/dispadmin',
     getconf     => '/usr/bin/getconf',
     pagesize    => '/usr/bin/pagesize',
+    file        => '/usr/bin/file',
 );
 
 my %ENVARGS = map {
@@ -96,6 +93,21 @@ my $edit = sub {
     $modified = $file->stat->mtime != $modified;
 
     return ($modified, $json);
+};
+
+my $zfsStrDecomp = sub {
+    my $self = shift;
+    my $file = shift;
+
+    my $type = $self->readProc('file', [ '-b', $file ])->[0] // '';
+
+    for ($type) {
+        /^ZFS/ && return ($CMDS{cat});
+        /^(xz|gzip|bzip2)/ && return ($CMDS{$1}, '-dc');
+        /^Zstandard/ && return ($CMDS{zstd}, '-dc');
+    }
+
+    Mojo::Exception->throw("ERROR: zfs stream '$file' is not in a supported format '$type'.\n");
 };
 
 # public methods
@@ -171,15 +183,8 @@ sub zfsRecv {
     my $file = shift;
     my $ds   = shift;
 
-    # TODO: should we add 'comp' from the provider metadata as an argument to zfsRecv?
-    # or even use 'file' to determine the compression type
-    my ($suf) = $file =~ /\.([^.]+)$/;
-
-    Mojo::Exception->throw("ERROR: compression algorithm for suffix '$suf' unknown.\n")
-        if $suf && !exists $CMDS{$suf};
-
     my $cmd = join ' ',
-        shell_quote(shellwords($CMDS{$suf // 'cat'}, $suf ? qw(-dc) : ())),
+        shell_quote(shellwords($self->$zfsStrDecomp($file))),
         shell_quote($file),
         '|', shell_quote(shellwords($CMDS{pv})), '|',
         shell_quote(shellwords($CMDS{zfs}), qw(recv -Fv)),
