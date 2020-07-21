@@ -261,7 +261,13 @@ sub main {
         };
         # not a generic command, so we forward it to the brand specific implementation
         /^\w+$/ && do {
-            my $zName = pop @ARGV or pod2usage(1);
+            my $zName = pop @ARGV or do {
+                for my $brand (@{$zones->brands}) {
+                    my $zone = $zones->zone('global', create => 1, brand => $brand);
+                    $zone->usage if $zone->isPublic($mainOpt);
+                }
+                pod2usage(1);
+            };
 
             my $zone = $zones->zone($zName);
 
