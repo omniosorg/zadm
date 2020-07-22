@@ -56,5 +56,40 @@ validate bhyve "extra dev"
 zadmshow bhyve > $zadmroot/bhyve.json
 compare "$name show" $zadmroot/bhyve.json t/bhyve.d/base.json
 
+# list-images
+name="bhyve images"
+typeset -i n=`zadm list-images -b bhyve -p omnios | grep -c bloody-`
+[ $n -gt 0 ] && result "$name" PASS || result "$name" FAIL
+
+# install -i
+
+# Create a test ZFS volume for installation
+magic=ZadmTestImage
+ds=$dataset/bhyveimg.$$
+img=$zadmroot/bhyve.img
+bootdisk=$dataset/hdd-bhyve
+zfs create -V 128M $ds
+echo $magic > /dev/zvol/rdsk/$ds
+zfs snapshot $ds@initial
+zfs send $ds@initial > $img
+
+exts=
+gzip -c $img > $img.gz; exts+=" .gz"
+bzip2 -c $img > $img.bz2; exts+=" .bz2"
+xz -c $img > $img.xz; exts+=" .xz"
+zstd --no-progress -qqc $img > $img.zst; exts+=" .zst"
+
+name="install bhyve image"
+for ext in "" $exts; do
+	zfs destroy -r $bootdisk
+	# Uninstall here since a true uninstall does not work inside a
+	# alternate root.
+	zoneadm -z bhyve uninstall
+	zadm install -i $img$ext bhyve
+	cc=`dd if=/dev/zvol/rdsk/$bootdisk bs=${#magic} count=1 2>/dev/null`
+	[ "$cc" = "$magic" ] && result "$name $ext" PASS \
+	    || result "$name $ext" FAIL
+done
+
 stop_environment
 

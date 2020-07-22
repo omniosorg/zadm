@@ -93,7 +93,19 @@ function validate {
 }
 
 function zoneadm {
-	/usr/sbin/zoneadm $__ZADM_ZONEADM_ARGS "$@"
+	typeset -i z=0
+	typeset zone=
+	typeset last=
+	for last in "$@"; do
+		[ "$z" -eq 1 ] && zone=$last && z=0
+		[ "$last" = "-z" ] && z=1
+	done
+	echo "zoneadm ($zone) - last=[$LAST]" >> /dev/stderr
+	case "$last" in
+		install)	zone_state $zone installed ;;
+		uninstall)	zone_state $zone configured ;;
+		*)		/usr/sbin/zoneadm $__ZADM_ZONEADM_ARGS "$@" ;;
+	esac
 }
 
 function zonecfg {
