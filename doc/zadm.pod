@@ -142,17 +142,24 @@ where 'command' is one of the following:
 
 =head1 DESCRIPTION
 
-Use zadm to create/edit your zones.
+Use zadm to create, edit or manage your zones.
 
 =head2 B<create>
 
-creates a zone with the name B<zone_name>. Create will open an editor
-where the properties can be set. vnics which do not exist will be created.
+creates a new zone with the name B<zone_name>.
 
-zone properties are according to I<zonecfg>.
-global properties can be set as "property" : "value" pair, single
-resources as "resource" : { } hash structure and multiple resources
-as "resource" : [ { }, ... ] array of hash structures.
+zadm will open an editor showing a suitable default configuration for the
+selected brand which can be modified as required. Once the configuration is
+saved and the editor is closed, the zone will be created and installed. Any
+required VNICs, ZFS datasets or volumes will be automatically set up based on
+the configuration.
+
+The zadm configuration format is JSON. Standard zone properties from
+the I<zonecfg(1M)> man page are supported via simple "property" : "value" pairs,
+single resources as "resource" : { } hash structure, and multiple resources
+as "resource" : [ { }, ... ] array of hash structures. For more information
+on the available attributes for a particular zone brand, issue
+B<zadm doc -b &lt;brand&gt;>
 
 =head2 B<delete>
 
@@ -165,13 +172,14 @@ function for details.
 
 =head2 B<set>
 
-modify the configuration of a zone. See the descriptions in the B<create>
-function for details. Set only supports simple "property" : "value" pairs.
+modify the configuration of a zone, changing a single attribute. See the
+description in the B<create> function for details. Set only supports simple
+"property" : "value" pairs.
 
 =head2 B<install>
 
-installs a zone. Uninstalls it first if the zone is not in the configured
-state if B<-f> is given.
+installs a zone. If the zone is already installed then the B<-f> option must
+be provided in order to first uninstall the zone.
 
 =head2 B<uninstall>
 
@@ -179,8 +187,8 @@ uninstalls a zone.
 
 =head2 B<show>
 
-shows the zones' configuration. Shows config for B<zone_name>
-if given.
+shows the configuration for all zones in JSON format, or for a single zone
+if a B<zone_name> is provided.
 
 =head2 B<list>
 
@@ -197,7 +205,7 @@ list all available and installed zone brands
 =head2 B<start>
 
 starts the zone B<zone_name>. Attaches to the console if B<-c> is given.
-B<extra_args> will be passed to B<zlogin(1)>.
+Any B<extra_args> will be passed to B<zlogin(1)>.
 
 =head2 B<stop>
 
@@ -218,7 +226,7 @@ forcefully stops the zone B<zone_name> (i.e. "unplug"); then boots the zone.
 =head2 B<console>
 
 attaches to the B<zone_name> zone console.
-B<extra_args> will be passed to B<zlogin(1)>.
+Any B<extra_args> will be passed to B<zlogin(1)>.
 
 =head2 B<log>
 
