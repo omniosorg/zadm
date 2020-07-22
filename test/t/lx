@@ -4,6 +4,8 @@ source ${.sh.file%/*}/../lib/testenv.ksh
 
 start_environment
 
+cachedir=`pwd`/../var/cache/
+
 function lx_install_img {
 	typeset zone="${1:?zone}"
 	typeset img="${2:?img}"
@@ -12,25 +14,40 @@ function lx_install_img {
 
 	# `zoneadm install` does not work within an alternate root
 	# This calls lx_install directly to do the work.
-	# TODO - not sure yet if this is useful for testing, `zone_state` is
-	#        probably sufficient.
-	set -e
-	zfs create $dataset/root/zones/$zone
+	zfs create $dataset/root/zones/$zone || return
 	typeset zr=$datasetmp/root/zones/$zone
 	chmod 0700 $zr
-	/usr/lib/brand/lx/lx_install -z $zone -R $zr -t `pwd`/../var/cache/$img
+	/usr/lib/brand/lx/lx_install -z $zone -R $zr -t $img || return
 	zone_state $z installed
-	set +e
 }
 
 name="lx"
-z=ubuntu2004
-uuid=79b2cc7a-7637-c3a2-cb20-b90dcf821538
+z=void
+provider=omnios
+
+uuid=`zadm list-images -b lx -p $provider | grep void- \
+    | nawk '{print $1; exit}'`
+[ -n "$uuid" ] || result "find lx image" FAIL
+
+# Remove any cached image to exercise the download code
+rm -f $cachedir/$provider/*$uuid.tar.xz
 
 zadmcreate -b lx -i $uuid $z
-lx_install_img $z omnios/$uuid.tar.xz
 
-validate $z "lx ubuntu 2004"
+img=`ls -1 $cachedir/$provider/*$uuid.tar.xz`
+[ -f "$img" ] || result "find downloaded lx image" FAIL
+
+lx_install_img $z $img
+name="install lx $z"
+[ `zone_curstate $z` = installed ] \
+    && result "$name" PASS || result "$name" FAIL
+
+validate $z "lx $z"
+
+name="install lx $z files"
+path=`zadm show $z zonepath | tr -d '"'`
+[ -n "$path" -a -x "$path/root/bin/ls" ] \
+    && result "$name" PASS || result "$name" FAIL
 
 stop_environment
 

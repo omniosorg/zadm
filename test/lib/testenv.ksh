@@ -118,6 +118,13 @@ function zone_state {
 	sed -i "/^$zone:/s/:[^:]*/:$state/" $zadmroot/etc/zones/index
 }
 
+function zone_curstate {
+	typeset zone="${1:?zone}"
+
+	nawk -F: -vzone=$zone '$1 == zone { print $2 }' \
+	    $zadmroot/etc/zones/index
+}
+
 function start_environment {
 	[ "`zonename`" != global ] && echo "Must be run in the GZ" && exit 1
 	[ "`id -u`" != 0 ] && echo "Must run as super-user" && exit 1
