@@ -159,7 +159,7 @@ the I<zonecfg(1M)> man page are supported via simple "property" : "value" pairs,
 single resources as "resource" : { } hash structure, and multiple resources
 as "resource" : [ { }, ... ] array of hash structures. For more information
 on the available attributes for a particular zone brand, issue
-B<zadm doc -b &lt;brand&gt;>
+B<zadm doc -b E<lt>brandE<gt>>.
 
 =head2 B<delete>
 
