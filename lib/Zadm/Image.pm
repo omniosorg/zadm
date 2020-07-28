@@ -5,8 +5,10 @@ use Mojo::Home;
 use Mojo::Exception;
 use Mojo::File;
 use File::Spec;
+use File::Temp;
 
 my $MODPREFIX = 'Zadm::Image';
+my $TMPIMGDIR;
 
 # private methods
 my $getImgProv = sub {
@@ -75,15 +77,17 @@ sub getImage {
 
     if ($uuid =~ /^http/) {
         $self->log->debug("downloading $uuid...");
-        my ($fileName) = $uuid =~ m!/([^/]+)$!;
-        my @cmd = ('-o', $self->cache . "/$fileName", $uuid);
+        # global reference to tmpdir. it will be removed once it gets out of scope
+        $TMPIMGDIR = File::Temp->newdir(DIR => $self->cache);
 
-        $self->utils->curl($self->cache . "/$fileName", $uuid);
+        my ($fileName) = $uuid =~ m!/([^/]+)$!;
+
+        $self->utils->curl("$TMPIMGDIR/$fileName", $uuid);
         # TODO: add a check whether we got a tarball or zfs stream
         # and not e.g. a html document
 
         return {
-            _file => $self->cache . "/$fileName",
+            _file => "$TMPIMGDIR/$fileName",
         };
     }
 
