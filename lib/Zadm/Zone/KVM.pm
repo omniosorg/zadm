@@ -457,6 +457,7 @@ where 'command' is one of the following:
     vnc [<[bind_addr:]port>] <zone_name>
     log <zone_name>
     help [-b <brand>]
+    doc [-b <brand>] [-a <attribute>]
     man
     version
 

@@ -60,6 +60,7 @@ where 'command' is one of the following:
     console [extra_args] <zone_name>
     log <zone_name>
     help [-b <brand>]
+    doc [-b <brand>] [-a <attribute>]
     man
     version
 
