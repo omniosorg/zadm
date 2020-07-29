@@ -8,7 +8,6 @@ use File::Spec;
 use File::Temp;
 
 my $MODPREFIX = 'Zadm::Image';
-my $TMPIMGDIR;
 
 # private methods
 my $getImgProv = sub {
@@ -77,17 +76,19 @@ sub getImage {
 
     if ($uuid =~ /^http/) {
         $self->log->debug("downloading $uuid...");
-        # global reference to tmpdir. it will be removed once it gets out of scope
-        $TMPIMGDIR = File::Temp->newdir(DIR => $self->cache);
 
-        my ($fileName) = $uuid =~ m!/([^/]+)$!;
+        my $tmpimgdir = File::Temp->newdir(DIR => $self->cache);
+        my $fileName  = Mojo::File->new($uuid)->basename;
 
-        $self->utils->curl("$TMPIMGDIR/$fileName", $uuid);
+        $self->utils->curl("$tmpimgdir/$fileName", $uuid);
         # TODO: add a check whether we got a tarball or zfs stream
         # and not e.g. a html document
 
+        # adding a reference to the tmpdir object. once it gets out of scope
+        # i.e. after zone install the temporary directory will be removed
         return {
-            _file => "$TMPIMGDIR/$fileName",
+            __tmpdir__ => $tmpimgdir,
+            _file      => "$tmpimgdir/$fileName",
         };
     }
 
