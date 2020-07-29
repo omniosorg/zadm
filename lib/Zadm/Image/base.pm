@@ -97,6 +97,18 @@ sub fetchImages {
     $self->images($self->postProcess(Mojo::File->new($self->cache . '/index.txt')->slurp));
 }
 
+sub vacuum {
+    my $self = shift;
+    my $ts   = shift;
+
+    for my $f (Mojo::File->new($self->cache)->list->each) {
+        next if $f =~ /index\.txt$/ || Mojo::File->new($f)->stat->atime > $ts;
+
+        $self->log->debug("removing '$f' from cache...");
+        $f->remove;
+    }
+}
+
 sub postInstall {}
 
 1;

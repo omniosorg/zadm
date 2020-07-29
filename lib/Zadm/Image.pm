@@ -6,6 +6,8 @@ use Mojo::Exception;
 use Mojo::File;
 use File::Spec;
 use File::Temp;
+use Time::Piece;
+use Time::Seconds qw(ONE_DAY);
 
 my $MODPREFIX = 'Zadm::Image';
 
@@ -140,6 +142,15 @@ sub dump {
             for sort { $a->{brand} cmp $b->{brand} || $a->{name} cmp $b->{name} }
                 grep { !$opts->{brand} || $_->{brand} =~ /^(?:$brand)$/ } @{$self->images->{$prov}};
     }
+}
+
+sub vacuum {
+    my $self = shift;
+    my $opts = shift // {};
+
+    my $ts = localtime->epoch - ($opts->{days} // 30) * ONE_DAY;
+
+    $self->provider->{$_}->vacuum($ts) for keys %{$self->provider};
 }
 
 1;

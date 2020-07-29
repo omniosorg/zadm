@@ -446,6 +446,7 @@ where 'command' is one of the following:
     show [zone_name [property]]
     list
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
+    vacuum [-d <days>]
     brands
     start [-c [extra_args]] <zone_name>
     stop <zone_name>
