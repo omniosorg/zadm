@@ -258,13 +258,29 @@ sub edit {
         }
 
         local $@;
-        eval {
+        $self->log->debug("validating JSON");
+        my $cfg = eval {
             local $SIG{__DIE__};
-
-            $self->log->debug("validating config");
-            my $cfg = $prop ? { %{$zone->config}, %$prop } : JSON::PP->new->relaxed(1)->decode($json);
-            $cfgValid = $zone->setConfig($cfg);
+            $prop ? { %{$zone->config}, %$prop } : JSON::PP->new->relaxed(1)->decode($json);
         };
+        if ($@) {
+            my ($pre, $off, $post) = $@ =~ /^(.+at)\s+character\s+offset\s+(\d+)\s+(.+\))\s+at\s+/;
+
+            if (defined $pre && defined $off && defined $post) {
+                # cut the JSON string at the offset where decoding failed
+                my $jsonerr = substr $json, 0, $off;
+                # count newlines
+                my $nl = $jsonerr =~ s/(?:\r\n|\n|\r)//sg;
+                $@ = "$pre line " . ($nl + 1) . " $post\n";
+            }
+        }
+        else {
+            $self->log->debug("validating config");
+            $cfgValid = eval {
+                local $SIG{__DIE__};
+                $zone->setConfig($cfg);
+            };
+        }
         if ($@) {
             print $@;
 
