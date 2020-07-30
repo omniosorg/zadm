@@ -277,19 +277,21 @@ has schema => sub {
         members => {
             name    => {
                 description => 'resource name',
-                validator   => $self->sv->regexp(qr/^.+$/, 'Expected a string'),
+                optional    => 1,
+                validator   => sub { return 'rctl attributes are currently not supported. use the alias attribute or zonecfg(1M)' },
             },
             value   => {
                 description => 'resource value',
+                optional    => 1,
                 members     => {
                     priv        => {
-                        validator   => $self->sv->regexp(qr/^.+$/, 'Expected a string'),
+                        validator   => sub { return 'rctl attributes are currently not supported. use the alias attribute or zonecfg(1M)' },
                     },
                     limit       => {
-                        validator   => $self->sv->regexp(qr/^.+$/, 'Expected a string'),
+                        validator   => sub { return 'rctl attributes are currently not supported. use the alias attribute or zonecfg(1M)' },
                     },
                     action      => {
-                        validator   => $self->sv->regexp(qr/^.+$/, 'Expected a string'),
+                        validator   => sub { return 'rctl attributes are currently not supported. use the alias attribute or zonecfg(1M)' },
                     },
                 },
             },
