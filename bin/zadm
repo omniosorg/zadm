@@ -187,6 +187,17 @@ sub main {
 
             last;
         };
+        /^vacuum$/ && do {
+            my $opts = {};
+            {
+                local $SIG{__WARN__} = sub { };
+                GetOptions($opts, qw(days|d=i)) or pod2usage(1);
+                $opts->{days} && $opts->{days} < 0 and pod2usage(1);
+            }
+            $zones->image->vacuum($opts);
+
+            last;
+        };
         /^brands$/ && do {
             $zones->dumpBrands;
 
@@ -319,6 +330,7 @@ where 'command' is one of the following:
     show [zone_name [property]]
     list
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
+    vacuum [-d <days>]
     brands
     start [-c [extra_args]] <zone_name>
     stop <zone_name>
@@ -389,6 +401,11 @@ prints the status of all existing zones
 =head2 B<list-images>
 
 list all available images ready for download and install.
+
+=head2 B<vacuum>
+
+removes images from the local cache which have not been accessed in the last
+30 days or the days specified with the B<-d> option.
 
 =head2 B<brands>
 

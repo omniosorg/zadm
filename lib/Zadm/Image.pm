@@ -6,9 +6,10 @@ use Mojo::Exception;
 use Mojo::File;
 use File::Spec;
 use File::Temp;
+use Time::Piece;
+use Time::Seconds qw(ONE_DAY);
 
 my $MODPREFIX = 'Zadm::Image';
-my $TMPIMGDIR;
 
 # private methods
 my $getImgProv = sub {
@@ -77,17 +78,19 @@ sub getImage {
 
     if ($uuid =~ /^http/) {
         $self->log->debug("downloading $uuid...");
-        # global reference to tmpdir. it will be removed once it gets out of scope
-        $TMPIMGDIR = File::Temp->newdir(DIR => $self->cache);
 
-        my ($fileName) = $uuid =~ m!/([^/]+)$!;
+        my $tmpimgdir = File::Temp->newdir(DIR => $self->cache);
+        my $fileName  = Mojo::File->new($uuid)->basename;
 
-        $self->utils->curl("$TMPIMGDIR/$fileName", $uuid);
+        $self->utils->curl("$tmpimgdir/$fileName", $uuid);
         # TODO: add a check whether we got a tarball or zfs stream
         # and not e.g. a html document
 
+        # adding a reference to the tmpdir object. once it gets out of scope
+        # i.e. after zone install the temporary directory will be removed
         return {
-            _file => "$TMPIMGDIR/$fileName",
+            __tmpdir__ => $tmpimgdir,
+            _file      => "$tmpimgdir/$fileName",
         };
     }
 
@@ -139,6 +142,15 @@ sub dump {
             for sort { $a->{brand} cmp $b->{brand} || $a->{name} cmp $b->{name} }
                 grep { !$opts->{brand} || $_->{brand} =~ /^(?:$brand)$/ } @{$self->images->{$prov}};
     }
+}
+
+sub vacuum {
+    my $self = shift;
+    my $opts = shift // {};
+
+    my $ts = localtime->epoch - ($opts->{days} // 30) * ONE_DAY;
+
+    $self->provider->{$_}->vacuum($ts) for keys %{$self->provider};
 }
 
 1;
