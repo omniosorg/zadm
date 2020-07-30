@@ -41,6 +41,10 @@ my %CMDS = (
     getconf     => '/usr/bin/getconf',
     pagesize    => '/usr/bin/pagesize',
     file        => '/usr/bin/file',
+    ipf         => '/usr/sbin/ipf',
+    ipfstat     => '/usr/sbin/ipfstat',
+    ipmon       => '/usr/sbin/ipmon',
+    ipnat       => '/usr/sbin/ipnat',
 );
 
 my %ENVARGS = map {
@@ -138,6 +142,7 @@ sub exec {
     my $args = shift || [];
     my $err  = shift || "executing '$cmd'";
     my $fork = shift;
+    my $ret  = shift;
 
     Mojo::Exception->throw("ERROR: command '$cmd' not defined.\n")
         if !exists $CMDS{$cmd};
@@ -153,7 +158,7 @@ sub exec {
         }
     }
     else {
-        system (@cmd) && Mojo::Exception->throw("ERROR: $err: $!\n");
+        system (@cmd) && ($ret || Mojo::Exception->throw("ERROR: $err: $!\n"));
     }
 }
 
@@ -411,7 +416,7 @@ sub isaTTY {
 
 sub getSTDIN {
     my $self = shift;
-    return $self->isaTTY() ? [] : [ split /[\r\n]+/, do { local $/; <STDIN>; } ];
+    return $self->isaTTY() ? [] : [ split /\r\n|\n|\r/, do { local $/; <STDIN>; } ];
 }
 
 sub genmap {
