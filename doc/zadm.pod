@@ -26,6 +26,7 @@ where 'command' is one of the following:
     reset <zone_name>
     console [extra_args] <zone_name>
     log <zone_name>
+    fw [-r] [-d] [-t] [-m] [-e ipf|ipf6|ipnat] <zone_name>
     help [-b <brand>]
     doc [-b <brand>] [-a <attribute>]
     man
@@ -57,6 +58,7 @@ where 'command' is one of the following:
     console [extra_args] <zone_name>
     vnc [<[bind_addr:]port>] <zone_name>
     log <zone_name>
+    fw [-r] [-d] [-t] [-m] [-e ipf|ipf6|ipnat] <zone_name>
     help [-b <brand>]
     doc [-b <brand>] [-a <attribute>]
     man
@@ -85,6 +87,7 @@ where 'command' is one of the following:
     poweroff <zone_name>
     console [extra_args] <zone_name>
     log <zone_name>
+    fw [-r] [-d] [-t] [-m] [-e ipf|ipf6|ipnat] <zone_name>
     help [-b <brand>]
     doc [-b <brand>] [-a <attribute>]
     man
@@ -145,6 +148,7 @@ where 'command' is one of the following:
     reset <zone_name>
     console [extra_args] <zone_name>
     log <zone_name>
+    fw [-r] [-d] [-t] [-m] [-e ipf|ipf6|ipnat] <zone_name>
     help [-b <brand>]
     doc [-b <brand>] [-a <attribute>]
     man
@@ -246,6 +250,18 @@ Any B<extra_args> will be passed to B<zlogin(1)>.
 =head2 B<log>
 
 displays the boot log for B<zone_name>.
+
+=head2 B<fw>
+
+manages the zone firewall. With no arguments, show the currently loaded
+firewall and NAT rules for the zone.
+
+  -r|--reload                 Reload and enable the zone firewall
+  -m|--monitor                Monitor zone firewall activity in real-time to stdout
+  -t|--top                    Show active zone firewall state in a top-like view
+  -e|--edit <ipf|ipf6|ipnat>  Open a zone firewall configuration file in an editor.
+  -d|--disable                Disable the zone firewall. It will be re-enabled
+                              on zone reboot or with -r|--reload
 
 =head2 B<doc>
 

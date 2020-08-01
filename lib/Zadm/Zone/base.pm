@@ -9,6 +9,7 @@ use Data::Processor;
 use Pod::Text;
 use Pod::Usage;
 use Storable qw(dclone freeze);
+use Term::ANSIColor qw(colored);
 use Zadm::Zones;
 use Zadm::Utils;
 use Zadm::Image;
@@ -47,7 +48,18 @@ has template   => sub {
         %{$self->utils->scheduler},
     }
 };
-has options => sub { {} };
+has options => sub {
+    {
+        fw => {
+            edit   => {
+                getopt => 'edit|e=s',
+            },
+            map {
+                $_ => { getopt =>  "$_|" . substr $_, 0, 1 }
+            } qw(reload disable monitor top)
+        },
+    }
+};
 
 # private methods
 my $resIsArray = sub {
@@ -409,7 +421,7 @@ has dp      => sub { Data::Processor->new(shift->schema) };
 has name    => sub { Mojo::Exception->throw("ERROR: zone name must be specified on instantiation.\n") };
 has oldres  => sub { 0 };
 has brand   => sub { lc ((split /::/, ref shift)[-1]) };
-has public  => sub { [] };
+has public  => sub { [ qw(fw) ] };
 has opts    => sub { {} };
 has smod    => sub { my $mod = ref shift; $mod =~ s/Zone/Schema/; $mod };
 has exists  => sub { my $self = shift; $self->zones->exists($self->name) };
@@ -766,6 +778,105 @@ sub doc {
     );
 }
 
+sub fw {
+    my $self = shift;
+
+    my $name = $self->name;
+
+    if ($self->opts->{edit}) {
+        $self->usage if $self->opts->{edit} !~ /^(?:ipf6?|ipnat)$/;
+
+        my $f = Mojo::File->new($self->config->{zonepath}, 'etc', $self->opts->{edit} . '.conf');
+        if ($self->utils->isaTTY) {
+            $self->utils->exec('editor', [ $f ]);
+        }
+        else {
+            # ipf requires a trailing newline
+            $f->spurt(join ("\n", @{$self->utils->getSTDIN}), "\n");
+        }
+
+        $self->opts->{reload} = 1;
+    }
+
+    return if !$self->is('running');
+
+    if ($self->opts->{disable}) {
+        $self->utils->exec('ipf', [ '-GD', $name ]);
+
+        return;
+    }
+
+    if ($self->opts->{reload}) {
+        $self->log->debug("reloading ipf/ipnat for zone '$name'...");
+
+        $self->utils->exec('ipf', [ '-GE', $name ]);
+
+        my $f = Mojo::File->new($self->config->{zonepath}, 'etc', 'ipf.conf');
+        $self->utils->exec('ipf', [ qw(-GFa -f), $f, $name ]) if -r $f;
+
+        $f = $f->sibling('ipf6.conf');
+        $self->utils->exec('ipf', [ qw(-6GFa -f), $f, $name ]) if -r $f;
+
+        $f = $f->sibling('ipnat.conf');
+        $self->utils->exec('ipnat', [ qw(-CF -G), $name, '-f', $f ]) if -r $f;
+
+        $self->utils->exec('ipf', [ '-Gy', $name ]);
+
+        return;
+    }
+
+    if ($self->opts->{monitor}) {
+        # ignore the return code of ipmon since ^C'ing it will return non-null
+        $self->utils->exec('ipmon', [ '-aG', $name ], undef, undef, 1);
+
+        return;
+    }
+
+    if ($self->opts->{top}) {
+        $self->utils->exec('ipfstat', [ '-tG', $name ]);
+
+        return;
+    }
+
+    my %statemap = (
+        'pass'  => colored('pass', 'green'),
+        'block' => colored('block', 'red'),
+    );
+    my %ipfheaders = (
+        '-iG'   => colored("==> inbound IPv4 ipf rules for $name:", 'ansi208'),
+        '-i6G'  => colored("==> inbound IPv6 ipf rules for $name:", 'ansi208'),
+        '-oG'   => colored("==> outbound IPv4 ipf rules for $name:", 'ansi208'),
+        '-o6G'  => colored("==> outbound IPv6 ipf rules for $name:", 'ansi208'),
+    );
+
+    for my $ipf (qw(-iG -i6G -oG -o6G)) {
+        my $rules = $self->utils->readProc('ipfstat', [ $ipf, $name ]);
+        next if !@$rules;
+
+        print $ipfheaders{$ipf} . "\n";
+        for my $line (@$rules) {
+            $line =~ s/$_/$statemap{$_}/ for keys %statemap;
+
+            print "$line\n";
+        }
+        print "\n";
+    }
+
+    my $rules = $self->utils->readProc('ipnat', [ '-lG', $name ]);
+    my @rules;
+    for my $rule (@$rules) {
+        next if !$rule || $rule =~ /active\s+MAP/;
+        last if $rule =~ /active\s+sessions/;
+
+        push @rules, $rule;
+    }
+    return if !@rules;
+
+    print colored("==> ipnat rules for $name:", 'ansi208') . "\n";
+    print join "\n", @rules;
+    print "\n";
+}
+
 1;
 
 __END__
@@ -794,6 +905,7 @@ where 'command' is one of the following:
     reset <zone_name>
     console [extra_args] <zone_name>
     log <zone_name>
+    fw [-r] [-d] [-t] [-m] [-e ipf|ipf6|ipnat] <zone_name>
     help [-b <brand>]
     doc [-b <brand>] [-a <attribute>]
     man

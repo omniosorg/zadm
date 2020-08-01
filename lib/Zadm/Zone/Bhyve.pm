@@ -3,7 +3,20 @@ use Mojo::Base 'Zadm::Zone::KVM';
 
 # reset public interface as the inherited list
 # from KVM will have additional methods
-has public => sub { [ qw(nmi vnc) ] };
+has public  => sub { [ qw(nmi vnc fw) ] };
+has options => sub {
+    return {
+        %{shift->SUPER::options},
+        fw => {
+            edit   => {
+                getopt => 'edit|e=s',
+            },
+            map {
+                $_ => { getopt =>  "$_|" . substr $_, 0, 1 }
+            } qw(reload disable monitor top)
+        },
+    }
+};
 
 my $bhyveCtl = sub {
     my $self = shift;
@@ -63,6 +76,7 @@ where 'command' is one of the following:
     console [extra_args] <zone_name>
     vnc [<[bind_addr:]port>] <zone_name>
     log <zone_name>
+    fw [-r] [-d] [-t] [-m] [-e ipf|ipf6|ipnat] <zone_name>
     help [-b <brand>]
     doc [-b <brand>] [-a <attribute>]
     man

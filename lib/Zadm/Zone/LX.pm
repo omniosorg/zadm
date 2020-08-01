@@ -2,7 +2,8 @@ package Zadm::Zone::LX;
 use Mojo::Base 'Zadm::Zone::base';
 
 has options => sub {
-    {
+    return {
+        %{shift->SUPER::options},
         create  => {
             image => {
                 getopt => 'image|i=s',
@@ -60,6 +61,7 @@ where 'command' is one of the following:
     reset <zone_name>
     console [extra_args] <zone_name>
     log <zone_name>
+    fw [-r] [-d] [-t] [-m] [-e ipf|ipf6|ipnat] <zone_name>
     help [-b <brand>]
     doc [-b <brand>] [-a <attribute>]
     man
