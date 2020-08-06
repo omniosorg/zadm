@@ -342,6 +342,12 @@ sub install {
         return $self->SUPER::install;
     };
 
+    # cannot zfs recv if snapshots are present
+    my $snapshots = $self->utils->readProc('zfs',
+        [ qw(list -t snapshot -d1 -H -o name), $self->bootdisk->{path} ]);
+    Mojo::Exception->throw("ERROR: destination has snapshots (eg. $snapshots->[0])\n"
+        . "must destroy them to overwrite it\n") if @$snapshots;
+
     # image can be either for kvm or bhyve
     my $img = $self->zones->image->getImage($self->opts->{image}, qr/kvm|bhyve/);
 
