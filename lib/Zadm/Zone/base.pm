@@ -787,6 +787,8 @@ sub fw {
         $self->usage if $self->opts->{edit} !~ /^(?:ipf6?|ipnat)$/;
 
         my $f = Mojo::File->new($self->config->{zonepath}, 'etc', $self->opts->{edit} . '.conf');
+        my $mtime = -e $f ? $f->stat->mtime : 0;
+
         if ($self->utils->isaTTY) {
             $self->utils->exec('editor', [ $f ]);
         }
@@ -795,6 +797,7 @@ sub fw {
             $f->spurt(join ("\n", @{$self->utils->getSTDIN}), "\n");
         }
 
+        return if !-e $f || $mtime == $f->stat->mtime;
         $self->opts->{reload} = 1;
     }
 
@@ -812,13 +815,16 @@ sub fw {
         $self->utils->exec('ipf', [ '-GE', $name ]);
 
         my $f = Mojo::File->new($self->config->{zonepath}, 'etc', 'ipf.conf');
-        $self->utils->exec('ipf', [ qw(-GFa -f), $f, $name ]) if -r $f;
+        $self->utils->exec('ipf', [ qw(-GFa -f), $f, $name ])
+            if -r $f && (!$self->opts->{edit} || $self->opts->{edit} eq 'ipf');
 
         $f = $f->sibling('ipf6.conf');
-        $self->utils->exec('ipf', [ qw(-6GFa -f), $f, $name ]) if -r $f;
+        $self->utils->exec('ipf', [ qw(-6GFa -f), $f, $name ])
+            if -r $f && (!$self->opts->{edit} || $self->opts->{edit} eq 'ipf6');
 
         $f = $f->sibling('ipnat.conf');
-        $self->utils->exec('ipnat', [ qw(-CF -G), $name, '-f', $f ]) if -r $f;
+        $self->utils->exec('ipnat', [ qw(-CF -G), $name, '-f', $f ])
+            if -r $f && (!$self->opts->{edit} || $self->opts->{edit} eq 'ipnat');
 
         $self->utils->exec('ipf', [ '-Gy', $name ]);
 
