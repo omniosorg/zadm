@@ -8,6 +8,7 @@ use Mojo::Promise;
 use Mojo::IOLoop::Subprocess;
 use FindBin;
 use File::Spec;
+use List::Util qw(min);
 use Term::ANSIColor qw(colored);
 use Zadm::Utils;
 use Zadm::Image;
@@ -31,6 +32,19 @@ my $statecol = sub {
     }
 
     return colored($state, 'ansi208');
+};
+
+my $mempercol = sub {
+    my $val = shift;
+
+    my $str   = sprintf '%.2f%%', $val;
+    my $space = ' ' x (9 - length ($str));
+
+    return $space . (
+          $val >= 90 ? colored($str, 'red')
+        : $val >= 70 ? colored($str, 'ansi208')
+        : $str
+    );
 };
 
 # private methods
@@ -147,7 +161,6 @@ sub refresh {
 
 sub dump {
     my $self = shift;
-    my $opts = shift;
 
     my $format = "%-18s%-11s%-9s%6s%8s%8s\n";
     my @header = qw(NAME STATUS BRAND);
@@ -196,6 +209,36 @@ sub dump {
                 . (' ' x (11 - length (substr ($list->{$zone}->{state}, 0, 10)))),
             $list->{$zone}->{brand},
             map { $zStats->{$zone}->{$_} } @zStats,
+    }
+}
+
+sub memstat {
+    my $self = shift;
+
+    my $format = "%-18s%9s%9s%9s%9s%9s%9s\n";
+    my @header = qw(NAME RSS RSSCAP RSS% SWAP SWAPCAP SWAP%);
+
+    printf $format, @header;
+
+    my $mcap = $self->utils->kstat->{memory_cap};
+
+    for my $stat (sort { $a <=> $b } keys %$mcap) {
+        my ($zone) = keys %{$mcap->{$stat}};
+
+        # reference for convenient access
+        my $zmcap = $mcap->{$stat}->{$zone};
+
+        # cap cannot exceed the available amount
+        my $physcap = min($zmcap->{physcap}, $self->utils->ram);
+        my $swapcap = min($zmcap->{swapcap}, $self->utils->swap);
+
+        printf $format, $zone,
+            $self->utils->prettySize($zmcap->{rss}, '%.2f%s'),
+            $self->utils->prettySize($physcap, '%.2f%s'),
+            $mempercol->($zmcap->{rss} / $physcap * 100),
+            $self->utils->prettySize($zmcap->{swap}, '%.2f%s'),
+            $self->utils->prettySize($swapcap, '%.2f%s'),
+            $mempercol->($zmcap->{swap} / $swapcap * 100);
     }
 }
 
