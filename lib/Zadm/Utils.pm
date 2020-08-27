@@ -40,6 +40,7 @@ my %CMDS = (
     dispadmin   => '/usr/sbin/dispadmin',
     getconf     => '/usr/bin/getconf',
     pagesize    => '/usr/bin/pagesize',
+    swap        => '/usr/sbin/swap',
     file        => '/usr/bin/file',
     ipf         => '/usr/sbin/ipf',
     ipfstat     => '/usr/sbin/ipfstat',
@@ -48,22 +49,31 @@ my %CMDS = (
 );
 
 my %ENVARGS = map {
-    $_ => [ shellwords($ENV{'__ZADM_' .  uc ($_) . '_ARGS'} // '') ]
+    $_ => [ shellwords($ENV{'__ZADM_' . uc ($_) . '_ARGS'} // '') ]
 } keys %CMDS;
 
 my $ZPATH = ($ENV{__ZADM_ALTROOT} // '') . '/etc/zones';
 
 # attributes
-has log => sub { Mojo::Log->new(level => 'debug') };
+has log      => sub { Mojo::Log->new(level => 'debug') };
+has kstat    => sub { Sun::Solaris::Kstat->new };
+has pagesize => sub { shift->readProc('pagesize')->[0] // 4096 };
+has ram      => sub {
+    my $self = shift;
 
-# private static methods
-my $prettySize = sub {
-    my $size = shift;
+    return $self->kstat->{unix}->{0}->{system_pages}->{physmem}
+        * $self->pagesize;
+};
+has swap     => sub {
+    my $self = shift;
 
-    my @units = qw(B K M G T P E);
-    my $i     = $size <= 0 ? 0 : int (log ($size) / log (1024.0));
+    my $swap = $self->readProc('swap', [ '-s' ])->[0]
+        or return 0;
 
-    return sprintf("%.0f%s", $size / 1024 ** $i, $units[$i]);
+    my ($used, $avail) = $swap =~ /(\d+)k\s+used,\s+(\d+)k\s+available$/
+        or return 0;
+
+    return ($used + $avail) * 1024;
 };
 
 # private methods
@@ -375,12 +385,21 @@ sub scheduler {
     return {};
 }
 
+sub prettySize {
+    my $self   = shift;
+    my $size   = shift;
+    my $format = shift // '%.0f%s';
+
+    my @units = qw(B K M G T P E);
+    my $i     = $size <= 0 ? 0 : int (log ($size) / log (1024.0));
+
+    return sprintf($format, $size / 1024 ** $i, $units[$i]);
+}
+
 sub getPhysMem {
     my $self = shift;
 
-    my $kstat = Sun::Solaris::Kstat->new;
-    return $prettySize->($kstat->{unix}->{0}->{system_pages}->{physmem}
-        * ($self->readProc('pagesize')->[0] // 4096));
+    return $self->prettySize($self->ram);
 }
 
 sub loadTemplate {

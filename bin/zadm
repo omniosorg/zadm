@@ -177,6 +177,11 @@ sub main {
 
             last;
         };
+        /^memstat$/ && do {
+            $zones->memstat;
+
+            last;
+        };
         /^list-images$/ && do {
             my $opts = {};
             {
@@ -335,6 +340,7 @@ where 'command' is one of the following:
     uninstall <zone_name>
     show [zone_name [property]]
     list
+    memstat
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     vacuum [-d <days>]
     brands
@@ -403,7 +409,11 @@ if a B<zone_name> is provided.
 
 =head2 B<list>
 
-prints the status of all existing zones
+prints the status of all existing zones.
+
+=head2 B<memstat>
+
+prints memory usage/caps for running zones.
 
 =head2 B<list-images>
 

@@ -64,6 +64,7 @@ where 'command' is one of the following:
     uninstall <zone_name>
     show [zone_name [property]]
     list
+    memstat
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     vacuum [-d <days>]
     brands
