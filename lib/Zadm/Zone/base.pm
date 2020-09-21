@@ -789,6 +789,15 @@ sub fw {
         my $f = Mojo::File->new($self->config->{zonepath}, 'etc', $self->opts->{edit} . '.conf');
         my $mtime = -e $f ? $f->stat->mtime : 0;
 
+        local $@;
+        eval {
+            local $SIG{__DIE__};
+
+            # create config directory if it does not yet exist
+            $f->dirname->make_path({ mode => 0700 });
+        };
+        Mojo::Exception->throw("ERROR: cannot access/create '" . $f->dirname . "': $!\n") if $@;
+
         if ($self->utils->isaTTY) {
             $self->utils->exec('editor', [ $f ]);
         }
