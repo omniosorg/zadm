@@ -63,24 +63,40 @@ sub main {
 
             last;
         };
-        /^(?:edit|set)$/ && do {
-            my $zName = $mainOpt eq 'set' ? $ARGV[-2] : $ARGV[-1] or pod2usage(1);
+        /^edit$/ && do {
+            my $zName = pop @ARGV or pod2usage(1);
 
             my $opts = {};
             my $zone = $zones->zone($zName, opts => $opts);
 
-            my $prop;
-            if ($mainOpt eq 'set') {
-                my $set = pop @ARGV or pod2usage(1);
-                my ($key, $val) = split /=/, $set, 2;
+            $ret = !$zones->utils->edit($zone);
 
-                $key && $val or die "ERROR: invalid argument. Expecting 'property=value'.\n";
-                $zone->isSimpleProp($key) or die "ERROR: set is only supported for simple properties.\n";
+            last;
+        };
+        /^set$/ && do {
+            my $set   = pop @ARGV or pod2usage(1);
+            my $zName = pop @ARGV or pod2usage(1);
 
-                $prop = { $key => $val };
+            my ($key, $val) = split /=/, $set, 2;
+            $key && $val or die "ERROR: invalid argument. Expecting 'property=value'.\n";
+
+            # special handling here to allow cpu-shares being set for the global zone
+            if ($zName eq 'global') {
+                die "ERROR: only setting 'cpu-shares' is supported for global zone.\n"
+                    if $key ne 'cpu-shares';
+                die "ERROR: 'cpu-shares' must be a positive integer.\n" if $val !~ /^\d+$/;
+
+                $zones->utils->exec('zonecfg', [ qw(-z global set), $set ]);
+
+                last;
             }
 
-            $ret = !$zones->utils->edit($zone, $prop);
+            my $opts = {};
+            my $zone = $zones->zone($zName, opts => $opts);
+
+            $zone->isSimpleProp($key) or die "ERROR: set is only supported for simple properties.\n";
+
+            $ret = !$zones->utils->edit($zone, { $key => $val });
 
             last;
         };

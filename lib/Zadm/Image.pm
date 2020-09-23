@@ -9,7 +9,7 @@ use File::Temp;
 use Time::Piece;
 use Time::Seconds qw(ONE_DAY);
 
-my $MODPREFIX = 'Zadm::Image';
+my $MODPREFIX = __PACKAGE__;
 
 # private methods
 my $getImgProv = sub {
@@ -20,7 +20,7 @@ my $getImgProv = sub {
     my @imgs;
     my $provider;
     for my $prov (keys %{$self->images}) {
-        if (my @provimgs = grep { $_->{brand} =~ /^(?:$brand)$/ && $_->{uuid} =~ /$uuid/ } @{$self->images->{$prov}}) {
+        if (my @provimgs = grep { $_->{brand} eq $brand && $_->{uuid} =~ /$uuid/ } @{$self->images->{$prov}}) {
             push @imgs, @provimgs;
             $provider = $prov;
         }
