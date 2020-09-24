@@ -23,8 +23,6 @@ if ($#ARGV >= 0 && $ARGV[0] =~ /^(?:--)?version$/) {
 #fix perldoc pager if not set
 $ENV{PERLDOC_PAGER} ||= '/usr/bin/less -rins' if -x '/usr/bin/less';
 
-my %delPurgeMap;
-
 sub main {
     my $mainOpt = shift // 'list';
     my $ret = 0;
@@ -152,22 +150,9 @@ sub main {
         /^delete$/ && do {
             my $zName = pop @ARGV or pod2usage(1);
 
-            my $opts = {};
-            {
-                local $SIG{__WARN__} = sub { };
-                GetOptions($opts, qw(purge=s)) or pod2usage(1);
-            }
-            #split all features into individual options
-            if ($opts->{purge}) {
-                for my $purge (split /,/, $opts->{purge}) {
-                    $delPurgeMap{$purge} or die "ERROR: purge '$purge' not supported\n";
-                    $opts->{$purge} = 1;
-                }
-                delete $opts->{purge};
-            }
-
             my $zone = $zones->zone($zName);
-            $zone->remove($opts);
+
+            $zone->remove;
 
             last;
         };
@@ -349,7 +334,7 @@ B<zadm> I<command> [I<options...>]
 where 'command' is one of the following:
 
     create -b <brand> [-t <template_path>] <zone_name>
-    delete [--purge=vnic] <zone_name>
+    delete <zone_name>
     edit <zone_name>
     set <zone_name> <property=value>
     install [-f] <zone_name>
@@ -396,7 +381,7 @@ B<zadm doc -b E<lt>brandE<gt>>.
 
 =head2 B<delete>
 
-deletes a zone with the name B<zone_name>.
+deletes zone B<zone_name>.
 
 =head2 B<edit>
 

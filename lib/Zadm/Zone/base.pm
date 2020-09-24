@@ -16,7 +16,6 @@ use Zadm::Image;
 use Zadm::Validator;
 
 # constants/definitions
-has purgemap   => sub { shift->utils->genmap([ qw(vnic zvol) ]) };
 has statemap   => sub {
     {
         boot        => [ qw(installed) ],
@@ -716,7 +715,6 @@ sub uninstall {
 
 sub remove {
     my $self = shift;
-    my $opts = shift;
 
     my $name = $self->name;
     Mojo::Exception->throw("ERROR: cannot delete running zone '$name'\n")
@@ -903,7 +901,7 @@ B<zadm> I<command> [I<options...>]
 where 'command' is one of the following:
 
     create -b <brand> [-t <template_path>] <zone_name>
-    delete [--purge=vnic] <zone_name>
+    delete <zone_name>
     edit <zone_name>
     set <zone_name> <property=value>
     install [-f] <zone_name>

@@ -444,7 +444,7 @@ B<zadm> I<command> [I<options...>]
 where 'command' is one of the following:
 
     create -b <brand> [-i <image_uuid|image_path_or_uri>] [-t <template_path>] <zone_name>
-    delete [--purge=vnic] <zone_name>
+    delete <zone_name>
     edit <zone_name>
     set <zone_name> <property=value>
     install [-i <image_uuid|image_path_or_uri>] [-f] <zone_name>
