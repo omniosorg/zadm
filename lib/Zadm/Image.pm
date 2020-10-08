@@ -27,7 +27,7 @@ my $getImgProv = sub {
     }
 
     @imgs < 1 and Mojo::Exception->throw("ERROR: image UUID containing '$uuid' not found.\n");
-    @imgs > 1 and Mojo::Exception->throw("ERROR: more than one image uuid contains '$uuid'.\n");
+    @imgs > 1 and Mojo::Exception->throw("ERROR: more than one image UUID contains '$uuid'.\n");
 
     # TODO: adding provider for now for postInstall. we should not expose the provider but
     # rework the interface so Zadm::Image can take care of postInstall
@@ -68,7 +68,7 @@ has provider => sub {
 sub getImage {
     my $self  = shift;
     my $uuid  = shift;
-    my $brand = shift;
+    my $brand = shift; # brand is potentially a regexp don't use it stringified
 
     $self->fetchImages;
 
