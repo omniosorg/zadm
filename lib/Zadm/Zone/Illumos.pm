@@ -77,6 +77,7 @@ where 'command' is one of the following:
     stop <zone_name>
     restart <zone_name>
     poweroff <zone_name>
+    login <zone_name>
     console [extra_args] <zone_name>
     log <zone_name>
     fw [-r] [-d] [-t] [-m] [-e ipf|ipf6|ipnat] <zone_name>

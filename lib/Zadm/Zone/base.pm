@@ -23,7 +23,6 @@ has statemap   => sub {
         halt        => [ qw(running) ],
         install     => [ qw(configured) ],
         uninstall   => [ qw(incomplete installed) ],
-
     }
 };
 # TODO: properties that can only be set on creation/needs verification
@@ -420,7 +419,7 @@ has dp      => sub { Data::Processor->new(shift->schema) };
 has name    => sub { Mojo::Exception->throw("ERROR: zone name must be specified on instantiation.\n") };
 has oldres  => sub { 0 };
 has brand   => sub { lc ((split /::/, ref shift)[-1]) };
-has public  => sub { [ qw(fw) ] };
+has public  => sub { [ qw(login fw) ] };
 has opts    => sub { {} };
 has smod    => sub { my $mod = ref shift; $mod =~ s/Zone/Schema/; $mod };
 has exists  => sub { my $self = shift; $self->zones->exists($self->name) };
@@ -663,6 +662,17 @@ sub reset {
 
     $self->poweroff;
     $self->boot;
+}
+
+sub login {
+    my $self = shift;
+
+    my $name = $self->name;
+
+    Mojo::Exception->throw("ERROR: '$name' is not running, cannot login.\n")
+        if !$self->is('running');
+
+    $self->utils->exec('zlogin', [ $name ], "cannot login to $name");
 }
 
 sub console {
