@@ -249,6 +249,7 @@ sub main {
             my $zName = pop @ARGV or pod2usage(1);
 
             $zones->zone($zName)->console(\@ARGV);
+
             last;
         };
         /^log$/ && do {
@@ -256,6 +257,7 @@ sub main {
 
             my $zone = $zones->zone($zName);
             $zone->utils->exec('pager', [ $zone->logfile ]);
+
             last;
         };
         /^man$/ && do {
@@ -350,6 +352,7 @@ where 'command' is one of the following:
     restart <zone_name>
     poweroff <zone_name>
     reset <zone_name>
+    login <zone_name>
     console [extra_args] <zone_name>
     log <zone_name>
     fw [-r] [-d] [-t] [-m] [-e ipf|ipf6|ipnat] <zone_name>
@@ -449,6 +452,10 @@ forcefully stops the zone B<zone_name> (i.e. "unplug")
 =head2 B<reset>
 
 forcefully stops the zone B<zone_name> (i.e. "unplug"); then boots the zone.
+
+=head2 B<login>
+
+log into B<zone_name>.
 
 =head2 B<console>
 

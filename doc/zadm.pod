@@ -9,7 +9,7 @@ B<zadm> I<command> [I<options...>]
 where 'command' is one of the following:
 
     create -b <brand> [-t <template_path>] <zone_name>
-    delete [--purge=vnic] <zone_name>
+    delete <zone_name>
     edit <zone_name>
     set <zone_name> <property=value>
     install [-f] <zone_name>
@@ -25,6 +25,7 @@ where 'command' is one of the following:
     restart <zone_name>
     poweroff <zone_name>
     reset <zone_name>
+    login <zone_name>
     console [extra_args] <zone_name>
     log <zone_name>
     fw [-r] [-d] [-t] [-m] [-e ipf|ipf6|ipnat] <zone_name>
@@ -40,7 +41,7 @@ B<zadm> I<command> [I<options...>]
 where 'command' is one of the following:
 
     create -b <brand> [-i <image_uuid|image_path_or_uri>] [-t <template_path>] <zone_name>
-    delete [--purge=vnic] <zone_name>
+    delete <zone_name>
     edit <zone_name>
     set <zone_name> <property=value>
     install [-i <image_uuid|image_path_or_uri>] [-f] <zone_name>
@@ -73,7 +74,7 @@ B<zadm> I<command> [I<options...>]
 where 'command' is one of the following:
 
     create -b <brand> -i <image_uuid|image_path_or_uri> [-t <template_path>] <zone_name>
-    delete [--purge=vnic] <zone_name>
+    delete <zone_name>
     edit <zone_name>
     set <zone_name> <property=value>
     install -i <image_uuid|image_path_or_uri> [-f] <zone_name>
@@ -88,6 +89,7 @@ where 'command' is one of the following:
     stop <zone_name>
     restart <zone_name>
     poweroff <zone_name>
+    login <zone_name>
     console [extra_args] <zone_name>
     log <zone_name>
     fw [-r] [-d] [-t] [-m] [-e ipf|ipf6|ipnat] <zone_name>
@@ -103,7 +105,7 @@ B<zadm> I<command> [I<options...>]
 where 'command' is one of the following:
 
     create -b <brand> [-i <image_uuid|image_path_or_uri>] [-t <template_path>] <zone_name>
-    delete [--purge=vnic] <zone_name>
+    delete <zone_name>
     edit <zone_name>
     set <zone_name> <property=value>
     install [-i <image_uuid|image_path_or_uri>] [-f] <zone_name>
@@ -135,7 +137,7 @@ B<zadm> I<command> [I<options...>]
 where 'command' is one of the following:
 
     create -b <brand> -i <image_uuid|image_path_or_uri> [-t <template_path>] <zone_name>
-    delete [--purge=vnic] <zone_name>
+    delete <zone_name>
     edit <zone_name>
     set <zone_name> <property=value>
     install -i <image_uuid|image_path_or_uri> [-f] <zone_name>
@@ -151,6 +153,7 @@ where 'command' is one of the following:
     restart <zone_name>
     poweroff <zone_name>
     reset <zone_name>
+    login <zone_name>
     console [extra_args] <zone_name>
     log <zone_name>
     fw [-r] [-d] [-t] [-m] [-e ipf|ipf6|ipnat] <zone_name>
@@ -182,7 +185,7 @@ B<zadm doc -b E<lt>brandE<gt>>.
 
 =head2 B<delete>
 
-deletes a zone with the name B<zone_name>.
+deletes zone B<zone_name>.
 
 =head2 B<edit>
 
@@ -250,6 +253,10 @@ forcefully stops the zone B<zone_name> (i.e. "unplug")
 =head2 B<reset>
 
 forcefully stops the zone B<zone_name> (i.e. "unplug"); then boots the zone.
+
+=head2 B<login>
+
+log into B<zone_name>.
 
 =head2 B<console>
 
