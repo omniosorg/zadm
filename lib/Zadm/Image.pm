@@ -15,19 +15,19 @@ my $MODPREFIX = __PACKAGE__;
 my $getImgProv = sub {
     my $self  = shift;
     my $uuid  = shift;
-    my $brand = shift;
+    my $brand = shift; # brand is potentially a regexp don't use it stringified
 
     my @imgs;
     my $provider;
     for my $prov (keys %{$self->images}) {
-        if (my @provimgs = grep { $_->{brand} eq $brand && $_->{uuid} =~ /$uuid/ } @{$self->images->{$prov}}) {
+        if (my @provimgs = grep { $_->{brand} =~ /^(?:$brand)$/ && $_->{uuid} =~ /$uuid/ } @{$self->images->{$prov}}) {
             push @imgs, @provimgs;
             $provider = $prov;
         }
     }
 
-    @imgs < 1 and Mojo::Exception->throw("ERROR: $brand image UUID containing '$uuid' not found.\n");
-    @imgs > 1 and Mojo::Exception->throw("ERROR: more than one $brand image uuid contains '$uuid'.\n");
+    @imgs < 1 and Mojo::Exception->throw("ERROR: image UUID containing '$uuid' not found.\n");
+    @imgs > 1 and Mojo::Exception->throw("ERROR: more than one image uuid contains '$uuid'.\n");
 
     # TODO: adding provider for now for postInstall. we should not expose the provider but
     # rework the interface so Zadm::Image can take care of postInstall
