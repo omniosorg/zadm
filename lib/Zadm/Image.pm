@@ -4,7 +4,7 @@ use Mojo::Base -base;
 use Mojo::Home;
 use Mojo::Exception;
 use Mojo::File;
-use File::Spec;
+use Mojo::Loader qw(load_class);
 use File::Temp;
 use Time::Piece;
 use Time::Seconds qw(ONE_DAY);
@@ -45,21 +45,13 @@ has provider => sub {
     my $self = shift;
 
     my %provider;
-    for my $path (@INC) {
-        my @mDirs = split /::/, $MODPREFIX;
-        my $fPath = File::Spec->catdir($path, @mDirs, '*.pm');
-        for my $file (sort glob $fPath) {
-            my ($volume, $modulePath, $modName) = File::Spec->splitpath($file);
-            $modName =~ s/\.pm$//;
-            next if $modName eq 'base';
+    for my $module (@{$self->utils->getMods($MODPREFIX)}) {
+        next if load_class $module;
 
-            my $module = $MODPREFIX . '::' . $modName;
-            my $mod = do {
-                eval "require $module";
-                $module->new(log => $self->log, utils => $self->utils, datadir => $self->datadir);
-            } or next;
-            $provider{$mod->provider} = $mod;
-        }
+        my $mod = $module->new(log => $self->log,
+            utils => $self->utils, datadir => $self->datadir);
+
+        $provider{$mod->provider} = $mod;
     }
 
     return \%provider;

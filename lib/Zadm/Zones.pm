@@ -7,7 +7,6 @@ use Mojo::Exception;
 use Mojo::Promise;
 use Mojo::IOLoop::Subprocess;
 use FindBin;
-use File::Spec;
 use List::Util qw(min);
 use Term::ANSIColor qw(colored);
 use Zadm::Utils;
@@ -99,18 +98,12 @@ has modmap => sub {
     my $self = shift;
 
     # base is the default module
-    my %modmap = map { $_ => $MODPREFIX . '::base' } @{$self->brands};
+    my %modmap = map { $_ => "${MODPREFIX}::base" } @{$self->brands};
 
-    for my $path (@INC) {
-        my @mDirs = split /::|\//, $MODPREFIX;
-        my $fPath = File::Spec->catdir($path, @mDirs, '*.pm');
-        for my $file (sort glob($fPath)) {
-            my ($volume, $modulePath, $modName) = File::Spec->splitpath($file);
-            $modName =~ s/\.pm$//;
-            next if $modName eq 'base';
-
-            $modmap{lc $modName} = $MODPREFIX . "::$modName" if exists $modmap{lc $modName};
-        }
+    for my $mod (@{$self->utils->getMods($MODPREFIX)}) {
+        my ($name) = $mod =~ /([^:]+)$/;
+        $name = lc $name;
+        $modmap{$name} &&= $mod;
     }
 
     return \%modmap;
