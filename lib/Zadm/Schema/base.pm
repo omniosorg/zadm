@@ -268,6 +268,12 @@ has schema => sub {
                 example     => '"over" : "igb0"',
                 validator   => $self->sv->globalNic,
             },
+            'vlan-id'       => {
+                optional    => 1,
+                description => 'vlan id',
+                example     => '"vlan-id" : "20"',
+                validator   => $self->sv->vlanId,
+            },
         },
     },
     rctl    => {
