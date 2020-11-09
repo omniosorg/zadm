@@ -420,7 +420,7 @@ sub getOverLink {
     my $self = shift;
 
     my $dladm = $self->readProc('dladm', [ qw(show-link -p -o), 'link,class' ]);
-    return [ map { /^([^:]+):(?:phys|etherstub|overlay)/ } @$dladm ];
+    return [ map { /^([^:]+):(?:phys|etherstub|aggr|overlay)/ } @$dladm ];
 }
 
 sub isVirtual {

@@ -138,9 +138,21 @@ sub lxIP {
     return sub {
         my $ip = shift;
 
-        return undef if $ip eq 'dhcp';
+        return undef if $ip eq 'dhcp' || $ip eq 'addrconf';
 
         return $self->cidr->($ip);
+    }
+}
+
+sub vlanId {
+    my $self = shift;
+
+    return sub {
+        my $vlan = shift;
+
+        return $vlan if !$vlan;
+
+        return $vlan > 0 && $vlan < 4095 ? undef : "vlan-id '$vlan' is out of range";
     }
 }
 
