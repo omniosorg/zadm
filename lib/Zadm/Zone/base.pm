@@ -302,7 +302,7 @@ my $setConfig = sub {
     $self->setPreProcess($oldConf);
 
     # validate new config
-    $self->validate($config) if !$self->valid;
+    $self->validate($config);
 
     # we don't support brand changes
     Mojo::Exception->throw("ERROR: brand cannot be changed from '"
