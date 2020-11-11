@@ -150,8 +150,7 @@ sub vlanId {
     return sub {
         my $vlan = shift;
 
-        return $vlan if !$vlan;
-
+        return "vlan-id '$vlan' is not numeric" if !$numeric->($vlan);
         return $vlan > 0 && $vlan < 4095 ? undef : "vlan-id '$vlan' is out of range";
     }
 }
