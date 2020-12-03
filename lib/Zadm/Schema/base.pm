@@ -171,6 +171,7 @@ has schema => sub {
                 validator   => $self->sv->regexp(qr/^\w[-\w\/]+$/, 'dataset name not valid. check man zfs'),
             },
         },
+        transformer => $self->sv->toHash('name', 1),
     },
     'dedicated-cpu' => {
         optional    => 1,

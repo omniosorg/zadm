@@ -47,11 +47,12 @@ my $toBytes = sub {
     return int ($val * $unitFactors{lc ($suf || 'b')});
 };
 
-my $toDiskStruct = sub {
-    my $disk = shift;
+my $toHash = sub {
+    my $key = shift;
+    my $val = shift;
 
-    # transform plain disk paths into disk structures
-    return $disk && !ref $disk ? { path => $disk } : $disk;
+    # transform scalars into hashes
+    return $key && $val && !ref $val ? { $key => $val } : $val;
 };
 
 my $checkBlockSize = sub {
@@ -409,16 +410,17 @@ sub toBytes {
     }
 }
 
-sub toDiskStruct {
+sub toHash {
     my $self    = shift;
+    my $attr    = shift;
     my $isarray = shift;
 
     return sub {
-        my $disk = $isarray ? $self->toArray->(shift) : shift;
+        my $elems = $isarray ? $self->toArray->(shift) : shift;
 
-        return ref $disk eq ref []
-            ? [ map { $toDiskStruct->($_) } @$disk ]
-            : $toDiskStruct->($disk);
+        return ref $elems eq ref []
+            ? [ map { $toHash->($attr, $_) } @$elems ]
+            : $toHash->($attr, $elems);
     }
 }
 
