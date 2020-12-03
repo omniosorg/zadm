@@ -58,7 +58,7 @@ $SCHEMA = sub {
                 'x-dskattr' => 0,
             },
         },
-        transformer => $self->sv->toDiskStruct,
+        transformer => $self->sv->toHash('path'),
         'x-attr'    => 1,
     },
     bootorder   => {
@@ -126,7 +126,7 @@ $SCHEMA = sub {
                 'x-dskattr' => 0,
             },
         },
-        transformer => $self->sv->toDiskStruct(1),
+        transformer => $self->sv->toHash('path', 1),
         'x-attr'    => 1,
     },
     diskif      => {
