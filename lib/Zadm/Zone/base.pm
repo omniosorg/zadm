@@ -610,7 +610,7 @@ sub state {
 
 sub is {
     my $self  = shift;
-    my $state = shift // return 1;
+    my $state = shift // return 0;
 
     return $self->state eq $state;
 }
