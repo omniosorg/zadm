@@ -2,6 +2,7 @@ package Zadm::Zone;
 use Mojo::Base -base;
 
 use Mojo::Exception;
+use Mojo::Loader qw(load_class);
 use Mojo::Log;
 use Zadm::Zones;
 
@@ -39,7 +40,8 @@ my $loadModule = sub {
     my $module = $self->zones->modmap->{$brand};
 
     return do {
-        eval "require $module";
+        load_class($module)
+            and Mojo::Exception->throw("ERROR: cannot load class '$module'.");
         $module->new(@args, brand => $brand);
     };
 };
@@ -54,7 +56,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 

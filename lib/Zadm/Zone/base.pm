@@ -4,6 +4,7 @@ use Mojo::Base -base;
 use Mojo::File;
 use Mojo::Log;
 use Mojo::Home;
+use Mojo::Loader qw(load_class);
 use Mojo::Util qw(class_to_path);
 use Data::Processor;
 use Pod::Text;
@@ -192,6 +193,33 @@ my $setProperty = sub {
     $self->utils->exec('zonecfg', \@cmd, "cannot set property '$prop'");
 };
 
+my $decodeProp = sub {
+    my $self = shift;
+    my ($res, $prop, $val) = @_;
+
+    my ($_prop, $_val) = $val =~ /name=([^,]+),value="([^"]+)"/;
+
+    ($prop, $val) = ($_prop, $_val)
+        if ($res eq 'net' && $_prop && exists $self->schema->{$res}->{members}->{$_prop}
+            && $self->schema->{$res}->{members}->{$_prop}->{'x-netprop'});
+
+    return ($prop, $val);
+};
+
+my $encodeProp = sub {
+    my $self = shift;
+    my ($res, $prop, $val) = @_;
+
+    return ('set', $prop, '=', q{"} . $self->$setVal($val) . q{"}, ';')
+        if ($res ne 'net' || (exists $self->schema->{$res}->{members}->{$prop}
+            && !$self->schema->{$res}->{members}->{$prop}->{'x-netprop'}));
+
+    $val = ref $val eq ref [] ? qq{(name=$prop,value="} . join (',', @$val) . '")'
+         : qq{(name=$prop,value="$val")};
+
+    return (qw(add property), $val, ';');
+};
+
 my $clearProperty = sub {
     my $self = shift;
     my $prop = shift;
@@ -254,7 +282,7 @@ my $getConfig = sub {
         };
         if ($isres) {
             # decode property
-            ($prop, $val) = $self->decodeProp($res, $prop, $val);
+            ($prop, $val) = $self->$decodeProp($res, $prop, $val);
             # check if property exists in schema
             $self->$isResProp($res, $prop) or do {
                 $self->log->warn("'$prop' is not a member of resource '$res'");
@@ -402,9 +430,8 @@ $genDoc = sub {
             push @doc, ('', '=over', '');
             push @doc, @{$genDoc->($schema->{$attr}->{members}, 1)};
             push @doc, ('', '=back', '');
-
         }
-    };
+    }
 
     return \@doc;
 };
@@ -449,10 +476,11 @@ has schema  => sub {
     my $mod = $self->smod;
     return do {
         # fall back to generic schema if there is no brand specific
-        eval "require $mod" || do {
+        load_class($mod) && do {
             $mod = __PACKAGE__;
             $mod =~ s/Zone/Schema/;
-            eval "require $mod";
+            load_class($mod)
+                and Mojo::Exception->throw("ERROR: cannot load schema class '$mod'.\n");
         };
         $mod->new(sv => $self->sv)->schema;
     };
@@ -473,33 +501,6 @@ has createpropmap => sub {
 };
 
 # public methods
-sub decodeProp {
-    my $self = shift;
-    my ($res, $prop, $val) = @_;
-
-    my ($_prop, $_val) = $val =~ /name=([^,]+),value="([^"]+)"/;
-
-    ($prop, $val) = ($_prop, $_val)
-        if ($res eq 'net' && $_prop && exists $self->schema->{$res}->{members}->{$_prop}
-            && $self->schema->{$res}->{members}->{$_prop}->{'x-netprop'});
-
-    return ($prop, $val);
-}
-
-sub encodeProp {
-    my $self = shift;
-    my ($res, $prop, $val) = @_;
-
-    return ('set', $prop, '=', q{"} . $self->$setVal($val) . q{"}, ';')
-        if ($res ne 'net' || (exists $self->schema->{$res}->{members}->{$prop}
-            && !$self->schema->{$res}->{members}->{$prop}->{'x-netprop'}));
-
-    $val = ref $val eq ref [] ? "(name=$prop,value=\"" . join (',', @$val) . '")'
-         : "(name=$prop,value=\"$val\")";
-
-    return (qw(add property), $val, ';');
-}
-
 sub addResource {
     my $self  = shift;
     my $res   = shift;
@@ -508,7 +509,7 @@ sub addResource {
     my $name = $self->name;
     my @cmd  = ('-z', $name, 'add', $res, ';');
 
-    push @cmd, $self->encodeProp($res, $_, $props->{$_}) for keys %$props;
+    push @cmd, $self->$encodeProp($res, $_, $props->{$_}) for keys %$props;
 
     push @cmd, qw(end);
 
@@ -545,7 +546,8 @@ sub setPreProcess {
     my $self = shift;
     my $cfg  = shift;
 
-    for my $res (keys %$cfg) {
+    # sort the attr resources by name for deep compare
+    for my $res (sort keys %$cfg) {
         next if !$self->$resIsAttr($res);
 
         my %elem = (
@@ -634,13 +636,12 @@ sub isSimpleProp {
 
 sub boot {
     my $self  = shift;
-    my $opts  = shift;
     my $cOpts = shift;
 
     # fork boot to the bg if we are about to attach to the console
-    $self->$zoneCmd('boot', undef, $opts->{console});
+    $self->$zoneCmd('boot', undef, $self->opts->{console});
 
-    $self->console($cOpts) if $opts->{console};
+    $self->console($cOpts) if $self->opts->{console};
 }
 
 sub shutdown {
@@ -759,7 +760,8 @@ sub usage {
 
 sub doc {
     my $self = shift;
-    my $opts = shift;
+
+    my $opts = $self->opts;
 
     my $schema;
     my $header;
@@ -790,11 +792,12 @@ sub fw {
     my $self = shift;
 
     my $name = $self->name;
+    my $opts = $self->opts;
 
-    if ($self->opts->{edit}) {
-        $self->usage if $self->opts->{edit} !~ /^(?:ipf6?|ipnat)$/;
+    if ($opts->{edit}) {
+        $self->usage if $opts->{edit} !~ /^(?:ipf6?|ipnat)$/;
 
-        my $f = Mojo::File->new($self->config->{zonepath}, 'etc', $self->opts->{edit} . '.conf');
+        my $f = Mojo::File->new($self->config->{zonepath}, 'etc', $opts->{edit} . '.conf');
         my $mtime = -e $f ? $f->stat->mtime : 0;
 
         local $@;
@@ -815,47 +818,47 @@ sub fw {
         }
 
         return if !-e $f || $mtime == $f->stat->mtime;
-        $self->opts->{reload} = 1;
+        $opts->{reload} = 1;
     }
 
     return if !$self->is('running');
 
-    if ($self->opts->{disable}) {
+    if ($opts->{disable}) {
         $self->utils->exec('ipf', [ '-GD', $name ]);
 
         return;
     }
 
-    if ($self->opts->{reload}) {
+    if ($opts->{reload}) {
         $self->log->debug("reloading ipf/ipnat for zone '$name'...");
 
         $self->utils->exec('ipf', [ '-GE', $name ]);
 
         my $f = Mojo::File->new($self->config->{zonepath}, 'etc', 'ipf.conf');
         $self->utils->exec('ipf', [ qw(-GFa -f), $f, $name ])
-            if -r $f && (!$self->opts->{edit} || $self->opts->{edit} eq 'ipf');
+            if -r $f && (!$opts->{edit} || $opts->{edit} eq 'ipf');
 
         $f = $f->sibling('ipf6.conf');
         $self->utils->exec('ipf', [ qw(-6GFa -f), $f, $name ])
-            if -r $f && (!$self->opts->{edit} || $self->opts->{edit} eq 'ipf6');
+            if -r $f && (!$opts->{edit} || $opts->{edit} eq 'ipf6');
 
         $f = $f->sibling('ipnat.conf');
         $self->utils->exec('ipnat', [ qw(-CF -G), $name, '-f', $f ])
-            if -r $f && (!$self->opts->{edit} || $self->opts->{edit} eq 'ipnat');
+            if -r $f && (!$opts->{edit} || $opts->{edit} eq 'ipnat');
 
         $self->utils->exec('ipf', [ '-Gy', $name ]);
 
         return;
     }
 
-    if ($self->opts->{monitor}) {
+    if ($opts->{monitor}) {
         # ignore the return code of ipmon since ^C'ing it will return non-null
         $self->utils->exec('ipmon', [ '-aG', $name ], undef, undef, 1);
 
         return;
     }
 
-    if ($self->opts->{top}) {
+    if ($opts->{top}) {
         $self->utils->exec('ipfstat', [ '-tG', $name ]);
 
         return;
@@ -937,7 +940,7 @@ where 'command' is one of the following:
 
 =head1 COPYRIGHT
 
-Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 
