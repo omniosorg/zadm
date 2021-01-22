@@ -218,7 +218,7 @@ sub main {
             }
             my $zName = pop @ARGV or pod2usage(1);
 
-            $zones->zone($zName)->boot($opts, \@ARGV);
+            $zones->zone($zName, opts => $opts)->boot(\@ARGV);
             last;
         };
         /^(?:stop|shutdown)$/ && do {
@@ -273,7 +273,7 @@ sub main {
             }
 
             $opts->{brand} ||= 'ipkg';
-            $zones->zone('global', create => 1, brand => $opts->{brand})->doc($opts);
+            $zones->zone('global', create => 1, brand => $opts->{brand}, opts => $opts)->doc;
 
             last;
         };
@@ -486,7 +486,7 @@ that attribute is shown.
 
 =head1 COPYRIGHT
 
-Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 
