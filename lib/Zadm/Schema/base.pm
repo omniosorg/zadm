@@ -61,22 +61,27 @@ has schema => sub {
         description => 'the number of Fair Share Scheduler (FSS) shares',
         validator   => $self->sv->regexp(qr/^\d+$/, 'cpu-shares not valid'),
     },
-    'max-lwps'    => {
+    'max-lwps'      => {
         optional    => 1,
         description => 'the maximum number of LWPs simultaneously available',
         validator   => $self->sv->regexp(qr/^\d+$/, 'max-lwps not valid'),
     },
-    'max-msg-ids'    => {
+    'max-msg-ids'   => {
         optional    => 1,
         description => 'the maximum number of message queue IDs allowed',
         validator   => $self->sv->regexp(qr/^\d+$/, 'max-msg-ids not valid'),
     },
-    'max-sem-ids'    => {
+    'max-processes' => {
+        optional    => 1,
+        description => 'the maximum number of processes simultaneously available',
+        validator   => $self->sv->regexp(qr/^\d+$/, 'max-processes not valid'),
+    },
+    'max-sem-ids'   => {
         optional    => 1,
         description => 'the maximum number of semaphore IDs allowed',
         validator   => $self->sv->regexp(qr/^\d+$/, 'max-sem-ids not valid'),
     },
-    'max-shm-ids'    => {
+    'max-shm-ids'   => {
         optional    => 1,
         description => 'the maximum number of shared memory IDs allowed',
         validator   => $self->sv->regexp(qr/^\d+$/, 'max-shm-ids not valid'),
