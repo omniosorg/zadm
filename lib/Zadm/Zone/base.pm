@@ -9,7 +9,7 @@ use Mojo::Util qw(class_to_path);
 use Data::Processor;
 use Pod::Text;
 use Pod::Usage;
-use Storable qw(dclone freeze);
+use Storable qw(freeze);
 use Term::ANSIColor qw(colored);
 use Zadm::Zones;
 use Zadm::Utils;
@@ -179,6 +179,8 @@ my $delResource = sub {
     my @cmd  = ('-z', $name, qw(remove -F), $res);
 
     $self->utils->exec('zonecfg', \@cmd, "cannot delete resource '$res' from zone '$name'");
+
+    delete $self->attrs->{$res};
 };
 
 my $setProperty = sub {
@@ -191,6 +193,8 @@ my $setProperty = sub {
         q{"} . $self->$setVal($self->config->{$prop}) . q{"});
 
     $self->utils->exec('zonecfg', \@cmd, "cannot set property '$prop'");
+
+    $self->attrs->{$prop} = $self->config->{$prop};
 };
 
 my $decodeProp = sub {
@@ -229,24 +233,30 @@ my $clearProperty = sub {
     my @cmd = ('-z', $name, 'clear', $prop);
 
     $self->utils->exec('zonecfg', \@cmd, "cannot clear property $prop");
+
+    delete $self->attrs->{$prop};
 };
 
-my $clearResources = sub {
+my $clearAttributes = sub {
     my $self    = shift;
-    my $oldConf = shift;
 
-    # using Storable which is in core for a deep compare
-    # make sure the hash keys are sorted for serialisation
-    $Storable::canonical = 1;
     # TODO: adding support for rctls (for now just aliased rctls are supported)
-    for my $res (@{$self->oldres}) {
-        next if $res eq 'rctl' || !$self->$isRes($res);
+    for my $attr (keys %{$self->attrs}) {
+        next if $attr eq 'rctl';
 
-        if (!$self->config->{$res} || freeze($oldConf->{$res}) ne freeze($self->config->{$res})) {
-            $self->$delResource($res);
+        # simple attributes
+        if (!$self->$isRes($attr)) {
+            $self->$clearProperty($attr) if !exists $self->config->{$attr};
+
+            next;
+        }
+
+        # resources
+        if (!$self->config->{$attr} || freeze($self->config->{$attr}) ne $self->attrs->{$attr}) {
+            $self->$delResource($attr);
         }
         else {
-            delete $self->config->{$res};
+            delete $self->config->{$attr};
         }
     }
 };
@@ -312,7 +322,11 @@ my $getConfig = sub {
             $config->{$prop} = $val;
         }
     }
-    $self->oldres([ keys %$config ]) if !$self->oldres;
+    $self->attrs({
+        map {
+            $_ => ref $config->{$_} ? freeze($config->{$_}) : $config->{$_}
+        } keys %$config
+    }) if !%{$self->attrs};
 
     return $self->getPostProcess($config);
 };
@@ -320,14 +334,6 @@ my $getConfig = sub {
 my $setConfig = sub {
     my $self   = shift;
     my $config = shift;
-
-    # get current config so we can check for changes
-    # deep cloning the data structure since pre-process changes in-place
-    # although we are setting a new config, both data structures
-    # might share common elements resulting in pre-processing
-    # the same data twice
-    my $oldConf = dclone($self->config);
-    $self->setPreProcess($oldConf);
 
     # validate new config
     $self->validate($config);
@@ -341,15 +347,12 @@ my $setConfig = sub {
     $self->config($config);
     $self->setPreProcess($self->config);
 
-    if ($self->exists) {
-        # clean up all existing resources
-        $self->$clearResources($oldConf);
-        # clear simple attributes which have been removed
-        $self->$clearSimpleAttrs;
-    }
-    else {
-        $self->create({ map { $_ => $config->{$_} } @{$self->createprop} });
-    }
+    # clean up all existing resources and
+    # simple attributes which have been removed
+    $self->$clearAttributes;
+
+    $self->create({ map { $_ => $config->{$_} } @{$self->createprop} })
+        if !$self->exists;
 
     my $installed = !$self->is('configured');
     for my $prop (keys %{$self->config}) {
@@ -370,9 +373,9 @@ my $setConfig = sub {
         }
         else {
             next if !$self->config->{$prop}
-                || ($oldConf->{$prop} && $oldConf->{$prop} eq $self->config->{$prop});
+                || ($self->attrs->{$prop} && $self->attrs->{$prop} eq $self->config->{$prop});
 
-            $self->log->debug("property '$prop' changed: " . ($oldConf->{$prop} // '(none)') . ' -> '
+            $self->log->debug("property '$prop' changed: " . ($self->attrs->{$prop} // '(none)') . ' -> '
                 . $self->config->{$prop});
 
             $self->$setProperty($prop);
@@ -444,7 +447,8 @@ has image   => sub { Zadm::Image->new(log => shift->log) };
 has sv      => sub { Zadm::Validator->new(log => shift->log) };
 has dp      => sub { Data::Processor->new(shift->schema) };
 has name    => sub { Mojo::Exception->throw("ERROR: zone name must be specified on instantiation.\n") };
-has oldres  => sub { 0 };
+# attribute to keep track of currently saved attributes in zonecfg
+has attrs   => sub { {} };
 has brand   => sub { lc ((split /::/, ref shift)[-1]) };
 has public  => sub { [ qw(login fw) ] };
 has opts    => sub { {} };
@@ -500,6 +504,15 @@ has createpropmap => sub {
     return $self->utils->genmap($self->createprop);
 };
 
+# constructor
+sub new {
+    # using Storable which is in core for a deep compare
+    # make sure the hash keys are sorted for serialisation
+    $Storable::canonical = 1;
+
+    return shift->SUPER::new(@_);
+}
+
 # public methods
 sub addResource {
     my $self  = shift;
@@ -514,6 +527,8 @@ sub addResource {
     push @cmd, qw(end);
 
     $self->utils->exec('zonecfg', \@cmd, "cannot config zone $name");
+
+    $self->attrs->{$res} = freeze($props);
 }
 
 sub getPostProcess {
