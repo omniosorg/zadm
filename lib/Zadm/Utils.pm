@@ -226,11 +226,10 @@ sub edit {
     # backup current zone XML so it can be restored when things get hairy
     my $backcfg;
     my $backmod;
-    my $zonexml = "$ZPATH/" . $zone->name . '.xml';
 
-    my $xml = Mojo::File->new($zonexml);
-    if (-r $zonexml) {
-        $self->log->debug("backing up current zone config from $zonexml");
+    my $xml = Mojo::File->new($ZPATH, $zone->name . '.xml');
+    if (-r $xml) {
+        $self->log->debug("backing up current zone config from $xml");
 
         $backmod = $xml->stat->mtime;
         $backcfg = $xml->slurp
@@ -314,7 +313,7 @@ sub edit {
                 # restoring the zone XML config since it was changed but something went wrong
                 if ($backmod && $backmod != $xml->stat->mtime) {
                     $self->log->warn('WARNING: restoring the zone config.');
-                    Mojo::File->new($zonexml)->spurt($backcfg);
+                    $xml->spurt($backcfg);
                 }
 
                 return 0;
