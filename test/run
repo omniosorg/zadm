@@ -5,7 +5,7 @@ source ${.sh.file%/*}/lib/testenv.ksh
 start_environment
 
 typeset -a tests
-tests=(zadmedit rollback simple simple-attr list show set bhyve lx)
+tests=(zadmedit rollback simple simple-attr list show set bhyve lx reedit)
 
 typeset testopt="$1"
 

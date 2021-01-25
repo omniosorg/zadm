@@ -40,16 +40,17 @@ function reap {
 	typeset pid="$1"
 	typeset name="$2"
 
+	expect -d $pid written
+	print -p "no\n"
+
 	wait $pid
 	ret=$?
-	while read -p line; do [[ $line = *written* ]] && break; done
-	while read -p line; do echo $line; done
 	[ $ret -eq 0 ] && result "$name exit" FAIL || result "$name exit" PASS
 }
 
 name="rollback brokenjson"
 note $name
-zadmedit -n $z |&
+zadmedit -n $z 2>&1 |&
 pid=$!
 brk
 print -p ":%s/,//
@@ -59,7 +60,7 @@ cf "$name"
 
 name="rollback editor abort"
 note $name
-zadmedit -n $z |&
+zadmedit -n $z 2>&1 |&
 pid=$!
 brk
 print -p ":cq"
@@ -70,7 +71,7 @@ cf "$name"
 # changes to it, while still allowing `zadm` to do its rollback.
 name="rollback zonecfg"
 note $name
-zadmedit -n $z |&
+zadmedit -n $z 2>&1 |&
 pid=$!
 brk
 chmod S+cu $xml

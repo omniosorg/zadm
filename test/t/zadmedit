@@ -6,22 +6,30 @@ source ${.sh.file%/*}/../lib/testenv.ksh
 
 start_environment
 
-create_zone zadmedit sparse
+z=zadmedit
+
+create_zone $z sparse
 
 # no change - should return 0
 name="zadmedit nosave"
-zadmedit zadmedit ":q
+zadmedit $z ":q
 " && result "$name" PASS || result "$name" FAIL
 
 # Save with no changes, expect 0
 name="zadmedit nochange"
-zadmedit zadmedit ":wq
+zadmedit $z ":wq
 " && result "$name" PASS || result "$name" FAIL
 
 # break the JSON structure, expect 1
 name="zadmedit brokenjson"
-zadmedit zadmedit "/,$$
-x:wq" && result "$name" FAIL || result "$name" PASS
+zadmedit -n $z 2>&1 |&
+pid=$!
+print -p "
+/,
+x:wq"
+expect $pid written
+print -p "no\n"
+wait $pid && result "$name" FAIL || result "$name" PASS
 
 stop_environment
 

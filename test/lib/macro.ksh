@@ -35,7 +35,11 @@ function zadmcreate {
 
 	echo :wq > $sf
 	VISUAL=/usr/bin/vim __ZADM_EDITOR_ARGS="-u NONE -n -s $sf" \
-	    $ZADM create "$@"
+	    $ZADM create "$@" 2>&1 |&
+	pid=$!
+	expect $pid 'with all defaults'
+	print -p "yes\n"
+	wait $pid
 	ret=$?
 	rm -f $sf
 	return $ret
@@ -151,5 +155,27 @@ function compare {
 		gdiff -u $nexpected $noutput
 	fi
 	rm -f $noutput $nexpected
+}
+
+function expect {
+	typeset -i debug=0
+	[ "$1" = "-d" ] && debug=1 && shift
+	typeset -i pid="$1"; shift
+	typeset pattern="$@"
+
+	typeset -i notseen=1
+	typeset line
+
+	[ $debug -eq 1 ] && echo "DEBUG: waiting for $pattern"
+	while read -p -t 5 line; do
+		[ $debug -eq 1 ] && echo "DEBUG: line - $line"
+		if echo $line | egrep -s "$pattern"; then
+			[ $debug -eq 1 ] && echo "DEBUG: Saw - $pattern"
+			notseen=0
+			break
+		fi
+		kill -0 $pid || break
+	done
+	return $notseen
 }
 

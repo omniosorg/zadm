@@ -1,0 +1,47 @@
+#!/bin/ksh
+
+# Test that re-editing a configuration that does not pass validation works
+# properly
+
+source ${.sh.file%/*}/../lib/testenv.ksh
+
+start_environment
+
+z=reedit
+
+zadmcreate -b sparse $z
+zonecfg -z $z 'set max-processes=1234'
+zonecfg -z $z 'set max-lwps=65536'
+
+zadm list
+zoneadm list -vc
+
+name="re-edit max-processes"
+note $name
+zadmedit -n $z 2>&1 |&
+pid=$!
+print -p "/max-processes
+f1xx:x"
+if expect $pid 'out of range'; then
+	result "$name out-of-range" PASS
+
+	print -p "yes\n"
+	if expect $pid 'sleep'; then
+		print -p "
+:%s/34/3456/
+:x"
+		expect $pid EOF
+		zonecfg -z $z info max-processes | tee -a /dev/stderr \
+		    | egrep -s 'max-processes: 3456' \
+		    && ok=1 || ok=0
+		[ "$ok" -eq 1 ] && result "$name" PASS || result "$name" FAIL
+	else
+		result "$name out-of-range (retry)" FAIL
+	fi
+else
+	result "$name out-of-range" FAIL
+fi
+kill $pid >/dev/null 2>&1
+
+stop_environment
+
