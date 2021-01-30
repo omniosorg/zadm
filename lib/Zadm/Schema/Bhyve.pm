@@ -1,14 +1,12 @@
 package Zadm::Schema::Bhyve;
-use Mojo::Base 'Zadm::Schema::KVM';
+use Mojo::Base 'Zadm::Schema::KVM', -signatures;
 
 use File::Basename qw(basename);
 
 my $FWPATH = '/usr/share/bhyve/firmware/';
 
 my $SCHEMA;
-has schema => sub {
-    my $self = shift;
-
+has schema => sub($self) {
     my $dp = Data::Processor->new($self->SUPER::schema);
     my $ec = $dp->merge_schema($self->$SCHEMA);
 
@@ -17,9 +15,7 @@ has schema => sub {
     return $dp->schema;
 };
 
-$SCHEMA = sub {
-    my $self = shift;
-
+$SCHEMA = sub($self) {
     return {
     bootdisk    => {
         optional    => 1,
@@ -175,7 +171,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 

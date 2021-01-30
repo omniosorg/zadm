@@ -1,12 +1,12 @@
 package Zadm::Zone::Bhyve;
-use Mojo::Base 'Zadm::Zone::KVM';
+use Mojo::Base 'Zadm::Zone::KVM', -signatures;
 
 # reset public interface as the inherited list
 # from KVM will have additional methods
 has public  => sub { [ qw(nmi vnc fw) ] };
-has options => sub {
+has options => sub($self) {
     return {
-        %{shift->SUPER::options},
+        %{$self->SUPER::options},
         fw => {
             edit   => {
                 getopt => 'edit|e=s',
@@ -18,10 +18,7 @@ has options => sub {
     }
 };
 
-my $bhyveCtl = sub {
-    my $self = shift;
-    my $cmd  = shift;
-
+my $bhyveCtl = sub($self, $cmd) {
     my $name = $self->name;
 
     $self->is('running') || do {
@@ -34,16 +31,16 @@ my $bhyveCtl = sub {
         "cannot $cmd zone $name");
 };
 
-sub poweroff {
-    shift->$bhyveCtl('--force-poweroff');
+sub poweroff($self) {
+    $self->$bhyveCtl('--force-poweroff');
 }
 
-sub reset {
-    shift->$bhyveCtl('--force-reset');
+sub reset($self) {
+    $self->$bhyveCtl('--force-reset');
 }
 
-sub nmi {
-    shift->$bhyveCtl('--inject-nmi');
+sub nmi($self) {
+    $self->$bhyveCtl('--inject-nmi');
 }
 
 1;
@@ -85,7 +82,7 @@ where 'command' is one of the following:
 
 =head1 COPYRIGHT
 
-Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 

@@ -1,5 +1,5 @@
 package Zadm::Validator;
-use Mojo::Base -base;
+use Mojo::Base -base, -signatures;
 
 use Mojo::Log;
 use Mojo::Exception;
@@ -30,13 +30,11 @@ my %unitFactors = (
 );
 
 # static private methods
-my $numeric = sub {
-    return shift =~ /^\d+$/;
+my $numeric = sub($val) {
+    return $val =~ /^\d+$/;
 };
 
-my $toBytes = sub {
-    my $size = shift;
-
+my $toBytes = sub($size = '') {
     return 0 if !$size;
 
     my $suffixes = join '', keys %unitFactors;
@@ -47,20 +45,12 @@ my $toBytes = sub {
     return int ($val * $unitFactors{lc ($suf || 'b')});
 };
 
-my $toHash = sub {
-    my $key = shift;
-    my $val = shift;
-
+my $toHash = sub($key, $val) {
     # transform scalars into hashes
     return $key && $val && !ref $val ? { $key => $val } : $val;
 };
 
-my $checkBlockSize = sub {
-    my $blkSize = shift;
-    my $name    = shift;
-    my $min     = shift;
-    my $max     = shift;
-
+my $checkBlockSize = sub($blkSize, $name, $min, $max) {
     my $val = $toBytes->($blkSize)
         or return "$name '$blkSize' not valid";
 
@@ -76,108 +66,81 @@ my $checkBlockSize = sub {
 
 # attributes
 has log   => sub { Mojo::Log->new(level => 'debug') };
-has utils => sub { Zadm::Utils->new(log => shift->log) };
+has utils => sub($self) { Zadm::Utils->new(log => $self->log) };
 
 has vnicmap => sub {
     my $i = 0;
     return { map { $_ => $i++ } @VNICATTR };
 };
 
-sub regexp {
-    my $self = shift;
-    my $rx   = shift;
-    my $msg  = shift // 'invalid value';
-
-    return sub {
-        my $value = shift;
+sub regexp($self, $rx, $msg = 'invalid value') {
+    return sub($value, @) {
         return $value =~ /$rx/ ? undef : "$msg ($value)";
     }
 }
 
-sub elemOf {
-    my $self = shift;
-    my $elems = [ @_ ];
-
-    return sub {
-        my $value = shift;
-        return (grep { $_ eq $value } @$elems) ? undef
-            : 'expected a value from the list: ' . join(', ', @$elems);
+sub elemOf($self, @elems) {
+    return sub($value, @) {
+        return (grep { $_ eq $value } @elems) ? undef
+            : 'expected a value from the list: ' . join(', ', @elems);
     }
 }
 
-sub bool {
-    return shift->elemOf(qw(true false));
+sub bool($self) {
+    return $self->elemOf(qw(true false));
 }
 
-sub ipv4 {
-    return shift->regexp(qr/^$IPv4_re$/, 'not a valid IPv4 address');
+sub ipv4($self) {
+    return $self->regexp(qr/^$IPv4_re$/, 'not a valid IPv4 address');
 }
 
-sub ipv6 {
-    return shift->regexp(qr/^$IPv6_re$/, 'not a valid IPv6 address');
+sub ipv6($self) {
+    return $self->regexp(qr/^$IPv6_re$/, 'not a valid IPv6 address');
 }
 
-sub ip {
-    return shift->regexp(qr/^(?:$IPv4_re|$IPv6_re)$/, 'not a valid IP address');
+sub ip($self) {
+    return $self->regexp(qr/^(?:$IPv4_re|$IPv6_re)$/, 'not a valid IP address');
 }
 
-sub cidrv4 {
-    return shift->regexp(qr!^$IPv4_re/\d{1,2}$!, 'not a valid IPv4 CIDR address');
+sub cidrv4($self) {
+    return $self->regexp(qr!^$IPv4_re/\d{1,2}$!, 'not a valid IPv4 CIDR address');
 }
 
-sub cidrv6 {
-    return shift->regexp(qr!^$IPv6_re/\d{1,3}$!, 'not a valid IPv6 CIDR address');
+sub cidrv6($self) {
+    return $self->regexp(qr!^$IPv6_re/\d{1,3}$!, 'not a valid IPv6 CIDR address');
 }
 
-sub cidr {
-    return shift->regexp(qr!^(?:$IPv4_re/\d{1,2}|$IPv6_re/\d{1,3})$!, 'not a valid CIDR address');
+sub cidr($self) {
+    return $self->regexp(qr!^(?:$IPv4_re/\d{1,2}|$IPv6_re/\d{1,3})$!, 'not a valid CIDR address');
 }
 
-sub lxIP {
-    my $self = shift;
-
-    return sub {
-        my $ip = shift;
-
+sub lxIP($self) {
+    return sub($ip, @) {
         return undef if $ip eq 'dhcp' || $ip eq 'addrconf';
 
         return $self->cidr->($ip);
     }
 }
 
-sub vlanId {
-    my $self = shift;
-
-    return sub {
-        my $vlan = shift;
-
+sub vlanId($self) {
+    return sub($vlan, @) {
         return "vlan-id '$vlan' is not numeric" if !$numeric->($vlan);
         return $vlan > 0 && $vlan < 4095 ? undef : "vlan-id '$vlan' is out of range";
     }
 }
 
-sub macaddr {
-    return shift->regexp(qr/^(?:[\da-f]{1,2}:){5}[\da-f]{1,2}$/i, 'not a valid MAC address');
+sub macaddr($self) {
+    return $self->regexp(qr/^(?:[\da-f]{1,2}:){5}[\da-f]{1,2}$/i, 'not a valid MAC address');
 }
 
-sub file {
-    my $self = shift;
-    my $op   = shift;
-    my $msg  = shift;
-
-    return sub {
-        my $file = shift;
+sub file($self, $op, $msg) {
+    return sub($file, @) {
         return open (my $fh, $op, $file) ? undef : "$msg $file: $!";
     }
 }
 
-sub globalNic {
-    my $self = shift;
-
-    return sub {
-        my $nic = shift;
-        my $net = shift;
-
+sub globalNic($self) {
+    return sub($nic, $net) {
         return $net->{'allowed-address'} ? undef : 'allowed-address must be set when global-nic is auto'
             if $nic eq 'auto';
 
@@ -186,12 +149,8 @@ sub globalNic {
     }
 }
 
-sub zoneNic {
-    my $self = shift;
-
-    return sub {
-        my ($name, $nic) = @_;
-
+sub zoneNic($self) {
+    return sub($name, $nic) {
         # if global-nic is set we just check if the vnic name is valid
         return $name =~ /^\w+\d+$/ ? undef : 'not a valid vnic name'
             if $nic->{'global-nic'};
@@ -233,12 +192,8 @@ sub zoneNic {
     }
 }
 
-sub vcpus {
-    my $self = shift;
-
-    return sub {
-        my $vcpu = shift;
-
+sub vcpus($self) {
+    return sub($vcpu, @) {
         return undef if $numeric->($vcpu);
 
         my @vcpu = split ',', $vcpu;
@@ -255,12 +210,8 @@ sub vcpus {
     }
 }
 
-sub zvol {
-    my $self = shift;
-
-    return sub {
-        my ($path, $disk) = @_;
-
+sub zvol($self) {
+    return sub($path, $disk) {
         $path =~ s|^/dev/zvol/r?dsk/||;
 
         if (!-e "/dev/zvol/rdsk/$path") {
@@ -317,11 +268,8 @@ sub zvol {
     }
 }
 
-sub zonePath {
-    my $self = shift;
-
-    return sub {
-        my $path   = shift // '';
+sub zonePath($self) {
+    return sub($path, @) {
         my $parent = dirname $path;
 
         open my $fh, '<', '/etc/mnttab'
@@ -338,20 +286,14 @@ sub zonePath {
     }
 }
 
-sub blockSize {
-    my $self = shift;
-
-    return sub {
-        return $checkBlockSize->(shift, 'blocksize', '512', '128k');
+sub blockSize($self) {
+    return sub($blksize, @) {
+        return $checkBlockSize->($blksize, 'blocksize', '512', '128k');
     }
 }
 
-sub sectorSize {
-    my $self = shift;
-
-    return sub {
-        my $secSize = shift // '';
-
+sub sectorSize($self) {
+    return sub($secSize, @) {
         my ($logical, $physical) = $secSize =~ m!^([^/]+)(?:/([^/]+))?$!;
 
         # logical size must be provided
@@ -370,12 +312,8 @@ sub sectorSize {
     }
 }
 
-sub stripDev {
-    my $self = shift;
-
-    return sub {
-        my $path = shift;
-
+sub stripDev($self) {
+    return sub($path, @) {
         $path =~ s|^/dev/zvol/r?dsk/||;
         # resources don't like multiple forward slashes, remove them
         $path =~ s|/{2,}|/|g;
@@ -384,12 +322,8 @@ sub stripDev {
     }
 }
 
-sub toInt {
-    my $self = shift;
-
-    return sub {
-        my $value = shift;
-
+sub toInt($self) {
+    return sub($value, @) {
         return $value if !$value;
 
         $value =~ s/\.\d+//;
@@ -398,25 +332,17 @@ sub toInt {
     }
 }
 
-sub toBytes {
-    my $self = shift;
-
-    return sub {
-        my $value = shift;
-
+sub toBytes($self) {
+    return sub($value, @) {
         return $value if !$value;
 
         return join '/', map { my $val = $_; $toBytes->($val) || $val } split m!/!, $value;
     }
 }
 
-sub toHash {
-    my $self    = shift;
-    my $attr    = shift;
-    my $isarray = shift;
-
-    return sub {
-        my $elems = $isarray ? $self->toArray->(shift) : shift;
+sub toHash($self, $attr, $isarray = 0) {
+    return sub($value, @) {
+        my $elems = $isarray ? $self->toArray->($value) : $value;
 
         return ref $elems eq ref []
             ? [ map { $toHash->($attr, $_) } @$elems ]
@@ -424,23 +350,14 @@ sub toHash {
     }
 }
 
-sub toArray {
-    my $self = shift;
-
-    return sub {
-        my $elem = shift;
-
+sub toArray($self) {
+    return sub($elem, @) {
         return ref $elem eq ref [] ? $elem : [ $elem ];
     }
 }
 
-sub vnc {
-    my $self  = shift;
-    my $brand = shift;
-
-    return sub {
-        my $vnc = shift;
-
+sub vnc($self, $brand) {
+    return sub($vnc, @) {
         return undef if $vnc =~ m!(?:^|,)unix[:=]/!;
         return $self->elemOf(qw(on off), $brand eq 'bhyve' ? qw(wait) : ())->($vnc);
     }
@@ -452,7 +369,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 

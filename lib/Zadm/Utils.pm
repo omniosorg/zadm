@@ -1,5 +1,5 @@
 package Zadm::Utils;
-use Mojo::Base -base;
+use Mojo::Base -base, -signatures;
 
 use POSIX qw(isatty);
 use Mojo::Exception;
@@ -58,16 +58,12 @@ my $ZPATH = ($ENV{__ZADM_ALTROOT} // '') . '/etc/zones';
 # attributes
 has log      => sub { Mojo::Log->new(level => 'debug') };
 has kstat    => sub { Sun::Solaris::Kstat->new };
-has pagesize => sub { shift->readProc('pagesize')->[0] // 4096 };
-has ram      => sub {
-    my $self = shift;
-
+has pagesize => sub($self) { $self->readProc('pagesize')->[0] // 4096 };
+has ram      => sub($self) {
     return $self->kstat->{unix}->{0}->{system_pages}->{physmem}
         * $self->pagesize;
 };
-has swap     => sub {
-    my $self = shift;
-
+has swap     => sub($self) {
     my $swap = $self->readProc('swap', [ '-s' ])->[0]
         or return 0;
 
@@ -78,10 +74,7 @@ has swap     => sub {
 };
 
 # private methods
-my $edit = sub {
-    my $self = shift;
-    my $json = shift;
-
+my $edit = sub($self, $json) {
     my $fh = File::Temp->new(SUFFIX => '.json');
     close $fh;
 
@@ -110,10 +103,7 @@ my $edit = sub {
     return ($modified, $json);
 };
 
-my $zfsStrDecomp = sub {
-    my $self = shift;
-    my $file = shift;
-
+my $zfsStrDecomp = sub($self, $file) {
     my $type = $self->readProc('file', [ '-b', $file ])->[0] // '';
 
     for ($type) {
@@ -126,11 +116,7 @@ my $zfsStrDecomp = sub {
 };
 
 # public methods
-sub readProc {
-    my $self = shift;
-    my $cmd  = shift;
-    my $args = shift || [];
-
+sub readProc($self, $cmd, $args = []) {
     Mojo::Exception->throw("ERROR: command '$cmd' not defined.\n")
         if !exists $CMDS{$cmd};
 
@@ -147,14 +133,7 @@ sub readProc {
     return \@read;
 }
 
-sub exec {
-    my $self = shift;
-    my $cmd  = shift;
-    my $args = shift || [];
-    my $err  = shift || "executing '$cmd'";
-    my $fork = shift;
-    my $ret  = shift;
-
+sub exec($self, $cmd, $args = [], $err = "executing '$cmd'", $fork = 0, $ret = 0) {
     Mojo::Exception->throw("ERROR: command '$cmd' not defined.\n")
         if !exists $CMDS{$cmd};
 
@@ -173,13 +152,8 @@ sub exec {
     }
 }
 
-sub curl {
-    my $self = shift;
-    my $file = shift;
-    my $url  = shift;
-    my $opts = shift // [];
-
-    my @cmd = ($CMDS{curl}, @$opts, qw(-L -w %{json} -o), $file, $url);
+sub curl($self, $file, $url, $silent = 0) {
+    my @cmd = ($CMDS{curl}, ($silent ? '-s' : ()), qw(-L -w %{json} -o), $file, $url);
 
     open my $curl, '-|', @cmd
         or Mojo::Exception->throw("ERROR: executing 'curl': $!\n");
@@ -194,11 +168,7 @@ sub curl {
             if !$res->is_success;
 }
 
-sub zfsRecv {
-    my $self = shift;
-    my $file = shift;
-    my $ds   = shift;
-
+sub zfsRecv($self, $file, $ds) {
     my $cmd = join ' ',
         shell_quote(shellwords($self->$zfsStrDecomp($file))),
         shell_quote($file),
@@ -211,18 +181,11 @@ sub zfsRecv {
     system $cmd and Mojo::Exception->throw("ERROR: receiving zfs stream: $!\n");
 }
 
-sub encodeJSON {
-    my $self = shift;
-    my $data = shift;
-
+sub encodeJSON($self, $data) {
     return JSON::PP->new->pretty->canonical(1)->encode($data);
 }
 
-sub edit {
-    my $self = shift;
-    my $zone = shift;
-    my $prop = shift // {};
-
+sub edit($self, $zone, $prop = {}) {
     # backup current zone XML so it can be restored when things get hairy
     my $backcfg;
     my $backmod;
@@ -316,11 +279,7 @@ sub edit {
     return 1;
 }
 
-sub getZfsProp {
-    my $self = shift;
-    my $ds   = shift;
-    my $prop = shift // [];
-
+sub getZfsProp($self, $ds, $prop = []) {
     return {} if !@$prop;
 
     my $vals = $self->readProc('zfs', [ qw(get -H -o value), join (',', @$prop), $ds ]);
@@ -328,9 +287,7 @@ sub getZfsProp {
     return { map { $prop->[$_] => $vals->[$_] } (0 .. $#$prop) };
 }
 
-sub domain {
-    my $self = shift;
-
+sub domain($self) {
     my %domain;
 
     my ($domain) = $self->readProc('domainname')->[0] =~ /^\s*(\S+)/;
@@ -368,37 +325,25 @@ sub domain {
     return \%domain;
 }
 
-sub scheduler {
-    my $self = shift;
-
+sub scheduler($self) {
     my $dispadmin = $self->readProc('dispadmin', [ qw(-d) ]);
 
     return { 'cpu-shares' => 1 } if grep { /^FSS/ } @$dispadmin;
     return {};
 }
 
-sub prettySize {
-    my $self   = shift;
-    my $size   = shift;
-    my $format = shift // '%.0f%s';
-
+sub prettySize($self, $size, $format = '%.0f%s') {
     my @units = qw(B K M G T P E);
     my $i     = $size <= 0 ? 0 : int (log ($size) / log (1024.0));
 
     return sprintf($format, $size / 1024 ** $i, $units[$i]);
 }
 
-sub getPhysMem {
-    my $self = shift;
-
+sub getPhysMem($self) {
     return $self->prettySize($self->ram);
 }
 
-sub loadTemplate {
-    my $self  = shift;
-    my $file  = shift;
-    my $name  = shift;
-
+sub loadTemplate($self, $file, $name = '') {
     my $template = Mojo::File->new($file)->slurp;
     # TODO: add handler for more modular transforms, for now we just support __ZONENAME__
     $template =~ s/__ZONENAME__/$name/g if $name;
@@ -407,40 +352,31 @@ sub loadTemplate {
     return JSON::PP->new->relaxed(1)->decode($template);
 }
 
-sub getOverLink {
-    my $self = shift;
-
+sub getOverLink($self) {
     my $dladm = $self->readProc('dladm', [ qw(show-link -p -o), 'link,class' ]);
     return [ map { /^([^:]+):(?:phys|etherstub|aggr|overlay)/ } @$dladm ];
 }
 
-sub isVirtual {
+sub isVirtual($self) {
     my $method = (caller (1))[3];
 
     Mojo::Exception->throw("ERROR: '$method' is a pure virtual method and must be implemented in a derived class.\n");
 }
 
-sub isaTTY {
-    my $self = shift;
+sub isaTTY($self) {
     return isatty(*STDIN);
 }
 
-sub getSTDIN {
-    my $self = shift;
+sub getSTDIN($self) {
     return $self->isaTTY() ? [] : [ split /\r\n|\n|\r/, do { local $/; <STDIN>; } ];
 }
 
-sub genmap {
-    my $self = shift;
-    my $arr  = shift;
-
+sub genmap($self, $arr) {
     return { map { $_ => undef } @$arr };
 }
 
-sub getMods {
-    my $self = shift;
-
-    return [ grep { !/base$/ } find_modules shift ];
+sub getMods($self, $namespace) {
+    return [ grep { !/base$/ } find_modules $namespace ];
 }
 
 1;
@@ -449,7 +385,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 

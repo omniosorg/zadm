@@ -1,7 +1,8 @@
 package Zadm::Zone::KVM;
-use Mojo::Base 'Zadm::Zone::base';
+use Mojo::Base 'Zadm::Zone::base', -signatures;
 
 use Mojo::Exception;
+use Mojo::File;
 use IO::Socket::UNIX qw(SOCK_STREAM);
 use IO::Select;
 use Regexp::IPv4 qw($IPv4_re);
@@ -14,9 +15,7 @@ my @MON_INFO = qw(block blockstats chardev cpus kvm network pci registers qtree 
 my $RCV_TMO  = 3;
 
 # private static methods
-my $cpuCount = sub {
-    my $vcpus = shift;
-
+my $cpuCount = sub($vcpus) {
     return $vcpus if !$vcpus || $vcpus =~ /^\d+$/;
 
     my %cpu = map { /^([^=]+)=([^=]+)$/ } split ',', $vcpus;
@@ -24,8 +23,8 @@ my $cpuCount = sub {
     return join '/', map { $cpu{$_} // '1' } qw(sockets cores threads);
 };
 
-has template => sub {
-    my $self = shift;
+# attributes
+has template => sub($self) {
     my $name = $self->name;
 
     my $template = $self->SUPER::template;
@@ -59,18 +58,14 @@ has options => sub {
         },
     }
 };
-has monsocket => sub { shift->config->{zonepath} . '/root/tmp/vm.monitor' };
-has vncsocket => sub {
-    my $self = shift;
+has monsocket => sub($self) { Mojo::File->new($self->config->{zonepath}, 'root/tmp/vm.monitor') };
+has vncsocket => sub($self) {
+    my ($socket) = $self->config->{vnc} =~ m!^unix[:=]/([^, ]+)!;
 
-    my ($socket) = $self->config->{vnc} =~ m!^unix[:=](/[^, ]+)!;
-
-    return $self->config->{zonepath} . '/root' . ($socket || '/tmp/vm.vnc');
+    return Mojo::File->new($self->config->{zonepath}, 'root', ($socket || 'tmp/vm.vnc'));
 };
 has public    => sub { [ qw(nmi vnc monitor) ] };
-has diskattr  => sub {
-    my $self = shift;
-
+has diskattr  => sub($self) {
     my %diskattr;
     for my $type (qw(disk bootdisk)) {
         $diskattr{$type} = {
@@ -83,19 +78,14 @@ has diskattr  => sub {
     return \%diskattr;
 };
 # adding an instance specific attribute to store the bootdisk path to be used by install
-has bootdisk => sub {
-    my $self = shift;
-
+has bootdisk => sub($self) {
     return ref $self->config->{bootdisk} eq ref {}
         ? { map { $_ => $self->config->{bootdisk}->{$_} } qw(path size) }
         : {};
 };
 
-my $queryMonitor = sub {
-    my $self   = shift;
-    my $query  = shift;
-    my $nowait = shift;
-
+# private methods
+my $queryMonitor = sub($self, $query, $nowait = 0) {
     my $socket = IO::Socket::UNIX->new(
         Type => SOCK_STREAM,
         Peer => $self->monsocket,
@@ -123,10 +113,7 @@ my $queryMonitor = sub {
     return [ grep { $_ !~ /^(?:QEMU|\(qemu\))/ } split /[\r\n]+/, $recv ];
 };
 
-my $getDiskAttr = sub {
-    my $self = shift;
-    my $attr = shift;
-
+my $getDiskAttr = sub($self, $attr) {
     return {} if !$attr;
 
     return {
@@ -138,11 +125,7 @@ my $getDiskAttr = sub {
     };
 };
 
-my $setDiskAttr = sub {
-    my $self = shift;
-    my $type = shift;
-    my $disk = shift // {};
-
+my $setDiskAttr = sub($self, $type, $disk = {}) {
     my $attrstr = '';
 
     for my $attr (keys %{$self->diskattr->{$type}}) {
@@ -156,9 +139,8 @@ my $setDiskAttr = sub {
     return $attrstr;
 };
 
-my $getDiskProps = sub {
-    my $self = shift;
-    my ($zvol, $attrstr) = split /,/, shift, 2;
+my $getDiskProps = sub($self, $prop) {
+    my ($zvol, $attrstr) = split /,/, $prop, 2;
 
     my $attr = $self->$getDiskAttr($attrstr);
 
@@ -178,10 +160,7 @@ my $getDiskProps = sub {
     };
 };
 
-sub getPostProcess {
-    my $self = shift;
-    my $cfg  = shift;
-
+sub getPostProcess($self, $cfg) {
     my $disk;
     $cfg->{disk} = [];
     # handle disks before the default getPostProcess
@@ -261,10 +240,7 @@ sub getPostProcess {
     return $cfg;
 }
 
-sub setPreProcess {
-    my $self = shift;
-    my $cfg  = shift;
-
+sub setPreProcess($self, $cfg) {
     # add cdrom lofs mount to zone config
     if ($cfg->{cdrom} && ref $cfg->{cdrom} eq ref []) {
         for (my $i = 0; $i < @{$cfg->{cdrom}}; $i++) {
@@ -330,9 +306,7 @@ sub setPreProcess {
     return $self->SUPER::setPreProcess($cfg);
 }
 
-sub install {
-    my $self = shift;
-
+sub install($self) {
     # just install the zone if no image was provided for the bootdisk
     return $self->SUPER::install
         if !$self->opts->{image};
@@ -377,27 +351,22 @@ sub install {
     }
 }
 
-sub poweroff {
-    my $self = shift;
-
+sub poweroff($self) {
     $self->$queryMonitor("quit\n", 1);
 
     # make sure parent class does 'halt'
     $self->SUPER::poweroff;
 }
 
-sub reset {
-    shift->$queryMonitor("system_reset\n", 1);
+sub reset($self) {
+    $self->$queryMonitor("system_reset\n", 1);
 }
 
-sub nmi {
-    shift->$queryMonitor("nmi 0\n", 1);
+sub nmi($self) {
+    $self->$queryMonitor("nmi 0\n", 1);
 }
 
-sub vnc {
-    my $self   = shift;
-    my $listen = shift // '5900';
-
+sub vnc($self, $listen = '5900') {
     $self->log->warn('WARNING: zone ' . $self->name . " is not running\n")
         if !$self->is('running');
     Mojo::Exception->throw('ERROR: vnc is not set up for zone ' . $self->name . "\n")
@@ -415,16 +384,12 @@ sub vnc {
         'UNIX-CONNECT:' . $self->vncsocket ]);
 }
 
-sub monitor {
-    my $self = shift;
-
+sub monitor($self) {
     $self->utils->exec('nc', [ '-U', $self->monsocket ],
         'cannot access monitor socket ' . $self->monsocket);
 }
 
-sub zStats {
-    my $self = shift;
-
+sub zStats($self) {
     return {
         %{$self->SUPER::zStats},
         RAM  => $self->config->{ram} // '-',
@@ -471,7 +436,7 @@ where 'command' is one of the following:
 
 =head1 COPYRIGHT
 
-Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 

@@ -1,9 +1,9 @@
 package Zadm::Zone::Illumos;
-use Mojo::Base 'Zadm::Zone::base';
+use Mojo::Base 'Zadm::Zone::base', -signatures;
 
-has options => sub {
+has options => sub($self) {
     return {
-        %{shift->SUPER::options},
+        %{$self->SUPER::options},
         create  => {
             image => {
                 getopt => 'image|i=s',
@@ -19,9 +19,7 @@ has options => sub {
     }
 };
 
-sub install {
-    my $self = shift;
-
+sub install($self) {
     my $img = $self->zones->image->getImage($self->opts->{image}, $self->brand);
 
     $img->{_file} && -r $img->{_file} || do {
@@ -88,7 +86,7 @@ where 'command' is one of the following:
 
 =head1 COPYRIGHT
 
-Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 
