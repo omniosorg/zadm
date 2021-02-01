@@ -1,15 +1,15 @@
 package Zadm::Image::Joyent;
-use Mojo::Base 'Zadm::Image::base';
+use Mojo::Base 'Zadm::Image::base', -signatures;
 
 use Mojo::JSON qw(decode_json);
 use Mojo::File;
+use Mojo::URL;
 
-has baseurl  => 'https://images.joyent.com/images';
-has index    => sub { shift->baseurl };
+has baseurl  => sub { Mojo::URL->new('https://images.joyent.com') };
+has index    => sub($self) { Mojo::URL->new('/images')->base($self->baseurl)->to_abs };
 
-sub postProcess {
-    my $self = shift;
-    my $json = decode_json(shift) // [];
+sub postProcess($self, $json) {
+    my $data = decode_json($json) // [];
 
     return [
         map { {
@@ -17,7 +17,7 @@ sub postProcess {
             name   => $_->{name},
             desc   => $_->{description},
             vers   => $_->{version},
-            img    => $self->baseurl . "/$_->{uuid}/file",
+            img    => Mojo::URL->new("/images/$_->{uuid}/file")->base($self->baseurl)->to_abs,
             brand  => $_->{requirements}->{brand} // 'illumos',
             type   => $_->{type},
             comp   => $_->{files}->[0]->{compression},
@@ -29,15 +29,11 @@ sub postProcess {
             },
         } }
         grep { $_->{requirements}->{brand} || $_->{type} eq 'zone-dataset' }
-        @$json
+        @$data
     ];
 }
 
-sub postInstall {
-    my $self  = shift;
-    my $brand = shift;
-    my $opts  = shift // {};
-
+sub postInstall($self, $brand, $opts = {}) {
     return if $brand ne 'illumos';
 
     # illumos branded images from Joyent have a different structure to that
@@ -70,7 +66,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 

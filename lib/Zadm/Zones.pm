@@ -1,5 +1,5 @@
 package Zadm::Zones;
-use Mojo::Base -base;
+use Mojo::Base -base, -signatures;
 
 use Mojo::File;
 use Mojo::Log;
@@ -22,9 +22,7 @@ my $MODPREFIX = 'Zadm::Zone';
 my $PKGPREFIX = 'system/zones/brand';
 
 # private static methods
-my $statecol = sub {
-    my $state = shift;
-
+my $statecol = sub($state) {
     for ($state) {
         /^running$/                   && return colored($state, 'green');
         /^(?:configured|incomplete)$/ && return colored($state, 'red');
@@ -33,9 +31,7 @@ my $statecol = sub {
     return colored($state, 'ansi208');
 };
 
-my $mempercol = sub {
-    my $val = shift;
-
+my $mempercol = sub($val) {
     my $str   = sprintf '%.2f%%', $val;
     my $space = ' ' x (9 - length ($str));
 
@@ -47,9 +43,7 @@ my $mempercol = sub {
 };
 
 # private methods
-my $list = sub {
-    my $self = shift;
-
+my $list = sub($self) {
     # ignore GZ
     my $zones = $self->utils->readProc('zoneadm', [ qw(list -cpn) ]);
 
@@ -67,9 +61,9 @@ my $list = sub {
 
 # attributes
 has loglvl  => 'warn'; # override to 'debug' for development
-has log     => sub { Mojo::Log->new(level => shift->loglvl) };
-has utils   => sub { Zadm::Utils->new(log => shift->log) };
-has image   => sub { my $self = shift; Zadm::Image->new(log => $self->log, datadir => $self->datadir) };
+has log     => sub($self) { Mojo::Log->new(level => $self->loglvl) };
+has utils   => sub($self) { Zadm::Utils->new(log => $self->log) };
+has image   => sub($self) { Zadm::Image->new(log => $self->log, datadir => $self->datadir) };
 has datadir => $DATADIR;
 has brands  => sub {
     return [
@@ -78,25 +72,23 @@ has brands  => sub {
         } glob '/usr/lib/brand/*/config.xml'
     ];
 };
-has availbrands => sub {
-    my $pkg = shift->utils->readProc('pkg', [ qw(list -aHv), "$PKGPREFIX/*" ]);
+has availbrands => sub($self) {
+    my $pkg = $self->utils->readProc('pkg', [ qw(list -aHv), "$PKGPREFIX/*" ]);
     # TODO: the state of sn1/s10 brands is currently unknown
     # while zadm can still be used to configure them we don't advertise them as available
     return [ grep { !/^(?:sn1|s10)$/ } map { m!\Q$PKGPREFIX\E/([^@/]+)\@! } @$pkg ];
 };
-has brandmap    => sub { my $self = shift; $self->utils->genmap($self->brands) };
-has avbrandmap  => sub { my $self = shift; $self->utils->genmap($self->availbrands) };
-has list        => sub { shift->$list };
+has brandmap    => sub($self) { $self->utils->genmap($self->brands) };
+has avbrandmap  => sub($self) { $self->utils->genmap($self->availbrands) };
+has list        => sub($self) { $self->$list };
 
-has zoneName => sub {
-    return shift->utils->readProc('zonename')->[0];
+has zoneName => sub($self) {
+    return $self->utils->readProc('zonename')->[0];
 };
 
-has isGZ => sub { shift->zoneName eq 'global' };
+has isGZ => sub($self) { $self->zoneName eq 'global' };
 
-has modmap => sub {
-    my $self = shift;
-
+has modmap => sub($self) {
     # base is the default module
     my %modmap = map { $_ => "${MODPREFIX}::base" } @{$self->brands};
 
@@ -115,22 +107,19 @@ has zonemap => sub {
 };
 
 # public methods
-sub exists {
-    return exists shift->list->{shift // ''};
+sub exists($self, $zName = '') {
+    return exists $self->list->{$zName};
 }
 
-sub brandExists {
-    return exists shift->brandmap->{shift // ''}
+sub brandExists($self, $brand = '') {
+    return exists $self->brandmap->{$brand}
 }
 
-sub brandAvail {
-    return exists shift->avbrandmap->{shift // ''}
+sub brandAvail($self, $brand = '') {
+    return exists $self->avbrandmap->{$brand}
 }
 
-sub installBrand {
-    my $self  = shift;
-    my $brand = shift;
-
+sub installBrand($self, $brand) {
     if ($self->utils->isaTTY) {
         print "Brand '$brand' is not installed. Do you want to install it [Y/n]? ";
         chomp (my $check = <STDIN>);
@@ -142,15 +131,11 @@ sub installBrand {
     $self->utils->exec('pkg', [ 'install', "$PKGPREFIX/$brand" ]);
 }
 
-sub refresh {
-    my $self = shift;
-
+sub refresh($self) {
     $self->list($self->$list);
 }
 
-sub dump {
-    my $self = shift;
-
+sub dump($self) {
     my $format = "%-18s%-11s%-9s%6s%8s%8s\n";
     my @header = qw(NAME STATUS BRAND);
     my @zStats = qw(RAM CPUS SHARES);
@@ -201,9 +186,7 @@ sub dump {
     }
 }
 
-sub memstat {
-    my $self = shift;
-
+sub memstat($self) {
     my $format = "%-18s%9s%9s%9s%9s%9s%9s\n";
     my @header = qw(NAME RSS RSSCAP RSS% SWAP SWAPCAP SWAP%);
 
@@ -231,9 +214,7 @@ sub memstat {
     }
 }
 
-sub dumpBrands {
-    my $self = shift;
-
+sub dumpBrands($self) {
     my $format = "%-9s%s\n";
     my @header = qw(BRAND STATUS);
 
@@ -242,11 +223,7 @@ sub dumpBrands {
         for sort @{$self->availbrands};
 }
 
-sub zone {
-    my $self  = shift;
-    my $zName = shift;
-    my %opts  = @_;
-
+sub zone($self, $zName, %opts) {
     my $create = delete $opts{create};
 
     Mojo::Exception->throw("ERROR: zone '$zName' already exists. use 'edit' to change properties\n")
@@ -265,10 +242,7 @@ sub zone {
     );
 }
 
-sub config {
-    my $self  = shift;
-    my $zName = shift;
-
+sub config($self, $zName) {
     # if we want the config for a particular zone, go ahead
     return $self->zone($zName)->config if $zName;
 
@@ -293,7 +267,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 

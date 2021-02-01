@@ -1,5 +1,5 @@
 package Zadm::Zone::base;
-use Mojo::Base -base;
+use Mojo::Base -base, -signatures;
 
 use Mojo::File;
 use Mojo::Log;
@@ -28,9 +28,7 @@ has statemap   => sub {
 };
 # TODO: properties that can only be set on creation/needs verification
 has createprop => sub { [ qw(zonename zonepath brand ip-type) ] };
-has template   => sub {
-    my $self = shift;
-
+has template   => sub($self) {
     my $name = $self->name;
 
     return {
@@ -61,77 +59,46 @@ has options => sub {
 };
 
 # private methods
-my $resIsArray = sub {
-    my $self = shift;
-    my $res  = shift;
-
+my $resIsArray = sub($self, $res) {
     return exists $self->schema->{$res} && $self->schema->{$res}->{array};
 };
 
-my $resIsAttr = sub {
-    my $self = shift;
-    my $res  = shift;
-
+my $resIsAttr = sub($self, $res) {
     return exists $self->schema->{$res} && $self->schema->{$res}->{'x-attr'};
 };
 
-my $propIsArray = sub {
-    my $self = shift;
-    my $res  = shift;
-    my $prop = shift;
-
+my $propIsArray = sub($self, $res, $prop) {
     return exists $self->schema->{$res}->{members}->{$prop}
         && $self->schema->{$res}->{members}->{$prop}->{array};
 };
 
-my $propIsHash = sub {
-    my $self = shift;
-    my $res  = shift;
-    my $prop = shift;
-
+my $propIsHash = sub($self, $res, $prop) {
     return exists $self->schema->{$res}->{members}->{$prop}->{members};
 };
 
-my $getArray = sub {
-    my $self = shift;
-    my $val  = shift;
-
+my $getArray = sub($self, $val) {
     # remove leading and trailing square brackets
     $val =~ s/^\s*\[// && $val =~ s/\]\s*$//;
 
     return [ split /,/, $val ];
 };
 
-my $setArray = sub {
-    my $self = shift;
-    my $val  = shift;
-
+my $setArray = sub($self, $val) {
     return join (',', @$val);
 };
 
-my $getHash = sub {
-    my $self = shift;
-    my $val  = shift;
-
+my $getHash = sub($self, $val) {
     # remove leading and trailing brackets
     $val =~ s/^\s*\(// && $val =~ s/\)\s*$//;
 
     return { split /[,=]/, $val };
 };
 
-my $setHash = sub {
-    my $self = shift;
-    my $val  = shift;
-
+my $setHash = sub($self, $val) {
     return '(' . join (',', map { "$_=$val->{$_}" } keys %$val) . ')';
 };
 
-my $getVal = sub {
-    my $self = shift;
-    my $res  = shift;
-    my $prop = shift;
-    my $val  = shift;
-
+my $getVal = sub($self, $res, $prop, $val) {
     # remove leading and trailing quotes
     $val =~ s/^\s*"// && $val =~ s/"\s*$//;
 
@@ -140,41 +107,25 @@ my $getVal = sub {
          : $val;
 };
 
-my $setVal = sub {
-    my $self = shift;
-    my $prop = shift;
-
+my $setVal = sub($self, $prop) {
     return ref $prop eq ref [] ? $self->$setArray($prop)
          : ref $prop eq ref {}  ? $self->$setHash($prop)
          : $prop;
 };
 
-my $isRes = sub {
-    my $self = shift;
-    my $prop = shift;
-
+my $isRes = sub($self, $prop) {
     return exists $self->resmap->{$prop};
 };
 
-my $isResProp = sub {
-    my $self = shift;
-    my $res  = shift;
-    my $prop = shift;
-
+my $isResProp = sub($self, $res, $prop) {
     return exists $self->schema->{$res}->{members}->{$prop};
 };
 
-my $isProp = sub {
-    my $self = shift;
-    my $prop = shift;
-
+my $isProp = sub($self, $prop) {
     return exists $self->schema->{$prop};
 };
 
-my $delResource = sub {
-    my $self  = shift;
-    my $res   = shift;
-
+my $delResource = sub($self, $res) {
     my $name = $self->name;
     my @cmd  = ('-z', $name, qw(remove -F), $res);
 
@@ -183,10 +134,7 @@ my $delResource = sub {
     delete $self->attrs->{$res};
 };
 
-my $setProperty = sub {
-    my $self = shift;
-    my $prop = shift;
-
+my $setProperty = sub($self, $prop) {
     my $name = $self->name;
 
     my @cmd = ('-z', $name, 'set', $prop, '=',
@@ -197,10 +145,7 @@ my $setProperty = sub {
     $self->attrs->{$prop} = $self->config->{$prop};
 };
 
-my $decodeProp = sub {
-    my $self = shift;
-    my ($res, $prop, $val) = @_;
-
+my $decodeProp = sub($self, $res, $prop, $val) {
     my ($_prop, $_val) = $val =~ /name=([^,]+),value="([^"]+)"/;
 
     ($prop, $val) = ($_prop, $_val)
@@ -210,10 +155,7 @@ my $decodeProp = sub {
     return ($prop, $val);
 };
 
-my $encodeProp = sub {
-    my $self = shift;
-    my ($res, $prop, $val) = @_;
-
+my $encodeProp = sub($self, $res, $prop, $val) {
     return ('set', $prop, '=', q{"} . $self->$setVal($val) . q{"}, ';')
         if ($res ne 'net' || (exists $self->schema->{$res}->{members}->{$prop}
             && !$self->schema->{$res}->{members}->{$prop}->{'x-netprop'}));
@@ -224,10 +166,7 @@ my $encodeProp = sub {
     return (qw(add property), $val, ';');
 };
 
-my $clearProperty = sub {
-    my $self = shift;
-    my $prop = shift;
-
+my $clearProperty = sub($self, $prop) {
     my $name = $self->name;
 
     my @cmd = ('-z', $name, 'clear', $prop);
@@ -237,9 +176,7 @@ my $clearProperty = sub {
     delete $self->attrs->{$prop};
 };
 
-my $clearAttributes = sub {
-    my $self    = shift;
-
+my $clearAttributes = sub($self) {
     # TODO: adding support for rctls (for now just aliased rctls are supported)
     for my $attr (keys %{$self->attrs}) {
         next if $attr eq 'rctl';
@@ -261,17 +198,13 @@ my $clearAttributes = sub {
     }
 };
 
-my $clearSimpleAttrs = sub {
-    my $self = shift;
-
+my $clearSimpleAttrs = sub($self) {
     $self->$clearProperty($_) for grep {
         !$self->$isRes($_) && !exists $self->config->{$_}
     } @{$self->oldres};
 };
 
-my $getConfig = sub {
-    my $self = shift;
-
+my $getConfig = sub($self) {
     my $config = {};
 
     return {} if !$self->zones->exists($self->name);
@@ -331,10 +264,186 @@ my $getConfig = sub {
     return $self->getPostProcess($config);
 };
 
-my $setConfig = sub {
-    my $self   = shift;
-    my $config = shift;
+my $zoneCmd = sub($self, $cmd, $opts = [], $fork = 0) {
+    my $name = $self->name;
 
+    $self->statemap->{$cmd} && !(grep { $self->is($_) } @{$self->statemap->{$cmd}}) && do {
+        $self->log->warn("WARNING: cannot '$cmd' $name. "
+            . "$name is " . $self->state . ' and '
+            . 'not ' . join (' or ', @{$self->statemap->{$cmd}}) . '.');
+        return 0;
+    };
+
+    $self->utils->exec('zoneadm', [ '-z', $name, $cmd, @$opts ],
+        "cannot $cmd zone $name", $fork);
+};
+
+# private static methods
+
+# not using pod_write from Data::Processor as we want a different formatting
+my $genDoc;
+$genDoc = sub($schema, $over = 0) {
+    my @doc;
+    for my $attr (sort {
+        # mandatory attributes first
+        ($schema->{$a}->{optional} // 0) <=> ($schema->{$b}->{optional} // 0)
+        ||
+        $a cmp $b
+    } keys %$schema) {
+        my $str = $attr;
+        $str .= ' (optional)' if $schema->{$attr}->{optional};
+        $str .= ':';
+        $str .= ' array of' if $schema->{$attr}->{array};
+        $str .= exists $schema->{$attr}->{members}
+            ? ' resource containing the following attributes:'
+            : ' ' . ($schema->{$attr}->{description} || '<description missing>');
+
+        push @doc, $over ? "  $str" : ($str, '');
+
+        if (exists $schema->{$attr}->{members}) {
+            push @doc, ('', '=over', '');
+            push @doc, @{$genDoc->($schema->{$attr}->{members}, 1)};
+            push @doc, ('', '=back', '');
+        }
+    }
+
+    return \@doc;
+};
+
+# attributes
+has log     => sub { Mojo::Log->new(level => 'debug') };
+has zones   => sub($self) { Zadm::Zones->new(log => $self->log) };
+has utils   => sub($self) { Zadm::Utils->new(log => $self->log) };
+has image   => sub($self) { Zadm::Image->new(log => $self->log) };
+has sv      => sub($self) { Zadm::Validator->new(log => $self->log) };
+has dp      => sub($self) { Data::Processor->new($self->schema) };
+has name    => sub { Mojo::Exception->throw("ERROR: zone name must be specified on instantiation.\n") };
+# attribute to keep track of currently saved attributes in zonecfg
+has attrs   => sub { {} };
+has brand   => sub($self) { lc ((split /::/, ref $self)[-1]) };
+has public  => sub { [ qw(login fw) ] };
+has opts    => sub { {} };
+has mod     => sub($self) { ref $self };
+has smod    => sub($self) { my $mod = $self->mod; $mod =~ s/Zone/Schema/; $mod };
+has exists  => sub($self) { $self->zones->exists($self->name) };
+has valid   => sub { 0 };
+
+has logfile => sub($self) {
+    my $zlog = $self->config->{zonepath} . '/root/tmp/init.log';
+    return -r $zlog ? $zlog : $self->config->{zonepath} . '/log/zone.log';
+};
+
+has config  => sub($self) {
+    return $self->$getConfig if $self->exists;
+
+    return {
+        %{$self->template},
+        zonename => $self->name,
+        brand    => $self->brand,
+    }
+};
+
+has schema  => sub($self) {
+    my $mod = $self->smod;
+    return do {
+        # fall back to generic schema if there is no brand specific
+        load_class($mod) && do {
+            $mod = __PACKAGE__;
+            $mod =~ s/Zone/Schema/;
+            load_class($mod)
+                and Mojo::Exception->throw("ERROR: cannot load schema class '$mod'.\n");
+        };
+        $mod->new(sv => $self->sv)->schema;
+    };
+};
+
+has resmap => sub($self) {
+    return $self->utils->genmap(
+        [ grep { exists $self->schema->{$_}->{members} } keys %{$self->schema} ]
+    );
+};
+
+has createpropmap => sub($self) {
+    return $self->utils->genmap($self->createprop);
+};
+
+# constructor
+sub new($class, @args) {
+    # using Storable which is in core for a deep compare
+    # make sure the hash keys are sorted for serialisation
+    $Storable::canonical = 1;
+
+    return $class->SUPER::new(@args);
+}
+
+# public methods
+sub addResource($self, $res, $props) {
+    my $name = $self->name;
+    my @cmd  = ('-z', $name, 'add', $res, ';');
+
+    push @cmd, $self->$encodeProp($res, $_, $props->{$_}) for keys %$props;
+
+    push @cmd, qw(end);
+
+    $self->utils->exec('zonecfg', \@cmd, "cannot config zone $name");
+
+    $self->attrs->{$res} = freeze($props);
+}
+
+sub getPostProcess($self, $cfg) {
+    my $schema = $self->schema;
+
+    for (my $i = $#{$cfg->{attr}}; $i >= 0; $i--) {
+        my $name = $cfg->{attr}->[$i]->{name};
+
+        next if !$self->$resIsAttr($name);
+
+        $cfg->{$name} = exists $schema->{$name} && $schema->{$name}->{array}
+                      ? [ split /,/, $cfg->{attr}->[$i]->{value} ]
+                      : $cfg->{attr}->[$i]->{value};
+
+        splice @{$cfg->{attr}}, $i, 1;
+    }
+    # check if attr is empty. if so remove it
+    delete $cfg->{attr} if !@{$cfg->{attr}};
+
+    # TODO: adding support for rctls (for now just aliased rctls are supported)
+    delete $cfg->{rctl};
+
+    return $cfg;
+}
+
+sub setPreProcess($self, $cfg) {
+    # sort the attr resources by name for deep compare
+    for my $res (sort keys %$cfg) {
+        next if !$self->$resIsAttr($res);
+
+        my %elem = (
+            name => $res,
+            type => 'string',
+        );
+
+        $elem{value} = ref $cfg->{$res} eq ref []
+                     ? join (',', @{$cfg->{$res}})
+                     : $cfg->{$res};
+
+        push @{$cfg->{attr}}, { %elem };
+        delete $cfg->{$res};
+    }
+
+    return $cfg;
+}
+
+sub validate($self, $config = $self->config) {
+    $self->valid(0);
+
+    my $ec = $self->dp->validate($config);
+    $ec->count and Mojo::Exception->throw(join ("\n", map { $_->stringify } @{$ec->{errors}}) . "\n");
+
+    return $self->valid(1);
+}
+
+sub setConfig($self, $config) {
     # validate new config
     $self->validate($config);
 
@@ -383,306 +492,70 @@ my $setConfig = sub {
     }
 
     return $self->valid;
-};
-
-my $zoneCmd = sub {
-    my $self     = shift;
-    my $cmd      = shift;
-    my $opts     = shift // [];
-    my $fork     = shift;
-
-    my $name = $self->name;
-
-    $self->statemap->{$cmd} && !(grep { $self->is($_) } @{$self->statemap->{$cmd}}) && do {
-        $self->log->warn("WARNING: cannot '$cmd' $name. "
-            . "$name is " . $self->state . ' and '
-            . 'not ' . join (' or ', @{$self->statemap->{$cmd}}) . '.');
-        return 0;
-    };
-
-    $self->utils->exec('zoneadm', [ '-z', $name, $cmd, @$opts ],
-        "cannot $cmd zone $name", $fork);
-};
-
-# private static methods
-
-# not using pod_write from Data::Processor as we want a different formatting
-my $genDoc;
-$genDoc = sub {
-    my $schema = shift;
-    my $over   = shift // 0;
-
-    my @doc;
-    for my $attr (sort {
-        # mandatory attributes first
-        ($schema->{$a}->{optional} // 0) <=> ($schema->{$b}->{optional} // 0)
-        ||
-        $a cmp $b
-    } keys %$schema) {
-        my $str = $attr;
-        $str .= ' (optional)' if $schema->{$attr}->{optional};
-        $str .= ':';
-        $str .= ' array of' if $schema->{$attr}->{array};
-        $str .= exists $schema->{$attr}->{members}
-            ? ' resource containing the following attributes:'
-            : ' ' . ($schema->{$attr}->{description} || '<description missing>');
-
-        push @doc, $over ? "  $str" : ($str, '');
-
-        if (exists $schema->{$attr}->{members}) {
-            push @doc, ('', '=over', '');
-            push @doc, @{$genDoc->($schema->{$attr}->{members}, 1)};
-            push @doc, ('', '=back', '');
-        }
-    }
-
-    return \@doc;
-};
-
-# attributes
-has log     => sub { Mojo::Log->new(level => 'debug') };
-has zones   => sub { Zadm::Zones->new(log => shift->log) };
-has utils   => sub { Zadm::Utils->new(log => shift->log) };
-has image   => sub { Zadm::Image->new(log => shift->log) };
-has sv      => sub { Zadm::Validator->new(log => shift->log) };
-has dp      => sub { Data::Processor->new(shift->schema) };
-has name    => sub { Mojo::Exception->throw("ERROR: zone name must be specified on instantiation.\n") };
-# attribute to keep track of currently saved attributes in zonecfg
-has attrs   => sub { {} };
-has brand   => sub { lc ((split /::/, ref shift)[-1]) };
-has public  => sub { [ qw(login fw) ] };
-has opts    => sub { {} };
-has smod    => sub { my $mod = ref shift; $mod =~ s/Zone/Schema/; $mod };
-has exists  => sub { my $self = shift; $self->zones->exists($self->name) };
-has valid   => sub { 0 };
-
-has logfile => sub {
-    my $self = shift;
-
-    my $zlog = $self->config->{zonepath} . '/root/tmp/init.log';
-    return -r $zlog ? $zlog : $self->config->{zonepath} . '/log/zone.log';
-};
-
-has config  => sub {
-    my $self = shift;
-    return $self->$getConfig if $self->exists;
-
-    return {
-        %{$self->template},
-        zonename => $self->name,
-        brand    => $self->brand,
-    }
-};
-
-has schema  => sub {
-    my $self = shift;
-
-    my $mod = $self->smod;
-    return do {
-        # fall back to generic schema if there is no brand specific
-        load_class($mod) && do {
-            $mod = __PACKAGE__;
-            $mod =~ s/Zone/Schema/;
-            load_class($mod)
-                and Mojo::Exception->throw("ERROR: cannot load schema class '$mod'.\n");
-        };
-        $mod->new(sv => $self->sv)->schema;
-    };
-};
-
-has resmap => sub {
-    my $self = shift;
-
-    return $self->utils->genmap(
-        [ grep { exists $self->schema->{$_}->{members} } keys %{$self->schema} ]
-    );
-};
-
-has createpropmap => sub {
-    my $self = shift;
-
-    return $self->utils->genmap($self->createprop);
-};
-
-# constructor
-sub new {
-    # using Storable which is in core for a deep compare
-    # make sure the hash keys are sorted for serialisation
-    $Storable::canonical = 1;
-
-    return shift->SUPER::new(@_);
 }
 
-# public methods
-sub addResource {
-    my $self  = shift;
-    my $res   = shift;
-    my $props = shift;
-
-    my $name = $self->name;
-    my @cmd  = ('-z', $name, 'add', $res, ';');
-
-    push @cmd, $self->$encodeProp($res, $_, $props->{$_}) for keys %$props;
-
-    push @cmd, qw(end);
-
-    $self->utils->exec('zonecfg', \@cmd, "cannot config zone $name");
-
-    $self->attrs->{$res} = freeze($props);
-}
-
-sub getPostProcess {
-    my $self = shift;
-    my $cfg  = shift;
-
-    my $schema = $self->schema;
-
-    for (my $i = $#{$cfg->{attr}}; $i >= 0; $i--) {
-        my $name = $cfg->{attr}->[$i]->{name};
-
-        next if !$self->$resIsAttr($name);
-
-        $cfg->{$name} = exists $schema->{$name} && $schema->{$name}->{array}
-                      ? [ split /,/, $cfg->{attr}->[$i]->{value} ]
-                      : $cfg->{attr}->[$i]->{value};
-
-        splice @{$cfg->{attr}}, $i, 1;
-    }
-    # check if attr is empty. if so remove it
-    delete $cfg->{attr} if !@{$cfg->{attr}};
-
-    # TODO: adding support for rctls (for now just aliased rctls are supported)
-    delete $cfg->{rctl};
-
-    return $cfg;
-}
-
-sub setPreProcess {
-    my $self = shift;
-    my $cfg  = shift;
-
-    # sort the attr resources by name for deep compare
-    for my $res (sort keys %$cfg) {
-        next if !$self->$resIsAttr($res);
-
-        my %elem = (
-            name => $res,
-            type => 'string',
-        );
-
-        $elem{value} = ref $cfg->{$res} eq ref []
-                     ? join (',', @{$cfg->{$res}})
-                     : $cfg->{$res};
-
-        push @{$cfg->{attr}}, { %elem };
-        delete $cfg->{$res};
-    }
-
-    return $cfg;
-}
-
-sub validate {
-    my $self = shift;
-    my $config = shift // $self->config;
-
-    $self->valid(0);
-
-    my $ec = $self->dp->validate($config);
-    $ec->count and Mojo::Exception->throw(join ("\n", map { $_->stringify } @{$ec->{errors}}) . "\n");
-
-    return $self->valid(1);
-}
-
-sub setConfig {
-    return shift->$setConfig(shift);
-}
-
-sub getOptions {
-    my $self = shift;
-    my $oper = shift;
-
+sub getOptions($self, $oper) {
     return [] if !exists $self->options->{$oper};
 
     return [ map { $self->options->{$oper}->{$_}->{getopt} } keys %{$self->options->{$oper}} ];
 }
 
-sub checkMandOptions {
-    my $self = shift;
-    my $oper = shift;
-
+sub checkMandOptions($self, $oper) {
     $self->options->{$oper}->{$_}->{mand} && !$self->opts->{$_}
         and return 0 for keys %{$self->options->{$oper}};
 
     return 1;
 }
 
-sub state {
-    my $self = shift;
-
+sub state($self) {
     $self->zones->refresh;
     my $zones = $self->zones->list;
 
     return exists $zones->{$self->name} ? $zones->{$self->name}->{state} : 'unknown';
 }
 
-sub is {
-    my $self  = shift;
-    my $state = shift // return 0;
-
+sub is($self, $state = '') {
     return $self->state eq $state;
 }
 
-sub isPublic {
-    my $self   = shift;
-    my $method = shift;
-
+sub isPublic($self, $method) {
     return !!grep { $_ eq $method } @{$self->public};
 }
 
-sub isSimpleProp {
-    my $self = shift;
-    my $prop = shift;
-
+sub isSimpleProp($self, $prop) {
     $self->$isProp($prop)
         or Mojo::Exception->throw("ERROR: property '$prop' does not exist for brand " . $self->brand . "\n");
 
     return !$self->$isRes($prop) && !$self->$resIsArray($prop);
 }
 
-sub boot {
-    my $self  = shift;
-    my $cOpts = shift;
-
+sub boot($self, $cOpts) {
     # fork boot to the bg if we are about to attach to the console
-    $self->$zoneCmd('boot', undef, $self->opts->{console});
+    $self->$zoneCmd('boot', [], $self->opts->{console});
 
     $self->console($cOpts) if $self->opts->{console};
 }
 
-sub shutdown {
+sub shutdown($self) {
     # fork shutdown to the bg
-    shift->$zoneCmd('shutdown', undef, 1);
+    $self->$zoneCmd('shutdown', [], 1);
 }
 
-sub reboot {
+sub reboot($self) {
     # fork shutdown to the bg
-    shift->$zoneCmd('shutdown', [ qw(-r) ], 1);
+    $self->$zoneCmd('shutdown', [ qw(-r) ], 1);
 }
 
-sub poweroff {
-    shift->$zoneCmd('halt');
+sub poweroff($self) {
+    $self->$zoneCmd('halt');
 }
 
-sub reset {
-    my $self = shift;
-
+sub reset($self) {
     $self->poweroff;
     $self->boot;
 }
 
-sub login {
-    my $self = shift;
-
+sub login($self) {
     my $name = $self->name;
 
     Mojo::Exception->throw("ERROR: '$name' is not running, cannot login.\n")
@@ -691,19 +564,13 @@ sub login {
     $self->utils->exec('zlogin', [ $name ], "cannot login to $name");
 }
 
-sub console {
-    my $self  = shift;
-    my $cOpts = shift // [];
-
+sub console($self, $cOpts = []) {
     my $name = $self->name;
     $self->utils->exec('zlogin', [ '-C', @$cOpts, $name ],
         "cannot attach to $name zone console");
 }
 
-sub create {
-    my $self  = shift;
-    my $props = shift;
-
+sub create($self, $props) {
     my @cmd = ('-z', $self->name, qw(create -b ;));
     push @cmd, ('set', $_, '=', q{"} . $props->{$_} . q{"}, ';')
         for keys %$props;
@@ -711,26 +578,20 @@ sub create {
     $self->utils->exec('zonecfg', \@cmd);
 }
 
-sub delete {
-    my $self = shift;
-
+sub delete($self) {
     $self->utils->exec('zonecfg', [ '-z', $self->name, 'delete' ]);
 }
 
-sub install {
-    my $self = shift;
-
+sub install($self, @args) {
     # TODO centralise and improve this
     $ENV{__ZADM_ALTROOT} && do {
         $self->log->warn('Cannot install a zone inside an alternate root.');
         return 1;
     };
-    $self->$zoneCmd('install', [ @_ ]);
+    $self->$zoneCmd('install', \@args);
 }
 
-sub uninstall {
-    my $self = shift;
-
+sub uninstall($self) {
     # TODO centralise and improve this
     $ENV{__ZADM_ALTROOT} && do {
         $self->log->warn('Cannot uninstall a zone inside an alternate root.');
@@ -739,9 +600,7 @@ sub uninstall {
     $self->$zoneCmd('uninstall');
 }
 
-sub remove {
-    my $self = shift;
-
+sub remove($self) {
     my $name = $self->name;
     Mojo::Exception->throw("ERROR: cannot delete running zone '$name'\n")
         if $self->is('running');
@@ -756,9 +615,7 @@ sub remove {
     };
 }
 
-sub zStats {
-    my $self = shift;
-
+sub zStats($self) {
     return {
         RAM    => $self->config->{'capped-memory'}->{physical} // '-',
         CPUS   => $self->config->{'capped-cpu'}->{ncpus} // '-',
@@ -766,16 +623,14 @@ sub zStats {
     };
 }
 
-sub usage {
-    my $mod = ref shift;
+sub usage($self) {
+    my $mod = $self->mod;
 
     pod2usage(-input => Mojo::File->new(Mojo::Home->new->detect($mod),
         'lib', class_to_path($mod))->to_abs->to_string, 1);
 }
 
-sub doc {
-    my $self = shift;
-
+sub doc($self) {
     my $opts = $self->opts;
 
     my $schema;
@@ -803,9 +658,7 @@ sub doc {
     );
 }
 
-sub fw {
-    my $self = shift;
-
+sub fw($self) {
     my $name = $self->name;
     my $opts = $self->opts;
 

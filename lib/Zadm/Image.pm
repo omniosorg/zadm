@@ -1,5 +1,5 @@
 package Zadm::Image;
-use Mojo::Base -base;
+use Mojo::Base -base, -signatures;
 
 use Mojo::Home;
 use Mojo::Exception;
@@ -9,14 +9,8 @@ use File::Temp;
 use Time::Piece;
 use Time::Seconds qw(ONE_DAY);
 
-my $MODPREFIX = __PACKAGE__;
-
 # private methods
-my $getImgProv = sub {
-    my $self  = shift;
-    my $uuid  = shift;
-    my $brand = shift; # brand is potentially a regexp don't use it stringified
-
+my $getImgProv = sub($self, $uuid, $brand) { # brand is potentially a regexp don't use it stringified
     my @imgs;
     my $provider;
     for my $prov (keys %{$self->images}) {
@@ -36,16 +30,14 @@ my $getImgProv = sub {
 
 # attributes
 has log      => sub { Mojo::Log->new(level => 'debug') };
-has utils    => sub { Zadm::Utils->new(log => shift->log) };
+has utils    => sub($self) { Zadm::Utils->new(log => $self->log) };
 has datadir  => sub { Mojo::Home->new->detect(__PACKAGE__)->rel_file('var')->to_string };
-has cache    => sub { shift->datadir . '/cache' };
+has cache    => sub($self) { $self->datadir . '/cache' };
 has images   => sub { {} };
 
-has provider => sub {
-    my $self = shift;
-
+has provider => sub($self) {
     my %provider;
-    for my $module (@{$self->utils->getMods($MODPREFIX)}) {
+    for my $module (@{$self->utils->getMods(__PACKAGE__)}) {
         next if load_class $module;
 
         my $mod = $module->new(log => $self->log,
@@ -57,11 +49,7 @@ has provider => sub {
     return \%provider;
 };
 
-sub getImage {
-    my $self  = shift;
-    my $uuid  = shift;
-    my $brand = shift; # brand is potentially a regexp don't use it stringified
-
+sub getImage($self, $uuid, $brand) { # brand is potentially a regexp don't use it stringified
     $self->fetchImages;
 
     # check if uuid points to a local image
@@ -100,20 +88,14 @@ sub getImage {
     return $img;
 }
 
-sub fetchImages {
-    my $self  = shift;
-    my $force = shift;
-
+sub fetchImages($self, $force = 0) {
     do {
         $self->provider->{$_}->fetchImages($force);
         $self->images->{$_} = $self->provider->{$_}->images;
     } for keys %{$self->provider};
 }
 
-sub dump {
-    my $self = shift;
-    my $opts = shift // {};
-
+sub dump($self, $opts = {}) {
     $self->fetchImages($opts->{refresh});
 
     my @header = qw(UUID PROVIDER BRAND NAME VERSION);
@@ -136,10 +118,7 @@ sub dump {
     }
 }
 
-sub vacuum {
-    my $self = shift;
-    my $opts = shift // {};
-
+sub vacuum($self, $opts = {}) {
     my $ts = localtime->epoch - ($opts->{days} // 30) * ONE_DAY;
 
     $self->provider->{$_}->vacuum($ts) for keys %{$self->provider};
@@ -151,7 +130,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 

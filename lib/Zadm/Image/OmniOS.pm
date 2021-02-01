@@ -1,14 +1,14 @@
 package Zadm::Image::OmniOS;
-use Mojo::Base 'Zadm::Image::base';
+use Mojo::Base 'Zadm::Image::base', -signatures;
 
 use Mojo::JSON qw(decode_json);
+use Mojo::URL;
 
-has baseurl  => 'https://downloads.omnios.org/media';
-has index    => sub { shift->baseurl . '/img.json' };
+has baseurl  => sub { Mojo::URL->new('https://downloads.omnios.org') };
+has index    => sub($self) { Mojo::URL->new('/media/img.json')->base($self->baseurl)->to_abs };
 
-sub postProcess {
-    my $self = shift;
-    my $json = decode_json(shift);
+sub postProcess($self, $json) {
+    my $data = decode_json($json);
 
     return [
         map { {
@@ -16,7 +16,7 @@ sub postProcess {
             name   => $_->{name},
             desc   => $_->{description},
             vers   => $_->{version},
-            img    => $self->baseurl . "/$_->{path}",
+            img    => Mojo::URL->new("/media/$_->{path}")->base($self->baseurl)->to_abs,
             brand  => $_->{brand},
             type   => $_->{type},
             comp   => $_->{comp},
@@ -26,7 +26,7 @@ sub postProcess {
                 chksum => $_->{sha256},
             }
         } }
-        @{$json->{images} // []}
+        @{$data->{images} // []}
     ];
 }
 
@@ -36,7 +36,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 

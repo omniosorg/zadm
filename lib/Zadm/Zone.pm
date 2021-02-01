@@ -1,5 +1,5 @@
 package Zadm::Zone;
-use Mojo::Base -base;
+use Mojo::Base -base, -signatures;
 
 use Mojo::Exception;
 use Mojo::Loader qw(load_class);
@@ -8,11 +8,10 @@ use Zadm::Zones;
 
 # attributes
 has log     => sub { Mojo::Log->new(level => 'debug') };
-has zones   => sub { Zadm::Zones->new(log => shift->log) };
+has zones   => sub($self) { Zadm::Zones->new(log => $self->log) };
 has name    => sub { Mojo::Exception->throw("ERROR: zone name must be specified on instantiation.\n") };
-has brand   => sub {
-    my $self = shift;
-    my $name = $self->name // '';
+has brand   => sub($self) {
+    my $name = $self->name;
 
     Mojo::Exception->throw("ERROR: zone '$name' does not exist.\n")
         if !$self->zones->exists($name);
@@ -21,10 +20,7 @@ has brand   => sub {
 };
 
 # private methods
-my $loadModule = sub {
-    my $self  = shift;
-    my @args  = @_;
-
+my $loadModule = sub($self, @args) {
     my $brand = $self->brand;
 
     if (!$self->zones->brandExists($brand)) {
@@ -46,8 +42,8 @@ my $loadModule = sub {
     };
 };
 
-sub new {
-    return shift->SUPER::new(@_)->$loadModule(@_);
+sub new($class, @args) {
+    return $class->SUPER::new(@args)->$loadModule(@args);
 }
 
 1;

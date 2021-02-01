@@ -1,10 +1,8 @@
 package Zadm::Schema::LX;
-use Mojo::Base 'Zadm::Schema::base';
+use Mojo::Base 'Zadm::Schema::base', -signatures;
 
 my $SCHEMA;
-has schema => sub {
-    my $self = shift;
-
+has schema => sub($self) {
     my $dp = Data::Processor->new($self->SUPER::schema);
     my $ec = $dp->merge_schema($self->$SCHEMA);
 
@@ -13,9 +11,7 @@ has schema => sub {
     return $dp->schema;
 };
 
-$SCHEMA = sub {
-    my $self = shift;
-
+$SCHEMA = sub($self) {
     return {
     net => {
         optional    => 1,
@@ -65,7 +61,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 

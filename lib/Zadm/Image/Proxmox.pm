@@ -1,13 +1,12 @@
 package Zadm::Image::Proxmox;
-use Mojo::Base 'Zadm::Image::base';
+use Mojo::Base 'Zadm::Image::base', -signatures;
 
-has baseurl  => 'http://download.proxmox.com/images';
-has index    => sub { shift->baseurl . '/aplinfo.dat' };
+use Mojo::URL;
 
-sub postProcess {
-    my $self = shift;
-    my $text = shift // '';
+has baseurl  => sub { Mojo::URL->new('http://download.proxmox.com') };
+has index    => sub($self) { Mojo::URL->new('/images/aplinfo.dat')->base($self->baseurl)->to_abs };
 
+sub postProcess($self, $text = '') {
     my @imgs;
     for my $img (split /(?:\r?\n){2}/, $text) {
         my %img = map { split /:\s+/, $_, 2 }
@@ -23,7 +22,7 @@ sub postProcess {
             name   => $img{Package},
             desc   => $img{Description},
             vers   => $img{Version},
-            img    => $self->baseurl . "/$img{Location}",
+            img    => Mojo::URL->new("/images/$img{Location}")->base($self->baseurl)->to_abs,
             brand  => 'lx',
             comp   => 'gzip',
             ext    => '.tar.gz',
@@ -45,7 +44,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 

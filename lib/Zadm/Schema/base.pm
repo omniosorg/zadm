@@ -1,16 +1,14 @@
 package Zadm::Schema::base;
-use Mojo::Base -base;
+use Mojo::Base -base, -signatures;
 
 use Zadm::Validator;
 use Data::Processor;
 
 has log   => sub { Mojo::Log->new(level => 'debug') };
-has sv    => sub { Zadm::Validator->new(log => shift->log) };
-has brand => sub { lc ((split /::/, ref shift)[-1]) };
+has sv    => sub($self) { Zadm::Validator->new(log => $self->log) };
+has brand => sub($self) { lc ((split /::/, ref $self)[-1]) };
 
-has schema => sub {
-    my $self = shift;
-
+has schema => sub($self) {
     return {
     zonename    => {
         description => 'name of zone',
@@ -332,7 +330,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2020 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 
