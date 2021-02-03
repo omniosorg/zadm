@@ -196,12 +196,12 @@ sub vcpus($self) {
     return sub($vcpu, @) {
         return undef if $numeric->($vcpu);
 
-        my @vcpu = split ',', $vcpu;
+        my @vcpu = split /,/, $vcpu;
 
         shift @vcpu if $numeric->($vcpu[0]);
 
         for my $vcpuConf (@vcpu){
-            my @vcpuConf = split '=', $vcpuConf, 2;
+            my @vcpuConf = split /=/, $vcpuConf, 2;
             exists $vcpuOptions{$vcpuConf[0]} && $numeric->($vcpuConf[1])
                 or return "ERROR: vcpu setting not valid";
         }

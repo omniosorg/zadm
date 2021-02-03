@@ -18,7 +18,7 @@ my $RCV_TMO  = 3;
 my $cpuCount = sub($vcpus) {
     return $vcpus if !$vcpus || $vcpus =~ /^\d+$/;
 
-    my %cpu = map { /^([^=]+)=([^=]+)$/ } split ',', $vcpus;
+    my %cpu = map { /^([^=]+)=([^=]+)$/ } split /,/, $vcpus;
 
     return join '/', map { $cpu{$_} // '1' } qw(sockets cores threads);
 };
@@ -121,7 +121,7 @@ my $getDiskAttr = sub($self, $attr) {
             my ($key, $val) = split /=/, $_, 2;
 
             $key => $val // 'true'
-        } split ',', $attr
+        } split /,/, $attr
     };
 };
 
