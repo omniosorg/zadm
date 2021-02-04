@@ -9,11 +9,13 @@ use Mojo::File;
 use Mojo::JSON qw(decode_json);
 use Mojo::Message::Response;
 use Mojo::Loader qw(find_modules);
+use IO::Handle;
+use IO::Uncompress::AnyUncompress qw($AnyUncompressError);
 use IPC::Open3;
 use File::Spec;
 use File::Temp;
 use Text::ParseWords qw(shellwords);
-use String::ShellQuote qw(shell_quote);
+use Time::Piece;
 use Sun::Solaris::Kstat;
 
 # commands
@@ -28,21 +30,14 @@ my %CMDS = (
     zfs         => '/usr/sbin/zfs',
     pkg         => '/usr/bin/pkg',
     curl        => '/usr/bin/curl',
-    cat         => '/usr/bin/cat',
     socat       => '/usr/bin/socat',
     nc          => '/usr/bin/nc',
-    pv          => '/usr/bin/pv',
-    gzip        => -x '/opt/ooce/bin/pigz' ? '/opt/ooce/bin/pigz' : '/usr/bin/gzip',
-    bzip2       => -x '/opt/ooce/bin/pbzip2' ? '/opt/ooce/bin/pbzip2' : '/usr/bin/bzip2',
-    xz          => '/usr/bin/xz',
-    zstd        => -x '/usr/bin/zstd' ? '/usr/bin/zstd' : '/opt/ooce/bin/zstd',
     pager       => $ENV{PAGER} || '/usr/bin/less -eimnqX',
     domainname  => '/usr/bin/domainname',
     dispadmin   => '/usr/sbin/dispadmin',
     getconf     => '/usr/bin/getconf',
     pagesize    => '/usr/bin/pagesize',
     swap        => '/usr/sbin/swap',
-    file        => '/usr/bin/file',
     ipf         => '/usr/sbin/ipf',
     ipfstat     => '/usr/sbin/ipfstat',
     ipmon       => '/usr/sbin/ipmon',
@@ -103,18 +98,6 @@ my $edit = sub($self, $json) {
     return ($modified, $json);
 };
 
-my $zfsStrDecomp = sub($self, $file) {
-    my $type = $self->readProc('file', [ '-b', $file ])->[0] // '';
-
-    for ($type) {
-        /^ZFS/ && return ($CMDS{cat});
-        /^(xz|gzip|bzip2)/ && return ($CMDS{$1}, '-dc');
-        /^Zstandard/ && return ($CMDS{zstd}, '-dc');
-    }
-
-    Mojo::Exception->throw("ERROR: zfs stream '$file' is not in a supported format '$type'.\n");
-};
-
 # public methods
 sub readProc($self, $cmd, $args = []) {
     Mojo::Exception->throw("ERROR: command '$cmd' not defined.\n")
@@ -169,16 +152,36 @@ sub curl($self, $file, $url, $silent = 0) {
 }
 
 sub zfsRecv($self, $file, $ds) {
-    my $cmd = join ' ',
-        shell_quote(shellwords($self->$zfsStrDecomp($file))),
-        shell_quote($file),
-        '|', shell_quote(shellwords($CMDS{pv})), '|',
-        shell_quote(shellwords($CMDS{zfs}), qw(recv -Fv)),
-        shell_quote($ds);
+    my @cmd = ($CMDS{zfs}, qw(recv -Fv), $ds);
 
-    $self->log->debug($cmd);
+    $self->log->debug("@cmd");
 
-    system $cmd and Mojo::Exception->throw("ERROR: receiving zfs stream: $!\n");
+    open my $zfs, '|-', @cmd or Mojo::Exception->throw("ERROR: receiving zfs stream: $!\n");
+    my $decomp = IO::Uncompress::AnyUncompress->new($file->to_string)
+        or Mojo::Exception->throw("ERROR: decompressing '$file' failed: $AnyUncompressError\n");
+
+    my $bytes = 0;
+    my $start = my $last = time;
+    while (my $status = $decomp->read(my $buffer)) {
+        Mojo::Exception->throw("ERROR: decompressing '$file' failed: $AnyUncompressError\n")
+            if $status < 0;
+
+        print $zfs $buffer;
+        $bytes += $status;
+
+        my $now = time;
+        if ($now > $last) {
+            $last = $now;
+
+            my $delta = $now - $start;
+            print "\r", $self->prettySize($bytes, '%.0f%s', [ qw(b KiB MiB GiB TiB) ]),
+                ' ', Time::Piece->new($delta)->hms, ' [',
+                $self->prettySize($bytes / $delta, '%.1f%s', [ qw(b KiB MiB GiB TiB) ]), '/s]';
+            STDOUT->flush;
+        }
+    }
+    print "\n";
+    STDOUT->flush;
 }
 
 sub encodeJSON($self, $data) {
@@ -332,11 +335,10 @@ sub scheduler($self) {
     return {};
 }
 
-sub prettySize($self, $size, $format = '%.0f%s') {
-    my @units = qw(B K M G T P E);
-    my $i     = $size <= 0 ? 0 : int (log ($size) / log (1024.0));
+sub prettySize($self, $size, $format = '%.0f%s', $units = [ qw(B K M G T P E) ]) {
+    my $i = $size <= 0 ? 0 : int (log ($size) / log (1024.0));
 
-    return sprintf($format, $size / 1024 ** $i, $units[$i]);
+    return sprintf($format, $size / 1024 ** $i, $units->[$i]);
 }
 
 sub getPhysMem($self) {
