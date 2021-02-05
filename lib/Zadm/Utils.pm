@@ -9,6 +9,8 @@ use Mojo::File;
 use Mojo::JSON qw(decode_json);
 use Mojo::Message::Response;
 use Mojo::Loader qw(find_modules);
+use Mojo::Promise;
+use Mojo::UserAgent;
 use IO::Handle;
 use IO::Uncompress::AnyUncompress qw($AnyUncompressError);
 use IPC::Open3;
@@ -29,7 +31,6 @@ my %CMDS = (
     editor      => $ENV{VISUAL} || $ENV{EDITOR} || '/usr/bin/vi',
     zfs         => '/usr/sbin/zfs',
     pkg         => '/usr/bin/pkg',
-    curl        => '/usr/bin/curl',
     socat       => '/usr/bin/socat',
     nc          => '/usr/bin/nc',
     pager       => $ENV{PAGER} || '/usr/bin/less -eimnqX',
@@ -50,9 +51,52 @@ my %ENVARGS = map {
 
 my $ZPATH = ($ENV{__ZADM_ALTROOT} // '') . '/etc/zones';
 
+my $progStr = sub($self, $bytes, $elapsed, $len = 0) {
+    my $rate = $bytes / $elapsed;
+
+    $len && return sprintf ('%s/%s %s [%s/s] [ETA: %-8s]',
+        $self->prettySize($bytes, '%.0f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
+        $self->prettySize($len, '%.0f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
+        Time::Piece->new($elapsed)->hms,
+        $self->prettySize($rate, '%.1f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
+        ($rate ? Time::Piece->new(($len - $bytes) / $rate)->hms : '-'));
+
+    return sprintf ('%s %s [%s/s]',
+        $self->prettySize($bytes, '%.0f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
+        Time::Piece->new($elapsed)->hms,
+        $self->prettySize($rate, '%.1f%s', [ qw(b KiB MiB GiB TiB PiB) ]));
+};
+
 # attributes
 has log      => sub { Mojo::Log->new(level => 'debug') };
 has kstat    => sub { Sun::Solaris::Kstat->new };
+has ua       => sub { Mojo::UserAgent->new->max_redirects(8) };
+has uaprog   => sub($self) {
+    my $ua = $self->ua->new;
+
+    $ua->on(start => sub($ua, $tx) {
+        my $start = my $last = time;
+        print 'Downloading ', $tx->req->url, "...\n";
+
+        $tx->res->on(progress => sub($res) {
+            my $now = time;
+            if ($now > $last) {
+                $last = $now;
+
+                print "\r", $self->$progStr($res->content->progress,
+                    $now - $start, $res->headers->content_length);
+                STDOUT->flush;
+            }
+        });
+        $tx->res->once(finish => sub($res) {
+            print "\r", $self->$progStr($res->content->progress,
+                time - $start, $res->headers->content_length), "\n";
+            STDOUT->flush;
+        });
+    });
+
+    return $ua;
+};
 has pagesize => sub($self) { $self->readProc('pagesize')->[0] // 4096 };
 has ram      => sub($self) {
     return $self->kstat->{unix}->{0}->{system_pages}->{physmem}
@@ -135,20 +179,42 @@ sub exec($self, $cmd, $args = [], $err = "executing '$cmd'", $fork = 0, $ret = 0
     }
 }
 
-sub curl($self, $file, $url, $silent = 0) {
-    my @cmd = ($CMDS{curl}, ($silent ? '-s' : ()), qw(-L -w %{json} -o), $file, $url);
+sub curl($self, $files, $opts = {}) {
+    return if !@$files;
+    $self->log->debug("downloading $_->{url}...") for @$files;
+    Mojo::Promise->all(
+        map { $opts->{silent} ? $self->ua->get_p($_->{url}) : $self->uaprog->get_p($_->{url}) } @$files
+    )->then(sub(@tx) {
+        for (my $i = 0; $i <= $#$files; $i++) {
+            my $res = $tx[$i]->[0]->result;
 
-    open my $curl, '-|', @cmd
-        or Mojo::Exception->throw("ERROR: executing 'curl': $!\n");
+            if (!$res->is_success) {
+                my $err = "ERROR: Failed to download file from $files->[$i]->{url} - "
+                    . $res->code . ' ' . $res->default_message . "\n";
 
-    my $status = decode_json(<$curl>) // {};
+                Mojo::Exception->throw($err) if $opts->{fatal};
+                print STDERR $err;
 
-    my $res = Mojo::Message::Response->new;
-    $res->code($status->{http_code});
+                next;
+            }
 
-    Mojo::Exception->throw("ERROR: Failed to download file from $url - "
-        . $res->code . ' ' . $res->default_message . "\n")
-            if !$res->is_success;
+            local $@;
+            eval {
+                local $SIG{__DIE__};
+
+                $res->save_to($files->[$i]->{path});
+            };
+
+            if ($@) {
+                my $err = "ERROR: Failed to write file to $files->[$i]->{path}.\n";
+                Mojo::Exception->throw($err) if $opts->{fatal};
+                print STDERR $err;
+            }
+        }
+    })->catch(sub($err) {
+        Mojo::Exception->throw($err) if $opts->{fatal};
+        print STDERR $err;
+    })->wait;
 }
 
 sub zfsRecv($self, $file, $ds) {
@@ -173,14 +239,11 @@ sub zfsRecv($self, $file, $ds) {
         if ($now > $last) {
             $last = $now;
 
-            my $delta = $now - $start;
-            print "\r", $self->prettySize($bytes, '%.0f%s', [ qw(b KiB MiB GiB TiB) ]),
-                ' ', Time::Piece->new($delta)->hms, ' [',
-                $self->prettySize($bytes / $delta, '%.1f%s', [ qw(b KiB MiB GiB TiB) ]), '/s]';
+            print "\r", $self->$progStr($bytes, $now - $start);
             STDOUT->flush;
         }
     }
-    print "\n";
+    print "\r", $self->$progStr($bytes, time - $start), "\n";
     STDOUT->flush;
 }
 

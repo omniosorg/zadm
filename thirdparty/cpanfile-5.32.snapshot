@@ -120,6 +120,23 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 0
       IO::Compress::Base 2.096
       IO::Uncompress::Base 2.096
+  IO-Socket-SSL-2.069
+    pathname: S/SU/SULLR/IO-Socket-SSL-2.069.tar.gz
+    provides:
+      IO::Socket::SSL 2.069
+      IO::Socket::SSL::Intercept 2.056
+      IO::Socket::SSL::OCSP_Cache 2.069
+      IO::Socket::SSL::OCSP_Resolver 2.069
+      IO::Socket::SSL::PublicSuffix undef
+      IO::Socket::SSL::SSL_Context 2.069
+      IO::Socket::SSL::SSL_HANDLE 2.069
+      IO::Socket::SSL::Session_Cache 2.069
+      IO::Socket::SSL::Utils 2.014
+    requirements:
+      ExtUtils::MakeMaker 0
+      Mozilla::CA 0
+      Net::SSLeay 1.46
+      Scalar::Util 0
   Module-Build-0.4231
     pathname: L/LE/LEONT/Module-Build-0.4231.tar.gz
     provides:
@@ -259,6 +276,7 @@ DISTRIBUTIONS
       Mojolicious::Lite undef
       Mojolicious::Plugin undef
       Mojolicious::Plugin::Config undef
+      Mojolicious::Plugin::Config::Sandbox undef
       Mojolicious::Plugin::DefaultHelpers undef
       Mojolicious::Plugin::EPLRenderer undef
       Mojolicious::Plugin::EPRenderer undef
@@ -285,6 +303,23 @@ DISTRIBUTIONS
       IO::Socket::IP 0.37
       Sub::Util 1.41
       perl 5.016
+  Mozilla-CA-20200520
+    pathname: A/AB/ABH/Mozilla-CA-20200520.tar.gz
+    provides:
+      Mozilla::CA 20200520
+    requirements:
+      ExtUtils::MakeMaker 0
+      Test 0
+      perl 5.006
+  Net-SSLeay-1.90
+    pathname: C/CH/CHRISN/Net-SSLeay-1.90.tar.gz
+    provides:
+      Net::SSLeay 1.90
+      Net::SSLeay::Handle 1.90
+    requirements:
+      ExtUtils::MakeMaker 0
+      MIME::Base64 0
+      perl 5.008001
   Regexp-IPv4-0.003
     pathname: P/PE/PERLANCAR/Regexp-IPv4-0.003.tar.gz
     provides:

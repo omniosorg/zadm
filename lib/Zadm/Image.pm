@@ -49,6 +49,22 @@ has provider => sub($self) {
     return \%provider;
 };
 
+sub fetchImages($self, $force = 0) {
+    $self->utils->curl(
+        [
+            map {{
+                path => $self->provider->{$_}->idxpath,
+                url  => $self->provider->{$_}->index
+            }}
+            grep { $force || $self->provider->{$_}->idxrefr }
+            keys %{$self->provider}
+        ],
+        { silent => 1, fatal => 0 }
+    );
+    $self->images->{$_} = $self->provider->{$_}->images
+        for keys %{$self->provider};
+}
+
 sub getImage($self, $uuid, $brand) { # brand is potentially a regexp don't use it stringified
     $self->fetchImages;
 
@@ -86,13 +102,6 @@ sub getImage($self, $uuid, $brand) { # brand is potentially a regexp don't use i
 
     # return the whole structure including all the metadata
     return $img;
-}
-
-sub fetchImages($self, $force = 0) {
-    do {
-        $self->provider->{$_}->fetchImages($force);
-        $self->images->{$_} = $self->provider->{$_}->images;
-    } for keys %{$self->provider};
 }
 
 sub dump($self, $opts = {}) {
