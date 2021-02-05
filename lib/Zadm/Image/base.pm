@@ -4,7 +4,6 @@ use Mojo::Base -base, -signatures;
 use Mojo::Exception;
 use Mojo::Home;
 use Mojo::File;
-use File::Path qw(make_path);
 use File::stat;
 use Digest::SHA;
 use Time::Piece;
@@ -15,10 +14,19 @@ has log      => sub { Mojo::Log->new(level => 'debug') };
 has utils    => sub($self) { Zadm::Utils->new(log => $self->log) };
 has datadir  => sub { Mojo::Home->new->detect(__PACKAGE__)->rel_file('var')->to_string };
 has provider => sub($self) { lc ((split /::/, ref $self)[-1]) };
-has cache    => sub($self) { Mojo::File->new($self->datadir, 'cache', $self->provider) };
+has cache    => sub($self) {
+    my $cache = Mojo::File->new($self->datadir, 'cache', $self->provider);
+    # check if cache directory exists
+    -d $cache || $cache->make_path
+        or Mojo::Exception->throw("ERROR: cannot create cache directory $self->cache\n");
+
+    return $cache
+};
 has baseurl  => sub { Mojo::Exception->throw("ERROR: baseurl must be specified in derived class.\n") };
 has index    => sub { Mojo::Exception->throw("ERROR: index must be specified in derived class.\n") };
-has images   => sub($self) { $self->postProcess(Mojo::File->new($self->cache, 'index.txt')->slurp) };
+has idxpath  => sub($self) { Mojo::File->new($self->cache, 'index.txt') };
+has idxrefr  => sub($self) { !-f $self->idxpath || localtime->epoch - ONE_DAY > $self->idxpath->stat->mtime };
+has images   => sub($self) { -r $self->idxpath ? $self->postProcess($self->idxpath->slurp) : [] };
 
 # private methods
 my $checkChecksum = sub($self, $file, $digest, $checksum) {
@@ -28,40 +36,26 @@ my $checkChecksum = sub($self, $file, $digest, $checksum) {
     return Digest::SHA->new($digest)->addfile($file->to_string)->hexdigest eq $checksum;
 };
 
-my $getFile = sub($self, $file, $url, $silent = 0) {
-    $self->log->debug("downloading $url...");
-    $self->utils->curl($file, $url, $silent);
-};
-
 sub postProcess($self) {
     $self->utils->isVirtual;
 }
 
 sub download($self, $fileName, $url, %opts) {
-    # check if cache directory exists
-    -d $self->cache || make_path($self->cache)
-        or Mojo::Exception->throw("ERROR: cannot create cache directory $self->cache\n");
-
     my $file = Mojo::File->new($self->cache, $fileName);
     $self->log->debug("checking cache for '$fileName' (provider: '" . $self->provider . "')...");
 
-    $self->$getFile($file, $url, $opts{silent}) if !-f $file
-        || (exists $opts{max_age} && localtime->epoch - $opts{max_age} > $file->stat->mtime);
+    $self->utils->curl([{ path => $file, url => $url }], \%opts) if !-f $file;
 
     return $file if !exists $opts{chksum}
         || $self->$checkChecksum($file, $opts{chksum}->{digest}, $opts{chksum}->{chksum});
 
     # re-download since checksum mismatch
     $self->log->debug("re-downloading '$fileName' because of checksum mismatch...");
-    $self->$getFile($file, $url, $opts{silent});
+    $self->utils->curl([{ path => $file, url => $url }], \%opts);
     $self->$checkChecksum($file, $opts{chksum}->{digest}, $opts{chksum}->{chksum})
         or Mojo::Exception->throw("ERROR: checksum mismatch for file '$fileName'.\n");
 
     return $file;
-}
-
-sub fetchImages($self, $force = 0) {
-    $self->download('index.txt', $self->index, max_age => ($force ? -1 : ONE_DAY), silent => 1);
 }
 
 sub vacuum($self, $ts) {
