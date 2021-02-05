@@ -1,5 +1,39 @@
 # carton snapshot format: version 1.0
 DISTRIBUTIONS
+  Compress-Raw-Bzip2-2.100
+    pathname: P/PM/PMQS/Compress-Raw-Bzip2-2.100.tar.gz
+    provides:
+      Compress::Raw::Bzip2 2.100
+    requirements:
+      ExtUtils::MakeMaker 0
+  Compress-Raw-Lzma-2.100
+    pathname: P/PM/PMQS/Compress-Raw-Lzma-2.100.tar.gz
+    provides:
+      Compress::Raw::Lzma 2.100
+    requirements:
+      ExtUtils::MakeMaker 0
+  Compress-Raw-Zlib-2.100
+    pathname: P/PM/PMQS/Compress-Raw-Zlib-2.100.tar.gz
+    provides:
+      Compress::Raw::Zlib 2.100
+    requirements:
+      ExtUtils::MakeMaker 0
+  Compress-Stream-Zstd-0.202
+    pathname: P/PM/PMQS/Compress-Stream-Zstd-0.202.tar.gz
+    provides:
+      Compress::Stream::Zstd 0.202
+      Compress::Stream::Zstd::CompressionContext undef
+      Compress::Stream::Zstd::CompressionDictionary undef
+      Compress::Stream::Zstd::Compressor undef
+      Compress::Stream::Zstd::DecompressionContext undef
+      Compress::Stream::Zstd::DecompressionDictionary undef
+      Compress::Stream::Zstd::Decompressor undef
+    requirements:
+      ExtUtils::CBuilder 0
+      ExtUtils::ParseXS 0
+      Module::Build 0.4005
+      parent 0
+      perl 5.008001
   Data-Processor-1.0.6
     pathname: M/MB/MBP/Data-Processor-1.0.6.tar.gz
     provides:
@@ -14,6 +48,124 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 0
       perl 5.008005
+  IO-Compress-2.100
+    pathname: P/PM/PMQS/IO-Compress-2.100.tar.gz
+    provides:
+      Compress::Zlib 2.100
+      File::GlobMapper 1.001
+      IO::Compress undef
+      IO::Compress::Adapter::Bzip2 2.100
+      IO::Compress::Adapter::Deflate 2.100
+      IO::Compress::Adapter::Identity 2.100
+      IO::Compress::Base 2.100
+      IO::Compress::Base::Common 2.100
+      IO::Compress::Bzip2 2.100
+      IO::Compress::Deflate 2.100
+      IO::Compress::Gzip 2.100
+      IO::Compress::Gzip::Constants 2.100
+      IO::Compress::RawDeflate 2.100
+      IO::Compress::Zip 2.100
+      IO::Compress::Zip::Constants 2.100
+      IO::Compress::Zlib::Constants 2.100
+      IO::Compress::Zlib::Extra 2.100
+      IO::Uncompress::Adapter::Bunzip2 2.100
+      IO::Uncompress::Adapter::Identity 2.100
+      IO::Uncompress::Adapter::Inflate 2.100
+      IO::Uncompress::AnyInflate 2.100
+      IO::Uncompress::AnyUncompress 2.100
+      IO::Uncompress::Base 2.100
+      IO::Uncompress::Bunzip2 2.100
+      IO::Uncompress::Gunzip 2.100
+      IO::Uncompress::Inflate 2.100
+      IO::Uncompress::RawInflate 2.100
+      IO::Uncompress::Unzip 2.100
+      U64 2.100
+      Zlib::OldDeflate 2.100
+      Zlib::OldInflate 2.100
+    requirements:
+      Compress::Raw::Bzip2 2.100
+      Compress::Raw::Zlib 2.100
+      Encode 0
+      ExtUtils::MakeMaker 0
+      Scalar::Util 0
+  IO-Compress-Lzma-2.100
+    pathname: P/PM/PMQS/IO-Compress-Lzma-2.100.tar.gz
+    provides:
+      IO::Compress::Adapter::Lzip 2.100
+      IO::Compress::Adapter::Lzma 2.100
+      IO::Compress::Adapter::Xz 2.100
+      IO::Compress::Lzip 2.100
+      IO::Compress::Lzma 2.100
+      IO::Compress::Xz 2.100
+      IO::Uncompress::Adapter::UnLzip 2.100
+      IO::Uncompress::Adapter::UnLzma 2.100
+      IO::Uncompress::Adapter::UnXz 2.100
+      IO::Uncompress::UnLzip 2.100
+      IO::Uncompress::UnLzma 2.100
+      IO::Uncompress::UnXz 2.100
+    requirements:
+      Compress::Raw::Lzma 2.100
+      ExtUtils::MakeMaker 0
+      IO::Compress::Base 2.100
+      IO::Uncompress::Base 2.100
+  IO-Compress-Zstd-2.100
+    pathname: P/PM/PMQS/IO-Compress-Zstd-2.100.tar.gz
+    provides:
+      IO::Compress::Adapter::Zstd 2.100
+      IO::Compress::Zstd 2.100
+      IO::Uncompress::Adapter::UnZstd 2.100
+      IO::Uncompress::UnZstd 2.100
+    requirements:
+      Compress::Stream::Zstd 0
+      ExtUtils::MakeMaker 0
+      IO::Compress::Base 2.096
+      IO::Uncompress::Base 2.096
+  Module-Build-0.4231
+    pathname: L/LE/LEONT/Module-Build-0.4231.tar.gz
+    provides:
+      Module::Build 0.4231
+      Module::Build::Base 0.4231
+      Module::Build::Compat 0.4231
+      Module::Build::Config 0.4231
+      Module::Build::Cookbook 0.4231
+      Module::Build::Dumper 0.4231
+      Module::Build::Notes 0.4231
+      Module::Build::PPMMaker 0.4231
+      Module::Build::Platform::Default 0.4231
+      Module::Build::Platform::MacOS 0.4231
+      Module::Build::Platform::Unix 0.4231
+      Module::Build::Platform::VMS 0.4231
+      Module::Build::Platform::VOS 0.4231
+      Module::Build::Platform::Windows 0.4231
+      Module::Build::Platform::aix 0.4231
+      Module::Build::Platform::cygwin 0.4231
+      Module::Build::Platform::darwin 0.4231
+      Module::Build::Platform::os2 0.4231
+      Module::Build::PodParser 0.4231
+    requirements:
+      CPAN::Meta 2.142060
+      Cwd 0
+      Data::Dumper 0
+      ExtUtils::CBuilder 0.27
+      ExtUtils::Install 0
+      ExtUtils::Manifest 0
+      ExtUtils::Mkbootstrap 0
+      ExtUtils::ParseXS 2.21
+      File::Basename 0
+      File::Compare 0
+      File::Copy 0
+      File::Find 0
+      File::Path 0
+      File::Spec 0.82
+      Getopt::Long 0
+      Module::Metadata 1.000002
+      Perl::OSType 1
+      Pod::Man 2.17
+      TAP::Harness 3.29
+      Text::Abbrev 0
+      Text::ParseWords 0
+      perl 5.006001
+      version 0.87
   Mojolicious-8.72
     pathname: S/SR/SRI/Mojolicious-8.72.tar.gz
     provides:
