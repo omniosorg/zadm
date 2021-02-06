@@ -33,6 +33,7 @@ my $getImgProv = sub($self, $uuid, $brand) { # brand is potentially a regexp don
 };
 
 my $progStr = sub($self, $bytes, $elapsed, $len = 0) {
+    return '' if !$elapsed;
     my $rate = $bytes / $elapsed;
 
     $len && return sprintf ('%s/%s %s [%s/s] [ETA: %-8s]',
@@ -98,7 +99,10 @@ has provider => sub($self) {
 # public methods
 sub curl($self, $files, $opts = {}) {
     return if !@$files;
+
+    # default to bail out if a download failed
     $opts->{fatal} //= 1;
+    my $failed = 0;
 
     $self->log->debug("downloading $_->{url}...") for @$files;
     Mojo::Promise->all(
@@ -108,11 +112,9 @@ sub curl($self, $files, $opts = {}) {
             my $res = $tx[$i]->[0]->result;
 
             if (!$res->is_success) {
-                my $err = "ERROR: Failed to download file from $files->[$i]->{url} - "
+                $failed = 1;
+                print STDERR "ERROR: Failed to download file from $files->[$i]->{url} - "
                     . $res->code . ' ' . $res->default_message . "\n";
-
-                Mojo::Exception->throw($err) if $opts->{fatal};
-                print STDERR $err;
 
                 next;
             }
@@ -125,15 +127,16 @@ sub curl($self, $files, $opts = {}) {
             };
 
             if ($@) {
-                my $err = "ERROR: Failed to write file to $files->[$i]->{path}.\n";
-                Mojo::Exception->throw($err) if $opts->{fatal};
-                print STDERR $err;
+                $failed = 1;
+                print STDERR "ERROR: Failed to write file to $files->[$i]->{path}.\n";
             }
         }
     })->catch(sub($err) {
-        Mojo::Exception->throw($err) if $opts->{fatal};
+        $failed = 1;
         print STDERR $err;
     })->wait;
+
+    exit 1 if $failed && $opts->{fatal};
 }
 
 sub zfsRecv($self, $file, $ds) {
@@ -194,8 +197,9 @@ sub getImage($self, $uuid, $brand) { # brand is potentially a regexp don't use i
 
         my $tmpimgdir = File::Temp->newdir(DIR => $self->cache);
         my $fileName  = Mojo::File->new($uuid)->basename;
+        my $file      = Mojo::File->new($tmpimgdir, $fileName);
 
-        $self->curl("$tmpimgdir/$fileName", $uuid);
+        $self->curl([{ path => $file, url => $uuid }]);
         # TODO: add a check whether we got a tarball or zfs stream
         # and not e.g. a html document
 
@@ -203,7 +207,7 @@ sub getImage($self, $uuid, $brand) { # brand is potentially a regexp don't use i
         # i.e. after zone install the temporary directory will be removed
         return {
             __tmpdir__ => $tmpimgdir,
-            _file      => "$tmpimgdir/$fileName",
+            _file      => $file,
         };
     }
 
