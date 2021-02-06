@@ -342,7 +342,7 @@ sub install($self) {
     }
 
     if ($check !~ /^no?$/i) {
-        $self->utils->zfsRecv($img->{_file}, $self->bootdisk->{path});
+        $self->zones->image->zfsRecv($img->{_file}, $self->bootdisk->{path});
         # TODO: '-x volsize' for zfs recv seems not to work so we must reset the
         # volsize to the original value after receive
         $self->utils->exec('zfs', [ 'set', 'volsize=' . $self->bootdisk->{size}, $self->bootdisk->{path} ]);
