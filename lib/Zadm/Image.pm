@@ -5,6 +5,10 @@ use Mojo::Home;
 use Mojo::Exception;
 use Mojo::File;
 use Mojo::Loader qw(load_class);
+use Mojo::Promise;
+use Mojo::UserAgent;
+use IO::Handle;
+use IO::Uncompress::AnyUncompress qw($AnyUncompressError);
 use File::Temp;
 use Time::Piece;
 use Time::Seconds qw(ONE_DAY);
@@ -28,20 +32,62 @@ my $getImgProv = sub($self, $uuid, $brand) { # brand is potentially a regexp don
     return { %{$imgs[0]}, _provider => $self->provider->{$provider} };
 };
 
+my $progStr = sub($self, $bytes, $elapsed, $len = 0) {
+    my $rate = $bytes / $elapsed;
+
+    $len && return sprintf ('%s/%s %s [%s/s] [ETA: %-8s]',
+        $self->utils->prettySize($bytes, '%.0f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
+        $self->utils->prettySize($len, '%.0f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
+        Time::Piece->new($elapsed)->hms,
+        $self->utils->prettySize($rate, '%.1f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
+        ($rate ? Time::Piece->new(($len - $bytes) / $rate)->hms : '-'));
+
+    return sprintf ('%s %s [%s/s]',
+        $self->utils->prettySize($bytes, '%.0f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
+        Time::Piece->new($elapsed)->hms,
+        $self->utils->prettySize($rate, '%.1f%s', [ qw(b KiB MiB GiB TiB PiB) ]));
+};
+
 # attributes
 has log      => sub { Mojo::Log->new(level => 'debug') };
 has utils    => sub($self) { Zadm::Utils->new(log => $self->log) };
 has datadir  => sub { Mojo::Home->new->detect(__PACKAGE__)->rel_file('var')->to_string };
 has cache    => sub($self) { $self->datadir . '/cache' };
 has images   => sub { {} };
+has ua       => sub { Mojo::UserAgent->new->max_redirects(8) };
+has uaprog   => sub($self) {
+    my $ua = $self->ua->new;
 
+    $ua->on(start => sub($ua, $tx) {
+        my $start = my $last = time;
+        print 'Downloading ', $tx->req->url, "...\n";
+
+        $tx->res->on(progress => sub($res) {
+            my $now = time;
+            if ($now > $last) {
+                $last = $now;
+
+                print "\r", $self->$progStr($res->content->progress,
+                    $now - $start, $res->headers->content_length);
+                STDOUT->flush;
+            }
+        });
+        $tx->res->once(finish => sub($res) {
+            print "\r", $self->$progStr($res->content->progress,
+                time - $start, $res->headers->content_length), "\n";
+            STDOUT->flush;
+        });
+    });
+
+    return $ua;
+};
 has provider => sub($self) {
     my %provider;
     for my $module (@{$self->utils->getMods(__PACKAGE__)}) {
         next if load_class $module;
 
-        my $mod = $module->new(log => $self->log,
-            utils => $self->utils, datadir => $self->datadir);
+        my $mod = $module->new(log => $self->log, utils => $self->utils,
+            datadir => $self->datadir, image => $self);
 
         $provider{$mod->provider} = $mod;
     }
@@ -49,8 +95,79 @@ has provider => sub($self) {
     return \%provider;
 };
 
+# public methods
+sub curl($self, $files, $opts = {}) {
+    return if !@$files;
+    $opts->{fatal} //= 1;
+
+    $self->log->debug("downloading $_->{url}...") for @$files;
+    Mojo::Promise->all(
+        map { $opts->{silent} ? $self->ua->get_p($_->{url}) : $self->uaprog->get_p($_->{url}) } @$files
+    )->then(sub(@tx) {
+        for (my $i = 0; $i <= $#$files; $i++) {
+            my $res = $tx[$i]->[0]->result;
+
+            if (!$res->is_success) {
+                my $err = "ERROR: Failed to download file from $files->[$i]->{url} - "
+                    . $res->code . ' ' . $res->default_message . "\n";
+
+                Mojo::Exception->throw($err) if $opts->{fatal};
+                print STDERR $err;
+
+                next;
+            }
+
+            local $@;
+            eval {
+                local $SIG{__DIE__};
+
+                $res->save_to($files->[$i]->{path});
+            };
+
+            if ($@) {
+                my $err = "ERROR: Failed to write file to $files->[$i]->{path}.\n";
+                Mojo::Exception->throw($err) if $opts->{fatal};
+                print STDERR $err;
+            }
+        }
+    })->catch(sub($err) {
+        Mojo::Exception->throw($err) if $opts->{fatal};
+        print STDERR $err;
+    })->wait;
+}
+
+sub zfsRecv($self, $file, $ds) {
+    my @cmd = ($self->utils->getCmd('zfs'), qw(recv -Fv), $ds);
+
+    $self->log->debug("@cmd");
+
+    open my $zfs, '|-', @cmd or Mojo::Exception->throw("ERROR: receiving zfs stream: $!\n");
+    my $decomp = IO::Uncompress::AnyUncompress->new($file->to_string)
+        or Mojo::Exception->throw("ERROR: decompressing '$file' failed: $AnyUncompressError\n");
+
+    my $bytes = 0;
+    my $start = my $last = time;
+    while (my $status = $decomp->read(my $buffer)) {
+        Mojo::Exception->throw("ERROR: decompressing '$file' failed: $AnyUncompressError\n")
+            if $status < 0;
+
+        print $zfs $buffer;
+        $bytes += $status;
+
+        my $now = time;
+        if ($now > $last) {
+            $last = $now;
+
+            print "\r", $self->$progStr($bytes, $now - $start);
+            STDOUT->flush;
+        }
+    }
+    print "\r", $self->$progStr($bytes, time - $start), "\n";
+    STDOUT->flush;
+}
+
 sub fetchImages($self, $force = 0) {
-    $self->utils->curl(
+    $self->curl(
         [
             map {{
                 path => $self->provider->{$_}->idxpath,
@@ -78,7 +195,7 @@ sub getImage($self, $uuid, $brand) { # brand is potentially a regexp don't use i
         my $tmpimgdir = File::Temp->newdir(DIR => $self->cache);
         my $fileName  = Mojo::File->new($uuid)->basename;
 
-        $self->utils->curl("$tmpimgdir/$fileName", $uuid);
+        $self->curl("$tmpimgdir/$fileName", $uuid);
         # TODO: add a check whether we got a tarball or zfs stream
         # and not e.g. a html document
 

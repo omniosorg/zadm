@@ -13,7 +13,6 @@ use Storable qw(freeze);
 use Term::ANSIColor qw(colored);
 use Zadm::Zones;
 use Zadm::Utils;
-use Zadm::Image;
 use Zadm::Validator;
 
 # constants/definitions
@@ -314,7 +313,6 @@ $genDoc = sub($schema, $over = 0) {
 has log     => sub { Mojo::Log->new(level => 'debug') };
 has zones   => sub($self) { Zadm::Zones->new(log => $self->log) };
 has utils   => sub($self) { Zadm::Utils->new(log => $self->log) };
-has image   => sub($self) { Zadm::Image->new(log => $self->log) };
 has sv      => sub($self) { Zadm::Validator->new(log => $self->log) };
 has dp      => sub($self) { Data::Processor->new($self->schema) };
 has name    => sub { Mojo::Exception->throw("ERROR: zone name must be specified on instantiation.\n") };

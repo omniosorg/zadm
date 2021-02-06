@@ -4,10 +4,10 @@ use Mojo::Base -base, -signatures;
 use Mojo::Exception;
 use Mojo::Home;
 use Mojo::File;
-use File::stat;
 use Digest::SHA;
 use Time::Piece;
 use Time::Seconds qw(ONE_DAY);
+use Zadm::Image;
 
 # attributes
 has log      => sub { Mojo::Log->new(level => 'debug') };
@@ -27,6 +27,7 @@ has index    => sub { Mojo::Exception->throw("ERROR: index must be specified in 
 has idxpath  => sub($self) { Mojo::File->new($self->cache, 'index.txt') };
 has idxrefr  => sub($self) { !-f $self->idxpath || localtime->epoch - ONE_DAY > $self->idxpath->stat->mtime };
 has images   => sub($self) { -r $self->idxpath ? $self->postProcess($self->idxpath->slurp) : [] };
+has image    => sub($self) { Zadm::Image->new(log => $self->log) };
 
 # private methods
 my $checkChecksum = sub($self, $file, $digest, $checksum) {
@@ -36,6 +37,7 @@ my $checkChecksum = sub($self, $file, $digest, $checksum) {
     return Digest::SHA->new($digest)->addfile($file->to_string)->hexdigest eq $checksum;
 };
 
+# public methods
 sub postProcess($self) {
     $self->utils->isVirtual;
 }
@@ -44,14 +46,14 @@ sub download($self, $fileName, $url, %opts) {
     my $file = Mojo::File->new($self->cache, $fileName);
     $self->log->debug("checking cache for '$fileName' (provider: '" . $self->provider . "')...");
 
-    $self->utils->curl([{ path => $file, url => $url }], \%opts) if !-f $file;
+    $self->image->curl([{ path => $file, url => $url }], \%opts) if !-f $file;
 
     return $file if !exists $opts{chksum}
         || $self->$checkChecksum($file, $opts{chksum}->{digest}, $opts{chksum}->{chksum});
 
     # re-download since checksum mismatch
     $self->log->debug("re-downloading '$fileName' because of checksum mismatch...");
-    $self->utils->curl([{ path => $file, url => $url }], \%opts);
+    $self->image->curl([{ path => $file, url => $url }], \%opts);
     $self->$checkChecksum($file, $opts{chksum}->{digest}, $opts{chksum}->{chksum})
         or Mojo::Exception->throw("ERROR: checksum mismatch for file '$fileName'.\n");
 

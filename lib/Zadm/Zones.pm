@@ -4,13 +4,13 @@ use Mojo::Base -base, -signatures;
 use Mojo::File;
 use Mojo::Log;
 use Mojo::Exception;
+use Mojo::Loader qw(load_class);
 use Mojo::Promise;
 use Mojo::IOLoop::Subprocess;
 use FindBin;
 use List::Util qw(min);
 use Term::ANSIColor qw(colored);
 use Zadm::Utils;
-use Zadm::Image;
 use Zadm::Zone;
 
 # constants
@@ -63,7 +63,16 @@ my $list = sub($self) {
 has loglvl  => 'warn'; # override to 'debug' for development
 has log     => sub($self) { Mojo::Log->new(level => $self->loglvl) };
 has utils   => sub($self) { Zadm::Utils->new(log => $self->log) };
-has image   => sub($self) { Zadm::Image->new(log => $self->log, datadir => $self->datadir) };
+has image   => sub($self) {
+    # Zadm::Image uses some modules which are expensive to load.
+    # However, Zadm::Image is only used for a few operations.
+    # To avoid having the penalty of loading it even when it is
+    # not used we dynamically load it on demand
+    Mojo::Exception->throw("ERROR: failed to load 'Zadm::Image'.\n")
+        if load_class 'Zadm::Image';
+
+    return Zadm::Image->new(log => $self->log, datadir => $self->datadir)
+};
 has datadir => $DATADIR;
 has brands  => sub {
     return [
@@ -236,7 +245,6 @@ sub zone($self, $zName, %opts) {
         zones => $self,
         log   => $self->log,
         utils => $self->utils,
-        image => $self->image,
         name  => $zName,
         %opts,
     );
