@@ -1,5 +1,5 @@
 requires 'Data::Processor', '== 1.0.6';
-requires 'Mojolicious', '== 8.72';
+requires 'Mojolicious', '== 9.0';
 requires 'IO::Socket::SSL', '== 2.069';
 requires 'IO::Uncompress::UnXz', '== 2.100';
 requires 'IO::Uncompress::UnZstd', '== 2.100';

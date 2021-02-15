@@ -102,7 +102,7 @@ sub getCmd($self, $cmd) {
 
 sub readProc($self, $cmd, $args = []) {
     my @cmd = ($self->getCmd($cmd), @{$ENVARGS{$cmd}}, @$args);
-    $self->log->debug("@cmd");
+    $self->log->debug(@cmd);
 
     open my $devnull, '>', File::Spec->devnull;
     my $pid = open3(undef, my $stdout, $devnull, @cmd);
@@ -116,7 +116,7 @@ sub readProc($self, $cmd, $args = []) {
 
 sub exec($self, $cmd, $args = [], $err = "executing '$cmd'", $fork = 0, $ret = 0) {
     my @cmd = ($self->getCmd($cmd), @{$ENVARGS{$cmd}}, @$args);
-    $self->log->debug("@cmd");
+    $self->log->debug(@cmd);
 
     if ($fork) {
         if (defined (my $pid = fork)) {

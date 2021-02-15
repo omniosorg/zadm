@@ -142,7 +142,7 @@ sub curl($self, $files, $opts = {}) {
 sub zfsRecv($self, $file, $ds) {
     my @cmd = ($self->utils->getCmd('zfs'), qw(recv -Fv), $ds);
 
-    $self->log->debug("@cmd");
+    $self->log->debug(@cmd);
 
     open my $zfs, '|-', @cmd or Mojo::Exception->throw("ERROR: receiving zfs stream: $!\n");
     my $decomp = IO::Uncompress::AnyUncompress->new($file->to_string)
