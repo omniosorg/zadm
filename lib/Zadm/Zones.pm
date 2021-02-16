@@ -2,12 +2,12 @@ package Zadm::Zones;
 use Mojo::Base -base, -signatures;
 
 use Mojo::File;
+use Mojo::Home;
 use Mojo::Log;
 use Mojo::Exception;
 use Mojo::Loader qw(load_class);
 use Mojo::Promise;
 use Mojo::IOLoop::Subprocess;
-use FindBin;
 use List::Util qw(min);
 use Term::ANSIColor qw(colored);
 use Zadm::Utils;
@@ -16,7 +16,7 @@ use Zadm::Zone;
 # constants
 my @ZONEATTR = qw(zoneid zonename state zonepath uuid brand ip-type debugid);
 
-my $DATADIR = "$FindBin::RealBin/../var"; # DATADIR
+my $DATADIR = Mojo::Home->new->detect(__PACKAGE__)->rel_file('var')->to_string; # DATADIR
 
 my $MODPREFIX = 'Zadm::Zone';
 my $PKGPREFIX = 'system/zones/brand';
@@ -38,7 +38,7 @@ my $mempercol = sub($val) {
     return $space . (
           $val >= 90 ? colored($str, 'red')
         : $val >= 70 ? colored($str, 'ansi208')
-        : $str
+        :              $str
     );
 };
 
@@ -167,23 +167,21 @@ sub dump($self) {
     );
 
     my $zStats;
-    Mojo::Promise->all(
-        # global zone stats
-        Mojo::IOLoop::Subprocess->new->run_p(sub {
-            return {
-                RAM     => $self->utils->getPhysMem,
-                CPUS    => $self->utils->readProc('getconf', [ qw(NPROCESSORS_ONLN) ])->[0] || '-',
-                SHARES  => (($self->utils->readProc('zonecfg', [ qw(-z global info cpu-shares) ])->[0] // '')
-                    =~ /cpu-shares:\s+(\d+)/)[0] // '1',
-            }
-        }),
-        # non-global zone stats
-        map {
-            my $name = $_;
-            Mojo::IOLoop::Subprocess->new->run_p(sub { return $self->zone($name)->zStats })
-        } @zones[1 .. $#zones]
-    )->then(sub { $zStats = { map { $zones[$_] => $_[$_]->[0] } (0 .. $#zones) } }
-    )->wait;
+    Mojo::Promise->map(
+        { concurrency => $self->utils->ncpus },
+        sub($name) {
+            Mojo::IOLoop::Subprocess->new->run_p(sub {
+                $name ne 'global' ? $self->zone($name)->zStats : {
+                    RAM    => $self->utils->getPhysMem,
+                    CPUS   => $self->utils->ncpus,
+                    SHARES => $self->utils->shares,
+                }
+            })
+        },
+        @zones
+    )->then(sub(@stats) {
+        $zStats = { map { $zones[$_] => $stats[$_]->[0] } (0 .. $#zones) }
+    })->wait;
 
     for my $zone (@zones) {
         printf $format, $zone,
@@ -254,17 +252,18 @@ sub config($self, $zName) {
     # if we want the config for a particular zone, go ahead
     return $self->zone($zName)->config if $zName;
 
-    my @zones = keys %{$self->list}
-        or return {};
+    return {} if !%{$self->list};
 
     my $config;
-    Mojo::Promise->all(
-        map {
-            my $name = $_;
+    Mojo::Promise->map(
+        { concurrency => $self->utils->ncpus },
+        sub($name) {
             Mojo::IOLoop::Subprocess->new->run_p(sub { return $self->zone($name)->config })
-        } @zones
-    )->then(sub { $config->{$_->[0]->{zonename}} = $_->[0] for @_ }
-    )->wait;
+        },
+        keys %{$self->list}
+    )->then(sub(@cfgs) {
+        $config = { map { $_->[0]->{zonename} => $_->[0] } @cfgs }
+    })->wait;
 
     return $config;
 }

@@ -6,7 +6,6 @@ use Mojo::Exception;
 use JSON::PP; # for pretty encoding and 'relaxed' decoding
 use Mojo::Log;
 use Mojo::File;
-use Mojo::JSON qw(decode_json);
 use Mojo::Loader qw(find_modules);
 use IPC::Open3;
 use File::Temp;
@@ -47,6 +46,11 @@ my $ZPATH = ($ENV{__ZADM_ALTROOT} // '') . '/etc/zones';
 # attributes
 has log      => sub { Mojo::Log->new(level => 'debug') };
 has kstat    => sub { Sun::Solaris::Kstat->new };
+has ncpus    => sub($self) { $self->readProc('getconf', [ qw(NPROCESSORS_ONLN) ])->[0] // 1 };
+has shares   => sub($self) {
+    return (($self->readProc('zonecfg', [ qw(-z global info cpu-shares) ])->[0] // '')
+        =~ /cpu-shares:\s+(\d+)/)[0] // '1';
+};
 has pagesize => sub($self) { $self->readProc('pagesize')->[0] // 4096 };
 has ram      => sub($self) {
     return $self->kstat->{unix}->{0}->{system_pages}->{physmem}
