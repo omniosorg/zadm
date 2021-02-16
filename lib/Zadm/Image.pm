@@ -105,8 +105,9 @@ sub curl($self, $files, $opts = {}) {
     my $failed = 0;
 
     $self->log->debug("downloading $_->{url}...") for @$files;
-    Mojo::Promise->all(
-        map { $opts->{silent} ? $self->ua->get_p($_->{url}) : $self->uaprog->get_p($_->{url}) } @$files
+    Mojo::Promise->map(
+        sub { $opts->{silent} ? $self->ua->get_p($_->{url}) : $self->uaprog->get_p($_->{url}) },
+        @$files
     )->then(sub(@tx) {
         for (my $i = 0; $i <= $#$files; $i++) {
             my $res = $tx[$i]->[0]->result;
@@ -142,7 +143,7 @@ sub curl($self, $files, $opts = {}) {
 sub zfsRecv($self, $file, $ds) {
     my @cmd = ($self->utils->getCmd('zfs'), qw(recv -Fv), $ds);
 
-    $self->log->debug("@cmd");
+    $self->log->debug(@cmd);
 
     open my $zfs, '|-', @cmd or Mojo::Exception->throw("ERROR: receiving zfs stream: $!\n");
     my $decomp = IO::Uncompress::AnyUncompress->new($file->to_string)
