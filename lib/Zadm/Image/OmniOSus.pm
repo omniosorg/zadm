@@ -3,7 +3,7 @@ use Mojo::Base 'Zadm::Image::OmniOS', -signatures;
 
 use Mojo::URL;
 
-has baseurl  => sub { Mojo::URL->new('https://us-west.mirror.omniosce.org') };
+has baseurl  => sub { Mojo::URL->new('https://us-west.mirror.omnios.org') };
 # if we call shift->SUPER::baseurl here we'll initialise baseurl in the
 # base class. if we don't explicitly call baseurl on the inherited class,
 # postProcess (implemented in the base class) will pick up baseurl from

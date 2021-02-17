@@ -823,7 +823,7 @@ this program. If not, see L<http://www.gnu.org/licenses/>.
 
 =head1 AUTHOR
 
-S<Dominik Hassler E<lt>hadfl@omniosce.orgE<gt>>
+S<Dominik Hassler E<lt>hadfl@omnios.orgE<gt>>
 
 =head1 HISTORY
 
