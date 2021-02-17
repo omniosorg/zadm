@@ -1,0 +1,7 @@
+{
+    "CONSOLE" : {
+        "auto_connect"    : "off",
+        "auto_disconnect" : "on",
+        "escape_char"     : "_"
+    }
+}

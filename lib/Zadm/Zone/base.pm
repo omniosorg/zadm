@@ -58,6 +58,10 @@ has options => sub {
 };
 
 # private methods
+my $gconfIs = sub($self, $sect, $elem, $val) {
+    return $self->gconf->{$sect}->{$elem}
+        && $self->gconf->{$sect}->{$elem} eq $val;
+};
 my $resIsArray = sub($self, $res) {
     return exists $self->schema->{$res} && $self->schema->{$res}->{array};
 };
@@ -325,6 +329,7 @@ has mod     => sub($self) { ref $self };
 has smod    => sub($self) { my $mod = $self->mod; $mod =~ s/Zone/Schema/; $mod };
 has exists  => sub($self) { $self->zones->exists($self->name) };
 has valid   => sub { 0 };
+has gconf   => sub { {} };
 
 has logfile => sub($self) {
     my $zlog = $self->config->{zonepath} . '/root/tmp/init.log';
@@ -528,6 +533,7 @@ sub isSimpleProp($self, $prop) {
 }
 
 sub boot($self, $cOpts) {
+    $self->opts->{console} = 1 if $self->$gconfIs(qw(CONSOLE auto_connect on));
     # fork boot to the bg if we are about to attach to the console
     $self->$zoneCmd('boot', [], $self->opts->{console});
 
@@ -564,6 +570,12 @@ sub login($self) {
 
 sub console($self, $cOpts = []) {
     my $name = $self->name;
+
+    push @$cOpts, qw(-d) if $self->$gconfIs(qw(CONSOLE auto_disconnect on))
+        && !grep { $_ eq '-d' } @$cOpts;
+    push @$cOpts, '-e', $self->gconf->{CONSOLE}->{escape_char}
+        if $self->gconf->{CONSOLE}->{escape_char} && !grep { /^-e.?$/ } @$cOpts;
+
     $self->utils->exec('zlogin', [ '-C', @$cOpts, $name ],
         "cannot attach to $name zone console");
 }
