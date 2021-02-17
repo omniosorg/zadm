@@ -37,16 +37,16 @@ my $progStr = sub($self, $bytes, $elapsed, $len = 0) {
     my $rate = $bytes / $elapsed;
 
     $len && return sprintf ('%s/%s %s [%s/s] [ETA: %-8s]',
-        $self->utils->prettySize($bytes, '%.0f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
-        $self->utils->prettySize($len, '%.0f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
+        $self->utils->prettySize($bytes, '%3.0f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
+        $self->utils->prettySize($len, '%3.0f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
         Time::Piece->new($elapsed)->hms,
-        $self->utils->prettySize($rate, '%.1f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
+        $self->utils->prettySize($rate, '%5.1f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
         ($rate ? Time::Piece->new(($len - $bytes) / $rate)->hms : '-'));
 
     return sprintf ('%s %s [%s/s]',
-        $self->utils->prettySize($bytes, '%.0f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
+        $self->utils->prettySize($bytes, '%3.0f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
         Time::Piece->new($elapsed)->hms,
-        $self->utils->prettySize($rate, '%.1f%s', [ qw(b KiB MiB GiB TiB PiB) ]));
+        $self->utils->prettySize($rate, '%5.1f%s', [ qw(b KiB MiB GiB TiB PiB) ]));
 };
 
 # attributes
@@ -278,7 +278,7 @@ this program. If not, see L<http://www.gnu.org/licenses/>.
 
 =head1 AUTHOR
 
-S<Dominik Hassler E<lt>hadfl@omniosce.orgE<gt>>
+S<Dominik Hassler E<lt>hadfl@omnios.orgE<gt>>
 
 =head1 HISTORY
 

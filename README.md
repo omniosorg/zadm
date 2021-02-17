@@ -1,4 +1,4 @@
-<img src="http://www.omniosce.org/OmniOSce_logo.svg" height="128">
+<img src="https://www.omnios.org/OmniOSce_logo.svg" height="128">
 
 zadm
 =========

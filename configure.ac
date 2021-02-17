@@ -1,6 +1,6 @@
 #  Copyright (C) 2015 Tobias Oetiker
 
-AC_INIT([zadm],m4_esyscmd([tr -d '\n' < VERSION]),[hadfl@omniosce.org])
+AC_INIT([zadm],m4_esyscmd([tr -d '\n' < VERSION]),[hadfl@omnios.org])
 AC_PREREQ([2.59])
 AC_CONFIG_AUX_DIR(conftools)
 SCRIPT_NAME=zadm
@@ -77,6 +77,7 @@ AC_SUBST(PERL5LIB)
 
 AC_CONFIG_FILES([
     Makefile
+    etc/Makefile
     lib/Makefile
     thirdparty/Makefile
 ])
