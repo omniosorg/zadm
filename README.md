@@ -9,7 +9,7 @@ Version: 0.5.0
 
 Date: 2021-02-17
 
-zadm is a zone admin tool.
+`zadm` is a zone admin tool.
 
 Setup
 -----
@@ -32,3 +32,6 @@ directory. Your system perl will NOT be affected by this.
 To install the application, just run
 
     gmake install
+
+Check the [man page](doc/zadm.pod) for information about how to use `zadm`.
+
