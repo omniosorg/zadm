@@ -18,7 +18,7 @@ $SCHEMA = sub($self) {
     return {
     bootdisk    => {
         optional    => 1,
-        description => 'boot disk',
+        description => 'ZFS volume which will be attached as the boot disk',
         members     => {
             path        => {
                 description => 'path of zvol',
@@ -86,7 +86,7 @@ $SCHEMA = sub($self) {
         optional    => 1,
         array       => 1,
         allow_empty => 1,
-        description => 'disks',
+        description => 'ZFS volume which will be attached as disk',
         members     => {
             path        => {
                 description => 'path of zvol',

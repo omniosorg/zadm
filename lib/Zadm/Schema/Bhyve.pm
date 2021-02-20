@@ -19,7 +19,7 @@ $SCHEMA = sub($self) {
     return {
     bootdisk    => {
         optional    => 1,
-        description => 'boot disk',
+        description => 'ZFS volume which will be attached as the boot disk',
         members     => {
             nocache     => {
                 optional    => 1,
@@ -70,7 +70,7 @@ $SCHEMA = sub($self) {
         optional    => 1,
         array       => 1,
         allow_empty => 1,
-        description => 'disks',
+        description => 'ZFS volume which will be attached as disk',
         members     => {
             nocache     => {
                 optional    => 1,
@@ -130,9 +130,18 @@ $SCHEMA = sub($self) {
             },
         },
     },
+    ppt         => {
+        optional    => 1,
+        array       => 1,
+        description => 'PCI devices to pass-through',
+        example     => '"ppt" : [ "ppt0" ]',
+        validator   => $self->sv->ppt,
+        transformer => $self->sv->toArray,
+        'x-attr'    => 1,
+    },
     acpi        => {
         optional    => 1,
-        description => 'ACPI',
+        description => 'generate ACPI tables for the guest',
         default     => 'on',
         example     => '"acpi" : "on"',
         validator   => $self->sv->elemOf(qw(on off)),
@@ -140,7 +149,7 @@ $SCHEMA = sub($self) {
     },
     bootrom     => {
         optional    => 1,
-        description => 'boot ROM',
+        description => 'boot ROM to use for starting the virtual machine',
         default     => 'BHYVE',
         example     => '"bootrom" : "BHYVE_DEBUG"',
         validator   => $self->sv->elemOf(map { basename($_, '.fd') } glob "$FWPATH/*.fd"),
@@ -148,7 +157,7 @@ $SCHEMA = sub($self) {
     },
     hostbridge  => {
         optional    => 1,
-        description => 'hostbridge',
+        description => 'type of emulated system host bridge',
         default     => 'i440fx',
         example     => '"hostbridge" : "i440fx"',
         validator   => $self->sv->elemOf(qw(i440fx q35 amd netapp none)),
@@ -156,7 +165,7 @@ $SCHEMA = sub($self) {
     },
     xhci        => {
         optional    => 1,
-        description => 'XHCI',
+        description => 'emulated USB tablet interface',
         default     => 'on',
         example     => '"xhci" : "off"',
         validator   => $self->sv->elemOf(qw(on off)),
