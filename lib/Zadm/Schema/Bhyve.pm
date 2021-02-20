@@ -163,6 +163,13 @@ $SCHEMA = sub($self) {
         validator   => $self->sv->elemOf(qw(i440fx q35 amd netapp none)),
         'x-attr'    => 1,
     },
+    vga         => {
+        optional    => 1,
+        description => 'type of VGA emulation to use',
+        example     => '"vga" : "on"',
+        validator   => $self->sv->elemOf(qw(on off io)),
+        'x-attr'    => 1,
+    },
     xhci        => {
         optional    => 1,
         description => 'emulated USB tablet interface',
