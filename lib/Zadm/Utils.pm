@@ -20,6 +20,7 @@ my %CMDS = (
     zonename    => '/usr/bin/zonename',
     bhyvectl    => '/usr/sbin/bhyvectl',
     dladm       => '/usr/sbin/dladm',
+    pptadm      => '/usr/sbin/pptadm',
     editor      => $ENV{VISUAL} || $ENV{EDITOR} || '/usr/bin/vi',
     zfs         => '/usr/sbin/zfs',
     pkg         => '/usr/bin/pkg',

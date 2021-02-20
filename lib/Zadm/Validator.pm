@@ -3,6 +3,7 @@ use Mojo::Base -base, -signatures;
 
 use Mojo::Log;
 use Mojo::Exception;
+use Mojo::JSON qw(decode_json);
 use File::Basename qw(dirname);
 use Regexp::IPv4 qw($IPv4_re);
 use Regexp::IPv6 qw($IPv6_re);
@@ -360,6 +361,27 @@ sub vnc($self, $brand) {
     return sub($vnc, @) {
         return undef if $vnc =~ m!(?:^|,)unix[:=]/!;
         return $self->elemOf(qw(on off), $brand eq 'bhyve' ? qw(wait) : ())->($vnc);
+    }
+}
+
+sub ppt($self) {
+    return $self->regexp(qr/^ppt\d+/, 'expected a ppt device') if $ENV{__ZADMTEST};
+
+    return sub($dev, @) {
+        my $ppts = decode_json join ' ', @{$self->utils->readProc('pptadm', [ qw(list -aj) ])};
+
+        return "ppt device '$dev' does not exist"
+            if !$ppts->{devices} || ref $ppts->{devices} ne ref []
+                || !grep { $_->{dev} eq "/dev/$dev" } @{$ppts->{devices}};
+
+        return undef;
+    }
+}
+
+sub hostbridge($self) {
+    return sub($hb, @) {
+        return undef if $hb =~ /^vendor=(?:0x[[:xdigit:]]+|\d+),device=(?:0x[[:xdigit:]]+|\d+)$/i;
+        return $self->elemOf(qw(i440fx q35 amd netapp none))->($hb);
     }
 }
 

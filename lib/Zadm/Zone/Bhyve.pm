@@ -31,6 +31,56 @@ my $bhyveCtl = sub($self, $cmd) {
         "cannot $cmd zone $name");
 };
 
+sub getPostProcess($self, $cfg) {
+    $cfg->{ppt} = [];
+
+    # handle ppt before the default getPostProcess
+    if ($cfg->{attr} && ref $cfg->{attr} eq ref []) {
+        for (my $i = $#{$cfg->{attr}}; $i >= 0; $i--) {
+            next if $cfg->{attr}->[$i]->{name} !~ /^ppt\d+$/;
+
+            push @{$cfg->{ppt}}, $cfg->{attr}->[$i]->{name};
+            splice @{$cfg->{attr}}, $i, 1;
+        }
+    }
+
+    $cfg = $self->SUPER::getPostProcess($cfg);
+
+    # remove device for ppt
+    if ($cfg->{ppt} && ref $cfg->{ppt} eq ref [] && $cfg->{device} && ref $cfg->{device} eq ref []) {
+        for (my $i = $#{$cfg->{device}}; $i >= 0; $i--) {
+            splice @{$cfg->{device}}, $i, 1
+                if grep { $_ && $cfg->{device}->[$i]->{match} =~ m!^/dev/$_$! } @{$cfg->{ppt}};
+        }
+    }
+
+    # remove ppt/device if empty
+    $cfg->{$_} && ref $cfg->{$_} eq ref [] && !@{$cfg->{$_}} && delete $cfg->{$_} for qw(ppt device);
+
+    return $cfg;
+}
+
+sub setPreProcess($self, $cfg) {
+    # add device for ppt
+    if ($cfg->{ppt} && ref $cfg->{ppt} eq ref []) {
+        for (my $i = 0; $i < @{$cfg->{ppt}}; $i++) {
+            next if !$cfg->{ppt}->[$i];
+
+            push @{$cfg->{attr}}, {
+                name    => $cfg->{ppt}->[$i],
+                type    => 'string',
+                value   => 'on',
+            };
+
+            push @{$cfg->{device}}, { match => "/dev/$cfg->{ppt}->[$i]" };
+        }
+
+        delete $cfg->{ppt};
+    }
+
+    return $self->SUPER::setPreProcess($cfg);
+}
+
 sub poweroff($self) {
     $self->$bhyveCtl('--force-poweroff');
 }
