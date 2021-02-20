@@ -125,7 +125,7 @@ $SCHEMA = sub($self) {
             feature_mask => {
                 optional    => 1,
                 description => 'bhyve viona feature mask',
-                validator   => $self->sv->regexp(qr/^(?:0x[[:xdigit:]]|\d+)$/, 'expected a numeric value'),
+                validator   => $self->sv->regexp(qr/^(?:0x[[:xdigit:]]+|\d+)$/i, 'expected a numeric value'),
                 'x-netprop' => 1,
             },
         },
@@ -160,7 +160,7 @@ $SCHEMA = sub($self) {
         description => 'type of emulated system host bridge',
         default     => 'i440fx',
         example     => '"hostbridge" : "i440fx"',
-        validator   => $self->sv->elemOf(qw(i440fx q35 amd netapp none)),
+        validator   => $self->sv->hostbridge,
         'x-attr'    => 1,
     },
     vga         => {

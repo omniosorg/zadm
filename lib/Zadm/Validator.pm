@@ -378,6 +378,13 @@ sub ppt($self) {
     }
 }
 
+sub hostbridge($self) {
+    return sub($hb, @) {
+        return undef if $hb =~ /^vendor=(?:0x[[:xdigit:]]+|\d+),device=(?:0x[[:xdigit:]]+|\d+)$/i;
+        return $self->elemOf(qw(i440fx q35 amd netapp none))->($hb);
+    }
+}
+
 1;
 
 __END__
