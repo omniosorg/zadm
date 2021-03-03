@@ -7,6 +7,8 @@ use JSON::PP; # for pretty encoding and 'relaxed' decoding
 use Mojo::Log;
 use Mojo::File;
 use Mojo::Loader qw(find_modules);
+use Mojo::IOLoop::Subprocess;
+use Mojo::Promise;
 use IPC::Open3;
 use File::Temp;
 use Text::ParseWords qw(shellwords);
@@ -231,6 +233,29 @@ sub edit($self, $zone, $prop = {}) {
     }
 
     return 1;
+}
+
+sub edit_s($self, $zone, $image = undef, $prop = {}) {
+    my $p = Mojo::Promise->new;
+
+    $image->editing(1) if $image;
+
+    Mojo::IOLoop::Subprocess->new->run(
+        sub($subprocess) {
+            $self->edit($zone, $prop);
+        },
+        sub($subprocess, $err, $res) {
+            warn $err if $err;
+            # if $res is false the user aborted, in this case we don't wait for
+            # all promises to be settled but exit
+            exit 1 if !$res || $err;
+
+            $image->editing(0) if $image;
+            $p->resolve(1);
+        }
+    );
+
+    return $p;
 }
 
 sub getZfsProp($self, $ds, $prop = []) {

@@ -55,6 +55,7 @@ has utils    => sub($self) { Zadm::Utils->new(log => $self->log) };
 has datadir  => sub { Mojo::Home->new->detect(__PACKAGE__)->rel_file('var')->to_string };
 has cache    => sub($self) { $self->datadir . '/cache' };
 has images   => sub { {} };
+has editing  => 0;
 has ua       => sub { Mojo::UserAgent->new->max_redirects(8) };
 has uaprog   => sub($self) {
     my $ua = $self->ua->new;
@@ -64,6 +65,8 @@ has uaprog   => sub($self) {
         print 'Downloading ', $tx->req->url, "...\n";
 
         $tx->res->on(progress => sub($res) {
+            return if $self->editing;
+
             my $now = time;
             if ($now > $last) {
                 $last = $now;
@@ -74,6 +77,8 @@ has uaprog   => sub($self) {
             }
         });
         $tx->res->once(finish => sub($res) {
+            return if $self->editing;
+
             print "\r", $self->$progStr($res->content->progress,
                 time - $start, $res->headers->content_length), "\n";
             STDOUT->flush;
@@ -114,7 +119,7 @@ sub curl($self, $files, $opts = {}) {
 
             if (!$res->is_success) {
                 $failed = 1;
-                print STDERR "ERROR: Failed to download file from $files->[$i]->{url} - "
+                warn "ERROR: Failed to download file from $files->[$i]->{url} - "
                     . $res->code . ' ' . $res->default_message . "\n";
 
                 next;
@@ -129,12 +134,12 @@ sub curl($self, $files, $opts = {}) {
 
             if ($@) {
                 $failed = 1;
-                print STDERR "ERROR: Failed to write file to $files->[$i]->{path}.\n";
+                warn "ERROR: Failed to write file to $files->[$i]->{path}.\n";
             }
         }
     })->catch(sub($err) {
         $failed = 1;
-        print STDERR $err;
+        warn $err;
     })->wait;
 
     exit 1 if $failed && $opts->{fatal};
@@ -224,6 +229,19 @@ sub getImage($self, $uuid, $brand) { # brand is potentially a regexp don't use i
 
     # return the whole structure including all the metadata
     return $img;
+}
+
+sub getImage_p($self, $uuid, $brand) { # brand is potentially a regexp don't use it stringified
+    my $p = Mojo::Promise->new;
+
+    local $@;
+    my $img = eval {
+        local $SIG{__DIE__};
+
+        $self->getImage($uuid, $brand);
+    };
+
+    return $@ ? $p->reject($@) : $p->resolve($img);
 }
 
 sub dump($self, $opts = {}) {

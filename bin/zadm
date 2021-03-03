@@ -9,6 +9,7 @@ use warnings;
 use Pod::Usage;
 use File::Basename qw(basename);
 use Getopt::Long qw(:config posix_default no_ignore_case);
+use Mojo::Promise;
 
 use Zadm::Zones;
 
@@ -57,7 +58,29 @@ sub main {
             }
             $zone->checkMandOptions($mainOpt) or $zone->usage;
 
-            ($ret = !$zones->utils->edit($zone)) || $zone->install;
+            my $img = {};
+            if ($opts->{image}) {
+                Mojo::Promise->all_settled(
+                    $zones->utils->edit_s($zone, $zones->image),
+                    $zones->image->getImage_p($opts->{image}, $zone->ibrand)
+                )->then(sub {
+                    my @res = @_;
+
+                    for my $res (@res) {
+                        next if $res->{status} eq 'fulfilled';
+
+                        $ret = 1;
+                        warn $res->{reason}->[0];
+                    }
+
+                    $img = $res[1]->{value}->[0];
+                })->wait;
+            }
+            else {
+                $ret = !$zones->utils->edit($zone);
+            }
+
+            $zone->install({ img => $img }) if !$ret;
 
             last;
         };
@@ -131,7 +154,8 @@ sub main {
             # The uninstall command may have failed or been aborted by the
             # user. Only proceed with the installation if the zone is now
             # in the 'configured' state.
-            $zone->install if $zone->is('configured');
+            my $img = $opts->{image} ? $zones->image->getImage($opts->{image}, $zone->ibrand) : {};
+            $zone->install({ img => $img }) if $zone->is('configured');
 
             last;
         };

@@ -323,6 +323,7 @@ has name    => sub { Mojo::Exception->throw("ERROR: zone name must be specified 
 # attribute to keep track of currently saved attributes in zonecfg
 has attrs   => sub { {} };
 has brand   => sub($self) { lc ((split /::/, ref $self)[-1]) };
+has ibrand  => sub($self) { $self->brand };
 has public  => sub { [ qw(login fw) ] };
 has opts    => sub { {} };
 has mod     => sub($self) { ref $self };
@@ -592,13 +593,13 @@ sub delete($self) {
     $self->utils->exec('zonecfg', [ '-z', $self->name, 'delete' ]);
 }
 
-sub install($self, @args) {
+sub install($self, $opts = {}) {
     # TODO centralise and improve this
     $ENV{__ZADM_ALTROOT} && do {
         $self->log->warn('Cannot install a zone inside an alternate root.');
         return 1;
     };
-    $self->$zoneCmd('install', \@args);
+    $self->$zoneCmd('install', $opts->{args} // []);
 }
 
 sub uninstall($self) {

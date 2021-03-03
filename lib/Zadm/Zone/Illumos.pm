@@ -19,14 +19,13 @@ has options => sub($self) {
     }
 };
 
-sub install($self) {
-    my $img = $self->zones->image->getImage($self->opts->{image}, $self->brand);
-
+sub install($self, $opts = {}) {
+    my $img = $opts->{img} || {};
     $img->{_file} && -r $img->{_file} || do {
         $self->log->warn('WARNING: no valid image path given. skipping install');
         return;
     };
-    $self->SUPER::install($img->{_instopt} // '-s', $img->{_file});
+    $self->SUPER::install({ args => [ $img->{_instopt} // '-s', $img->{_file} ] });
 
     $img->{_provider}->postInstall($self->brand, { zonepath => $self->config->{zonepath} })
         if $img->{_provider};

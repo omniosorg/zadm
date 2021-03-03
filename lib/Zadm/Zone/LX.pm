@@ -21,14 +21,13 @@ has options => sub($self) {
 
 # TODO: we need a mechanism to override kernel-version if provided by the image metadata
 # but it's too late here since we already configured the zone and are about to install
-sub install($self) {
-    my $img = $self->zones->image->getImage($self->opts->{image}, $self->brand);
-
+sub install($self, $opts = {}) {
+    my $img = $opts->{img} || {};
     $img->{_file} && -r $img->{_file} || do {
         $self->log->warn('WARNING: no valid image path given. skipping install');
         return;
     };
-    $self->SUPER::install($img->{_instopt} // '-t', $img->{_file});
+    $self->SUPER::install({ args => [ $img->{_instopt} // '-t', $img->{_file} ] });
 }
 
 1;
