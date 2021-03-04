@@ -308,8 +308,8 @@ sub setPreProcess($self, $cfg) {
     return $self->SUPER::setPreProcess($cfg);
 }
 
-sub install($self, $opts = {}) {
-    my $img = $opts->{img} || {};
+sub install($self, @args) {
+    my $img = $self->hasimg ? $self->image->image : {};
     # just install the zone if no image was provided for the bootdisk
     return $self->SUPER::install
         if !%$img;
@@ -342,7 +342,7 @@ sub install($self, $opts = {}) {
     }
 
     if ($check !~ /^no?$/i) {
-        $self->zones->image->zfsRecv($img->{_file}, $self->bootdisk->{path});
+        $self->zones->images->zfsRecv($img->{_file}, $self->bootdisk->{path});
         # TODO: '-x volsize' for zfs recv seems not to work so we must reset the
         # volsize to the original value after receive
         $self->utils->exec('zfs', [ 'set', 'volsize=' . $self->bootdisk->{size}, $self->bootdisk->{path} ]);

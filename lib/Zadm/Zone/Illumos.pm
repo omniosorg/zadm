@@ -19,33 +19,23 @@ has options => sub($self) {
     }
 };
 
-sub install($self, $opts = {}) {
-    my $img = $opts->{img} || {};
+sub setPreProcess($self, $cfg) {
+    $cfg = $self->image->provider->preSetConfig($self->brand, $cfg)
+        if $self->hasimg;
+
+    return $self->SUPER::setPreProcess($cfg);
+}
+
+sub install($self, @args) {
+    my $img = $self->hasimg ? $self->image->image : {};
     $img->{_file} && -r $img->{_file} || do {
         $self->log->warn('WARNING: no valid image path given. skipping install');
         return;
     };
-    $self->SUPER::install({ args => [ $img->{_instopt} // '-s', $img->{_file} ] });
+    $self->SUPER::install($img->{_instopt} // '-s', $img->{_file});
 
-    $img->{_provider}->postInstall($self->brand, { zonepath => $self->config->{zonepath} })
-        if $img->{_provider};
-
-    # TODO: create a generic framework for post installation zoneconfig modification
-    # we cannot do this in getPostProcess and setPreProcess since we have no info, yet
-    # about the provider. Also after installation we lose the provider info.
-    # The best we can do is to add the required lofs mounts for joyent zone datasets
-    # once after install.
-
-    return if !$img->{_provider} || $img->{_provider}->provider ne 'joyent';
-
-    for my $lofs (qw(/lib /sbin /usr)) {
-        $self->addResource('fs', {
-            dir     => $lofs,
-            special => $lofs,
-            type    => 'lofs',
-            options => 'ro,nodevices',
-        }) if !grep { $_->{dir} eq $lofs } @{$self->config->{fs} // []}
-    }
+    $self->image->provider->postInstall($self->brand, { zonepath => $self->config->{zonepath} })
+        if $self->hasimg;
 }
 
 1;

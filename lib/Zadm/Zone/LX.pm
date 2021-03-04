@@ -1,6 +1,18 @@
 package Zadm::Zone::LX;
 use Mojo::Base 'Zadm::Zone::base', -signatures;
 
+# attributes
+has template => sub($self) {
+    # default kernel version if not provided by metadata
+    my $kernelVer = '4.4';
+    $kernelVer = $self->image->metadata->{kernel} || $kernelVer
+        if $self->hasimg;
+
+    return {
+        %{$self->SUPER::template},
+        'kernel-version' => $kernelVer,
+    }
+};
 has options => sub($self) {
     return {
         %{$self->SUPER::options},
@@ -19,15 +31,13 @@ has options => sub($self) {
     }
 };
 
-# TODO: we need a mechanism to override kernel-version if provided by the image metadata
-# but it's too late here since we already configured the zone and are about to install
-sub install($self, $opts = {}) {
-    my $img = $opts->{img} || {};
+sub install($self, @args) {
+    my $img = $self->hasimg ? $self->image->image : {};
     $img->{_file} && -r $img->{_file} || do {
         $self->log->warn('WARNING: no valid image path given. skipping install');
         return;
     };
-    $self->SUPER::install({ args => [ $img->{_instopt} // '-t', $img->{_file} ] });
+    $self->SUPER::install($img->{_instopt} // '-t', $img->{_file});
 }
 
 1;

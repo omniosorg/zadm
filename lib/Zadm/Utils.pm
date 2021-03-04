@@ -235,10 +235,10 @@ sub edit($self, $zone, $prop = {}) {
     return 1;
 }
 
-sub edit_s($self, $zone, $image = undef, $prop = {}) {
+sub edit_s($self, $zone, $prop = {}) {
     my $p = Mojo::Promise->new;
 
-    $image->editing(1) if $image;
+    $zone->zones->images->editing(1) if $zone->opts->{image};
 
     Mojo::IOLoop::Subprocess->new->run(
         sub($subprocess) {
@@ -250,7 +250,7 @@ sub edit_s($self, $zone, $image = undef, $prop = {}) {
             # all promises to be settled but exit
             exit 1 if !$res || $err;
 
-            $image->editing(0) if $image;
+            $zone->zones->images->editing(0) if $zone->opts->{image};
             $p->resolve(1);
         }
     );

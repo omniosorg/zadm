@@ -201,12 +201,6 @@ my $clearAttributes = sub($self) {
     }
 };
 
-my $clearSimpleAttrs = sub($self) {
-    $self->$clearProperty($_) for grep {
-        !$self->$isRes($_) && !exists $self->config->{$_}
-    } @{$self->oldres};
-};
-
 my $getConfig = sub($self) {
     my $config = {};
 
@@ -332,6 +326,12 @@ has exists  => sub($self) { $self->zones->exists($self->name) };
 has valid   => sub { 0 };
 has gconf   => sub { {} };
 
+has hasimg  => sub($self) { return $self->opts->{image} };
+has image   => sub($self) {
+    Mojo::Exception->throw("ERROR: image option has not been provided\n") if !$self->hasimg;
+    return $self->zones->images->image($self->opts->{image}, $self->ibrand);
+};
+
 has logfile => sub($self) {
     my $zlog = $self->config->{zonepath} . '/root/tmp/init.log';
     return -r $zlog ? $zlog : $self->config->{zonepath} . '/log/zone.log';
@@ -431,7 +431,7 @@ sub setPreProcess($self, $cfg) {
                      ? join (',', @{$cfg->{$res}})
                      : $cfg->{$res};
 
-        push @{$cfg->{attr}}, { %elem };
+        push @{$cfg->{attr}}, \%elem;
         delete $cfg->{$res};
     }
 
@@ -593,13 +593,13 @@ sub delete($self) {
     $self->utils->exec('zonecfg', [ '-z', $self->name, 'delete' ]);
 }
 
-sub install($self, $opts = {}) {
+sub install($self, @args) {
     # TODO centralise and improve this
     $ENV{__ZADM_ALTROOT} && do {
         $self->log->warn('Cannot install a zone inside an alternate root.');
         return 1;
     };
-    $self->$zoneCmd('install', $opts->{args} // []);
+    $self->$zoneCmd('install', \@args);
 }
 
 sub uninstall($self) {

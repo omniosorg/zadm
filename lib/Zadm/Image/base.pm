@@ -7,7 +7,7 @@ use Mojo::File;
 use Digest::SHA;
 use Time::Piece;
 use Time::Seconds qw(ONE_DAY);
-use Zadm::Image;
+use Zadm::Images;
 
 # attributes
 has log      => sub { Mojo::Log->new(level => 'debug') };
@@ -22,12 +22,12 @@ has cache    => sub($self) {
 
     return $cache
 };
-has baseurl  => sub { Mojo::Exception->throw("ERROR: baseurl must be specified in derived class.\n") };
-has index    => sub { Mojo::Exception->throw("ERROR: index must be specified in derived class.\n") };
-has idxpath  => sub($self) { Mojo::File->new($self->cache, 'index.txt') };
-has idxrefr  => sub($self) { !-f $self->idxpath || localtime->epoch - ONE_DAY > $self->idxpath->stat->mtime };
-has images   => sub($self) { -r $self->idxpath ? $self->postProcess($self->idxpath->slurp) : [] };
-has image    => sub($self) { Zadm::Image->new(log => $self->log) };
+has baseurl => sub { Mojo::Exception->throw("ERROR: baseurl must be specified in derived class.\n") };
+has index   => sub { Mojo::Exception->throw("ERROR: index must be specified in derived class.\n") };
+has idxpath => sub($self) { Mojo::File->new($self->cache, 'index.txt') };
+has idxrefr => sub($self) { !-f $self->idxpath || localtime->epoch - ONE_DAY > $self->idxpath->stat->mtime };
+has imgs    => sub($self) { -r $self->idxpath ? $self->postProcess($self->idxpath->slurp) : [] };
+has images  => sub($self) { Zadm::Images->new(log => $self->log) };
 
 # private methods
 my $checkChecksum = sub($self, $file, $digest, $checksum) {
@@ -46,14 +46,14 @@ sub download($self, $fileName, $url, %opts) {
     my $file = Mojo::File->new($self->cache, $fileName);
     $self->log->debug("checking cache for '$fileName' (provider: '" . $self->provider . "')...");
 
-    $self->image->curl([{ path => $file, url => $url }], \%opts) if !-f $file;
+    $self->images->curl([{ path => $file, url => $url }], \%opts) if !-f $file;
 
     return $file if !exists $opts{chksum}
         || $self->$checkChecksum($file, $opts{chksum}->{digest}, $opts{chksum}->{chksum});
 
     # re-download since checksum mismatch
     $self->log->debug("re-downloading '$fileName' because of checksum mismatch...");
-    $self->image->curl([{ path => $file, url => $url }], \%opts);
+    $self->images->curl([{ path => $file, url => $url }], \%opts);
     $self->$checkChecksum($file, $opts{chksum}->{digest}, $opts{chksum}->{chksum})
         or Mojo::Exception->throw("ERROR: checksum mismatch for file '$fileName'.\n");
 
@@ -69,7 +69,9 @@ sub vacuum($self, $ts) {
     }
 }
 
-sub postInstall {}
+sub preSetConfig($self, $brand, $cfg, $opts = {}) { return $cfg; }
+
+sub postInstall($self, $brand, $opts = {}) {}
 
 1;
 

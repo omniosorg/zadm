@@ -22,7 +22,7 @@ sub postProcess($self, $json) {
             type   => $_->{type},
             comp   => $_->{files}->[0]->{compression},
             ext    => $_->{type} eq 'lx-dataset' ? '.tar.gz' : '.gz',
-            kernel => $_->{tags}->{'kernel-version'},
+            kernel => $_->{tags}->{kernel_version},
             chksum => {
                 digest => 'sha1',
                 chksum => $_->{files}->[0]->{sha1},
@@ -58,6 +58,23 @@ sub postInstall($self, $brand, $opts = {}) {
     });
     $newroot->remove_tree;
     $root->chmod(0755);
+}
+
+sub preSetConfig($self, $brand, $cfg, $opts = {}) {
+    return $cfg if $brand ne 'illumos';
+
+    $cfg->{fs} //= [];
+
+    for my $lofs (qw(/lib /sbin /usr)) {
+        push @{$cfg->{fs}}, {
+            dir     => $lofs,
+            special => $lofs,
+            type    => 'lofs',
+            options => 'ro,nodevices',
+        } if !grep { $_->{dir} eq $lofs } @{$cfg->{fs}}
+    }
+
+    return $cfg;
 }
 
 1;

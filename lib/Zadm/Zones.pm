@@ -95,15 +95,15 @@ my $list = sub($self) {
 has loglvl  => 'warn'; # override to 'debug' for development
 has log     => sub($self) { Mojo::Log->new(level => $self->loglvl) };
 has utils   => sub($self) { Zadm::Utils->new(log => $self->log) };
-has image   => sub($self) {
-    # Zadm::Image uses some modules which are expensive to load.
-    # However, Zadm::Image is only used for a few operations.
+has images  => sub($self) {
+    # Zadm::Images uses some modules which are expensive to load.
+    # However, Zadm::Images is only used for a few operations.
     # To avoid having the penalty of loading it even when it is
     # not used we dynamically load it on demand
-    Mojo::Exception->throw("ERROR: failed to load 'Zadm::Image'.\n")
-        if load_class 'Zadm::Image';
+    Mojo::Exception->throw("ERROR: failed to load 'Zadm::Images'.\n")
+        if load_class 'Zadm::Images';
 
-    return Zadm::Image->new(log => $self->log, datadir => $self->datadir)
+    return Zadm::Images->new(log => $self->log, datadir => $self->datadir)
 };
 has datadir => $DATADIR;
 has gconf   => sub($self) {
