@@ -201,12 +201,6 @@ my $clearAttributes = sub($self) {
     }
 };
 
-my $clearSimpleAttrs = sub($self) {
-    $self->$clearProperty($_) for grep {
-        !$self->$isRes($_) && !exists $self->config->{$_}
-    } @{$self->oldres};
-};
-
 my $getConfig = sub($self) {
     my $config = {};
 
@@ -323,6 +317,7 @@ has name    => sub { Mojo::Exception->throw("ERROR: zone name must be specified 
 # attribute to keep track of currently saved attributes in zonecfg
 has attrs   => sub { {} };
 has brand   => sub($self) { lc ((split /::/, ref $self)[-1]) };
+has ibrand  => sub($self) { $self->brand };
 has public  => sub { [ qw(login fw) ] };
 has opts    => sub { {} };
 has mod     => sub($self) { ref $self };
@@ -330,6 +325,12 @@ has smod    => sub($self) { my $mod = $self->mod; $mod =~ s/Zone/Schema/; $mod }
 has exists  => sub($self) { $self->zones->exists($self->name) };
 has valid   => sub { 0 };
 has gconf   => sub { {} };
+
+has hasimg  => sub($self) { return $self->opts->{image} };
+has image   => sub($self) {
+    Mojo::Exception->throw("ERROR: image option has not been provided\n") if !$self->hasimg;
+    return $self->zones->images->image($self->opts->{image}, $self->ibrand);
+};
 
 has logfile => sub($self) {
     my $zlog = $self->config->{zonepath} . '/root/tmp/init.log';
@@ -430,7 +431,7 @@ sub setPreProcess($self, $cfg) {
                      ? join (',', @{$cfg->{$res}})
                      : $cfg->{$res};
 
-        push @{$cfg->{attr}}, { %elem };
+        push @{$cfg->{attr}}, \%elem;
         delete $cfg->{$res};
     }
 

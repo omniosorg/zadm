@@ -9,6 +9,7 @@ use warnings;
 use Pod::Usage;
 use File::Basename qw(basename);
 use Getopt::Long qw(:config posix_default no_ignore_case);
+use Mojo::Promise;
 
 use Zadm::Zones;
 
@@ -57,7 +58,28 @@ sub main {
             }
             $zone->checkMandOptions($mainOpt) or $zone->usage;
 
-            ($ret = !$zones->utils->edit($zone)) || $zone->install;
+            if ($opts->{image}) {
+                # we wait for all promises to be settled as otherwise a failing image
+                # download would potentially exit the editor.
+                Mojo::Promise->all_settled(
+                    $zones->utils->edit_s($zone),
+                    $zone->image->image_p
+                )->then(sub {
+                    my @res = @_;
+
+                    for my $res (@res) {
+                        next if $res->{status} eq 'fulfilled';
+
+                        $ret = 1;
+                        warn $res->{reason}->[0];
+                    }
+                })->wait;
+            }
+            else {
+                $ret = !$zones->utils->edit($zone);
+            }
+
+            $zone->install if !$ret;
 
             last;
         };
@@ -189,7 +211,7 @@ sub main {
                 local $SIG{__WARN__} = sub { };
                 GetOptions($opts, qw(brand|b=s provider|p=s refresh|r verbose|v)) or pod2usage(1);
             }
-            $zones->image->dump($opts);
+            $zones->images->dump($opts);
 
             last;
         };
@@ -200,7 +222,7 @@ sub main {
                 GetOptions($opts, qw(days|d=i)) or pod2usage(1);
                 $opts->{days} && $opts->{days} < 0 and pod2usage(1);
             }
-            $zones->image->vacuum($opts);
+            $zones->images->vacuum($opts);
 
             last;
         };

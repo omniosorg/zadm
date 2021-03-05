@@ -83,6 +83,8 @@ has bootdisk => sub($self) {
         ? { map { $_ => $self->config->{bootdisk}->{$_} } qw(path size) }
         : {};
 };
+# install image can be either for kvm or bhyve
+has ibrand   => sub { qr/kvm|bhyve/ };
 
 # private methods
 my $queryMonitor = sub($self, $query, $nowait = 0) {
@@ -306,10 +308,11 @@ sub setPreProcess($self, $cfg) {
     return $self->SUPER::setPreProcess($cfg);
 }
 
-sub install($self) {
+sub install($self, @args) {
+    my $img = $self->hasimg ? $self->image->image : {};
     # just install the zone if no image was provided for the bootdisk
     return $self->SUPER::install
-        if !$self->opts->{image};
+        if !%$img;
 
     %{$self->bootdisk} || do {
         $self->log->warn('WARNING: no bootdisk attribute specified. Not installing image');
@@ -321,9 +324,6 @@ sub install($self) {
         [ qw(list -t snapshot -d1 -H -o name), $self->bootdisk->{path} ]);
     Mojo::Exception->throw("ERROR: destination has snapshots (eg. $snapshots->[0])\n"
         . "must destroy them to overwrite it\n") if @$snapshots;
-
-    # image can be either for kvm or bhyve
-    my $img = $self->zones->image->getImage($self->opts->{image}, qr/kvm|bhyve/);
 
     $img->{_file} && -r $img->{_file} || do {
         $self->log->warn('WARNING: no valid image path given. Not installing image');
@@ -342,7 +342,7 @@ sub install($self) {
     }
 
     if ($check !~ /^no?$/i) {
-        $self->zones->image->zfsRecv($img->{_file}, $self->bootdisk->{path});
+        $self->zones->images->zfsRecv($img->{_file}, $self->bootdisk->{path});
         # TODO: '-x volsize' for zfs recv seems not to work so we must reset the
         # volsize to the original value after receive
         $self->utils->exec('zfs', [ 'set', 'volsize=' . $self->bootdisk->{size}, $self->bootdisk->{path} ]);
