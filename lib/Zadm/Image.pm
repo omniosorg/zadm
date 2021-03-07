@@ -13,6 +13,7 @@ has log      => sub { Mojo::Log->new(level => 'debug') };
 has images   => sub($self) { Zadm::Zones->new(log => $self->log) };
 has brand    => sub { Mojo::Exception->throw("ERROR: brand must be specified on instantiation.\n") };
 has uuid     => sub { Mojo::Exception->throw("ERROR: uuid must be specified on instantiation.\n") };
+has opts     => sub { {} };
 # creating an instance of the base class as a stub.
 # so the zone classes can safely call 'preSetConfig' and 'postInstall'
 # when the image is not from a provider but from a local file or direct http download
@@ -59,7 +60,8 @@ has metadata => sub($self) {
         }
     }
 
-    @imgs < 1 and Mojo::Exception->throw("ERROR: image UUID containing '$uuid' not found.\n");
+    @imgs < 1 and Mojo::Exception->throw("ERROR: image UUID containing '$uuid' not found"
+        . ($self->opts->{brand} ? " for brand '" . $self->opts->{brand} . "'" : '') . ".\n");
     @imgs > 1 and Mojo::Exception->throw("ERROR: more than one image UUID contains '$uuid'.\n");
 
     my $img = $imgs[0];

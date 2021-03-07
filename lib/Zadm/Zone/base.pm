@@ -329,7 +329,7 @@ has gconf   => sub { {} };
 has hasimg  => sub($self) { return $self->opts->{image} };
 has image   => sub($self) {
     Mojo::Exception->throw("ERROR: image option has not been provided\n") if !$self->hasimg;
-    return $self->zones->images->image($self->opts->{image}, $self->ibrand);
+    return $self->zones->images->image($self->opts->{image}, $self->ibrand, { brand => $self->brand });
 };
 
 has logfile => sub($self) {
