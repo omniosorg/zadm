@@ -219,6 +219,13 @@ sub main {
 
             last;
         };
+        /^pull$/ && do {
+            my $uuid = pop @ARGV or pod2usage(1);
+
+            $zones->images->image($uuid, qr/.+/)->image;
+
+            last;
+        };
         /^vacuum$/ && do {
             my $opts = {};
             {
@@ -371,6 +378,7 @@ where 'command' is one of the following:
     list
     memstat
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
+    pull <image_uuid>
     vacuum [-d <days>]
     brands
     start [-c [extra_args]] <zone_name>
@@ -448,6 +456,11 @@ prints memory usage/caps for running zones.
 =head2 B<list-images>
 
 list all available images ready for download and install.
+
+=head2 B<pull>
+
+downloads the image with ID B<image_uuid> and caches this without creating
+a zone with it.
 
 =head2 B<vacuum>
 
