@@ -58,6 +58,7 @@ where 'command' is one of the following:
     list
     memstat
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
+    pull <image_uuid>
     vacuum [-d <days>]
     brands
     start [-c [extra_args]] <zone_name>
