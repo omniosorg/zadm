@@ -83,6 +83,47 @@ sub main {
 
             last;
         };
+        /^pull$/ && do {
+            pop @ARGV or pod2usage(1); # No positional arguments required; keep -i and -b for consistency with e.g. create
+
+            my $opts = {};
+            Getopt::Long::Configure(qw(permute pass_through));
+            {
+                local $SIG{__WARN__} = sub { };
+                GetOptions($opts, qw(brand|b=s)) or pod2usage(1);
+            }
+            $opts->{brand} or pod2usage(1);
+            $opts->{image} or pod2usage(1);
+
+            my $image = $images->image($opts->{image}, $opts->{brand});
+            # Catch image not found and print error here?
+           
+
+            ## ???
+            Getopt::Long::Configure(qw(no_permute no_pass_through));
+            {
+                local $SIG{__WARN__} = sub { };
+                GetOptions($opts, @{$zone->getOptions($mainOpt)}) or $zone->usage;
+            }
+            $zone->checkMandOptions($mainOpt) or $zone->usage;
+
+            
+            # we wait for all promises to be settled as otherwise a failing image
+            # download would potentially exit the editor.
+            Mojo::Promise->all_settled(
+                $image->image_p
+                )->then(sub {
+                my @res = @_;
+
+                for my $res (@res) {
+                    next if $res->{status} eq 'fulfilled';
+
+                    $ret = 1;
+                    warn $res->{reason}->[0];
+                }
+            })->wait;
+            last;
+        };
         /^edit$/ && do {
             my $zName = pop @ARGV or pod2usage(1);
 
@@ -357,6 +398,7 @@ B<zadm> I<command> [I<options...>]
 
 where 'command' is one of the following:
 
+    pull -b <brand> -i <image_uuid>
     create -b <brand> [-t <template_path>] <zone_name>
     delete <zone_name>
     edit <zone_name>
@@ -386,6 +428,11 @@ where 'command' is one of the following:
 =head1 DESCRIPTION
 
 Use zadm to create, edit or manage your zones.
+
+=head2 B<pull>
+
+downloads the image with ID B<image_uuid> for brand B<brand> and caches this 
+without creating a zone with it.
 
 =head2 B<create>
 
