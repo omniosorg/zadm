@@ -59,6 +59,10 @@ sub main {
             $zone->checkMandOptions($mainOpt) or $zone->usage;
 
             if ($opts->{image}) {
+                # create image instance early which will be fatal
+                # if the uuid does not point to a valid image
+                $zone->image;
+
                 # we wait for all promises to be settled as otherwise a failing image
                 # download would potentially exit the editor.
                 Mojo::Promise->all_settled(
