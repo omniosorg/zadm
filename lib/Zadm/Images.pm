@@ -103,12 +103,13 @@ has provider => sub($self) {
 };
 
 # public methods
-sub image($self, $uuid, $brand) {
+sub image($self, $uuid, $brand, $opts = {}) {
     return Zadm::Image->new(
         images => $self,
         log    => $self->log,
         uuid   => $uuid,
         brand  => $brand,
+        opts   => $opts,
     );
 }
 
