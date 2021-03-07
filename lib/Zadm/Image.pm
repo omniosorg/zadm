@@ -59,7 +59,7 @@ has metadata => sub($self) {
         }
     }
 
-    @imgs < 1 and Mojo::Exception->throw("ERROR: image UUID containing '$uuid' not found.\n");
+    @imgs < 1 and Mojo::Exception->throw("ERROR: image UUID containing '$uuid' not found for brand '$brand'.\n");
     @imgs > 1 and Mojo::Exception->throw("ERROR: more than one image UUID contains '$uuid'.\n");
 
     my $img = $imgs[0];
