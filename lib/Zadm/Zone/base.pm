@@ -9,7 +9,7 @@ use Mojo::Util qw(class_to_path);
 use Data::Processor;
 use Pod::Text;
 use Pod::Usage;
-use Storable qw(freeze);
+use Storable qw(dclone freeze);
 use Term::ANSIColor qw(colored);
 use Zadm::Zones;
 use Zadm::Utils;
@@ -137,15 +137,15 @@ my $delResource = sub($self, $res) {
     delete $self->attrs->{$res};
 };
 
-my $setProperty = sub($self, $prop) {
+my $setProperty = sub($self, $cfg, $prop) {
     my $name = $self->name;
 
     my @cmd = ('-z', $name, 'set', $prop, '=',
-        q{"} . $self->$setVal($self->config->{$prop}) . q{"});
+        q{"} . $self->$setVal($cfg->{$prop}) . q{"});
 
     $self->utils->exec('zonecfg', \@cmd, "cannot set property '$prop'");
 
-    $self->attrs->{$prop} = $self->config->{$prop};
+    $self->attrs->{$prop} = $cfg->{$prop};
 };
 
 my $decodeProp = sub($self, $res, $prop, $val) {
@@ -179,24 +179,24 @@ my $clearProperty = sub($self, $prop) {
     delete $self->attrs->{$prop};
 };
 
-my $clearAttributes = sub($self) {
+my $clearAttributes = sub($self, $cfg) {
     # TODO: adding support for rctls (for now just aliased rctls are supported)
     for my $attr (keys %{$self->attrs}) {
         next if $attr eq 'rctl';
 
         # simple attributes
         if (!$self->$isRes($attr)) {
-            $self->$clearProperty($attr) if !exists $self->config->{$attr};
+            $self->$clearProperty($attr) if !exists $cfg->{$attr};
 
             next;
         }
 
         # resources
-        if (!$self->config->{$attr} || freeze($self->config->{$attr}) ne $self->attrs->{$attr}) {
+        if (!$cfg->{$attr} || freeze($cfg->{$attr}) ne $self->attrs->{$attr}) {
             $self->$delResource($attr);
         }
         else {
-            delete $self->config->{$attr};
+            delete $cfg->{$attr};
         }
     }
 };
@@ -323,7 +323,6 @@ has opts    => sub { {} };
 has mod     => sub($self) { ref $self };
 has smod    => sub($self) { my $mod = $self->mod; $mod =~ s/Zone/Schema/; $mod };
 has exists  => sub($self) { $self->zones->exists($self->name) };
-has valid   => sub { 0 };
 has gconf   => sub { {} };
 
 has hasimg  => sub($self) { return $self->opts->{image} };
@@ -439,12 +438,10 @@ sub setPreProcess($self, $cfg) {
 }
 
 sub validate($self, $config = $self->config) {
-    $self->valid(0);
-
     my $ec = $self->dp->validate($config);
     $ec->count and Mojo::Exception->throw(join ("\n", map { $_->stringify } @{$ec->{errors}}) . "\n");
 
-    return $self->valid(1);
+    return 1;
 }
 
 sub setConfig($self, $config) {
@@ -456,46 +453,45 @@ sub setConfig($self, $config) {
         . $self->config->{brand} . "' to '" . $config->{brand} . ".\n")
         if $self->config->{brand} ne $config->{brand};
 
-    # set new config
+    # set new config and create a copy for pre-processing
     $self->config($config);
-    $self->setPreProcess($self->config);
+    $self->setPreProcess(my $cfg = dclone $config);
 
     # clean up all existing resources and
     # simple attributes which have been removed
-    $self->$clearAttributes;
+    $self->$clearAttributes($cfg);
 
-    $self->create({ map { $_ => $config->{$_} } @{$self->createprop} })
+    $self->create({ map { $_ => $cfg->{$_} } @{$self->createprop} })
         if !$self->exists;
 
     my $installed = !$self->is('configured');
-    for my $prop (keys %{$self->config}) {
+    for my $prop (keys %{$cfg}) {
         $self->log->debug("processing property '$prop'");
 
         # skip props that cannot be changed once the zone is installed
         next if $installed && exists $self->createpropmap->{$prop};
 
-        if (ref $self->config->{$prop} eq ref []) {
+        if (ref $cfg->{$prop} eq ref []) {
             $self->log->debug("property '$prop' is a resource array");
 
-            $self->addResource($prop, $_) for (@{$self->config->{$prop}});
+            $self->addResource($prop, $_) for (@{$cfg->{$prop}});
         }
         elsif ($self->$isRes($prop)) {
             $self->log->debug("property '$prop' is a resource");
 
-            $self->addResource($prop, $self->config->{$prop});
+            $self->addResource($prop, $cfg->{$prop});
         }
         else {
-            next if !$self->config->{$prop}
-                || ($self->attrs->{$prop} && $self->attrs->{$prop} eq $self->config->{$prop});
+            next if !$cfg->{$prop} || ($self->attrs->{$prop} && $self->attrs->{$prop} eq $cfg->{$prop});
 
-            $self->log->debug("property '$prop' changed: " . ($self->attrs->{$prop} // '(none)') . ' -> '
-                . $self->config->{$prop});
+            $self->log->debug("property '$prop' changed:",
+                ($self->attrs->{$prop} // '(none)'), '->', $cfg->{$prop});
 
-            $self->$setProperty($prop);
+            $self->$setProperty($cfg, $prop);
         }
     }
 
-    return $self->valid;
+    return 1;
 }
 
 sub getOptions($self, $oper) {

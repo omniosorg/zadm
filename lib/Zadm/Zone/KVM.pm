@@ -77,12 +77,6 @@ has diskattr  => sub($self) {
 
     return \%diskattr;
 };
-# adding an instance specific attribute to store the bootdisk path to be used by install
-has bootdisk => sub($self) {
-    return ref $self->config->{bootdisk} eq ref {}
-        ? { map { $_ => $self->config->{bootdisk}->{$_} } qw(path size) }
-        : {};
-};
 # install image can be either for kvm or bhyve
 has ibrand   => sub { qr/kvm|bhyve/ };
 
@@ -267,19 +261,13 @@ sub setPreProcess($self, $cfg) {
     }
 
     # add device for bootdisk
-    $self->bootdisk({});
     if ($cfg->{bootdisk}) {
         my $disksize = $cfg->{bootdisk}->{size};
         my $diskattr = $self->$setDiskAttr('bootdisk', $cfg->{bootdisk});
 
         $cfg->{bootdisk} = $cfg->{bootdisk}->{path};
         $cfg->{bootdisk} =~ s!^$ZVOLRX!!;
-        $self->bootdisk(
-            {
-                path => $cfg->{bootdisk},
-                size => $disksize,
-            }
-        );
+
         push @{$cfg->{device}}, { match => "$ZVOLDEV/$cfg->{bootdisk}" };
         $cfg->{bootdisk} .= $diskattr;
 
@@ -314,14 +302,14 @@ sub install($self, @args) {
     return $self->SUPER::install
         if !%$img;
 
-    %{$self->bootdisk} || do {
+    $self->config->{bootdisk} || do {
         $self->log->warn('WARNING: no bootdisk attribute specified. Not installing image');
         return $self->SUPER::install;
     };
 
     # cannot zfs recv if snapshots are present
     my $snapshots = $self->utils->readProc('zfs',
-        [ qw(list -t snapshot -d1 -H -o name), $self->bootdisk->{path} ]);
+        [ qw(list -t snapshot -d1 -H -o name), $self->config->{bootdisk}->{path} ]);
     Mojo::Exception->throw("ERROR: destination has snapshots (eg. $snapshots->[0])\n"
         . "must destroy them to overwrite it\n") if @$snapshots;
 
@@ -336,16 +324,17 @@ sub install($self, @args) {
         $check = 'yes';
     }
     else {
-        print "Going to overwrite the boot disk '" . $self->bootdisk->{path}
+        print "Going to overwrite the boot disk '" . $self->config->{bootdisk}->{path}
             . "'\nwith the provided image. Do you want to continue [Y/n]? ";
         chomp ($check = <STDIN>);
     }
 
     if ($check !~ /^no?$/i) {
-        $self->zones->images->zfsRecv($img->{_file}, $self->bootdisk->{path});
+        $self->zones->images->zfsRecv($img->{_file}, $self->config->{bootdisk}->{path});
         # TODO: '-x volsize' for zfs recv seems not to work so we must reset the
         # volsize to the original value after receive
-        $self->utils->exec('zfs', [ 'set', 'volsize=' . $self->bootdisk->{size}, $self->bootdisk->{path} ]);
+        $self->utils->exec('zfs', [ 'set', 'volsize=' . $self->config->{bootdisk}->{size},
+            $self->config->{bootdisk}->{path} ]);
 
         $self->SUPER::install;
     }
