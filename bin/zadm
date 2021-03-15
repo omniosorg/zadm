@@ -304,6 +304,8 @@ sub main {
                 local $SIG{__WARN__} = sub { };
                 GetOptions($opts, qw(brand|b=s attr|a=s)) or pod2usage(1);
             }
+            # doc does not take any additional arguments
+            pop @ARGV and pod2usage(1);
 
             $opts->{brand} ||= 'ipkg';
             $zones->zone('global', create => 1, brand => $opts->{brand}, opts => $opts)->doc;
