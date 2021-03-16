@@ -242,13 +242,17 @@ sub edit_s($self, $zone, $prop = {}) {
 
     Mojo::IOLoop::Subprocess->new->run(
         sub($subprocess) {
-            $self->edit($zone, $prop);
+            return ($self->edit($zone, $prop), $zone->config);
         },
-        sub($subprocess, $err, $res) {
+        sub($subprocess, $err, $res, $cfg) {
             warn $err if $err;
             # if $res is false the user aborted, in this case we don't wait for
             # all promises to be settled but exit
             exit 1 if !$res || $err;
+
+            # update the zone config of the main instance with
+            # the changes from edit in the forked instance
+            $zone->config($cfg);
 
             $zone->zones->images->editing(0) if $zone->opts->{image};
             $p->resolve(1);
