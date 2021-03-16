@@ -24,13 +24,13 @@ my $progStr = sub($self, $bytes, $elapsed, $len = 0) {
     $len && return sprintf ('%s/%s %s [%s/s] [ETA: %-8s]',
         $self->utils->prettySize($bytes, '%5.1f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
         $self->utils->prettySize($len, '%5.1f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
-        Time::Piece->new($elapsed)->hms,
+        gmtime ($elapsed)->hms,
         $self->utils->prettySize($rate, '%5.1f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
-        ($rate ? Time::Piece->new(($len - $bytes) / $rate)->hms : '-'));
+        ($rate ? gmtime (($len - $bytes) / $rate)->hms : '-'));
 
     return sprintf ('%s %s [%s/s]',
         $self->utils->prettySize($bytes, '%5.1f%s', [ qw(b KiB MiB GiB TiB PiB) ]),
-        Time::Piece->new($elapsed)->hms,
+        gmtime ($elapsed)->hms,
         $self->utils->prettySize($rate, '%5.1f%s', [ qw(b KiB MiB GiB TiB PiB) ]));
 };
 
