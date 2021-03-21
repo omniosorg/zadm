@@ -7,7 +7,12 @@ my $FWPATH = '/usr/share/bhyve/firmware/';
 
 my $SCHEMA;
 has schema => sub($self) {
-    my $dp = Data::Processor->new($self->SUPER::schema);
+    my $kvmschema = $self->SUPER::schema;
+    # we need to drop the parent diskif entry since merging would result in checking both validators;
+    # the additional options from the bhyve brand would fail the check from the parent
+    delete $kvmschema->{diskif};
+
+    my $dp = Data::Processor->new($kvmschema);
     my $ec = $dp->merge_schema($self->$SCHEMA);
 
     $ec->count and Mojo::Exception->throw(join ("\n", map { $_->stringify } @{$ec->{errors}}));
@@ -153,6 +158,14 @@ $SCHEMA = sub($self) {
         default     => 'BHYVE',
         example     => '"bootrom" : "BHYVE_DEBUG"',
         validator   => $self->sv->elemOf(map { basename($_, '.fd') } glob "$FWPATH/*.fd"),
+        'x-attr'    => 1,
+    },
+    diskif      => {
+        optional    => 1,
+        description => 'disk type',
+        default     => 'virtio',
+        example     => '"diskif" : "virtio"',
+        validator   => $self->sv->elemOf(qw(virtio virtio-blk nvme ahci ahci-hd ahci-cd ide)),
         'x-attr'    => 1,
     },
     hostbridge  => {
