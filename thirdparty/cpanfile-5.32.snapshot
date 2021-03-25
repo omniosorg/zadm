@@ -183,8 +183,8 @@ DISTRIBUTIONS
       Text::ParseWords 0
       perl 5.006001
       version 0.87
-  Mojolicious-9.12
-    pathname: S/SR/SRI/Mojolicious-9.12.tar.gz
+  Mojolicious-9.14
+    pathname: S/SR/SRI/Mojolicious-9.14.tar.gz
     provides:
       Mojo undef
       Mojo::Asset undef
@@ -252,7 +252,7 @@ DISTRIBUTIONS
       Mojo::UserAgent::Transactor undef
       Mojo::Util undef
       Mojo::WebSocket undef
-      Mojolicious 9.12
+      Mojolicious 9.14
       Mojolicious::Command undef
       Mojolicious::Command::Author::cpanify undef
       Mojolicious::Command::Author::generate undef
