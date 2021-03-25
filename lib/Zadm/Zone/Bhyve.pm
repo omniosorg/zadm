@@ -123,7 +123,7 @@ where 'command' is one of the following:
     reset <zone_name>
     nmi <zone_name>
     console [extra_args] <zone_name>
-    vnc [<[bind_addr:]port>] <zone_name>
+    vnc [-w] [<[bind_addr:]port>] <zone_name>
     log <zone_name>
     fw [-r] [-d] [-t] [-m] [-e ipf|ipf6|ipnat] <zone_name>
     help [-b <brand>]

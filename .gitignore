@@ -21,3 +21,4 @@ thirdparty/*
 etc
 !etc/zadm.conf.dist
 !etc/Makefile.am
+novnc
