@@ -49,8 +49,19 @@ my $SCHEMA = sub($self) {
                 example     => '"escape_char" : "_"',
                 validator   => $sv->regexp(qr/^.$/, 'expected a single character'),
             },
-        }
-    }
+        },
+    },
+    VNC     => {
+        optional => 1,
+        members  => {
+            novnc_path      => {
+                optional    => 1,
+                description => 'path to noVNC',
+                example     => '"novnc_path" : "/path/to/novnc"',
+                validator   => $sv->noVNC,
+            },
+        },
+    },
 }};
 
 # private static methods

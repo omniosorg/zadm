@@ -3,5 +3,8 @@
         "auto_connect"    : "off",
         "auto_disconnect" : "on",
         "escape_char"     : "_"
+    },
+    "VNC"     : {
+        "novnc_path"      : "/path/to/novnc"
     }
 }

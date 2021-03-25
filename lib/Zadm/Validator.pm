@@ -385,6 +385,13 @@ sub hostbridge($self) {
     }
 }
 
+sub noVNC($self) {
+    return sub($path, @) {
+        return undef if -r Mojo::File->new($path, 'vnc.html');
+        return "noVNC not found under '$path'";
+    }
+}
+
 1;
 
 __END__

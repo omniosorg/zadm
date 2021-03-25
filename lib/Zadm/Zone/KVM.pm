@@ -3,6 +3,7 @@ use Mojo::Base 'Zadm::Zone::base', -signatures;
 
 use Mojo::Exception;
 use Mojo::File;
+use Mojo::Loader qw(load_class);
 use IO::Socket::UNIX qw(SOCK_STREAM);
 use IO::Select;
 use Regexp::IPv4 qw($IPv4_re);
@@ -54,6 +55,11 @@ has options => sub {
         install => {
             image => {
                 getopt => 'image|i=s',
+            },
+        },
+        vnc     => {
+            web   => {
+                getopt => 'web|w',
             },
         },
     }
@@ -356,21 +362,32 @@ sub nmi($self) {
 }
 
 sub vnc($self, $listen = '5900') {
-    $self->log->warn('WARNING: zone ' . $self->name . " is not running\n")
+    $self->log->warn('WARNING: zone', $self->name, 'is not running')
         if !$self->is('running');
     Mojo::Exception->throw('ERROR: vnc is not set up for zone ' . $self->name . "\n")
         if !$self->config->{vnc} || $self->config->{vnc} eq 'off';
 
     my ($ip, $port) = $listen =~ /^(?:($IPv4_re|$IPv6_re):)?(\d+)$/;
-    Mojo::Exception->throw("ERROR: port '$port' is not valid\n")
-        if !$port;
+    Mojo::Exception->throw("ERROR: '$listen' is not valid\n") if !$port;
     $ip //= '127.0.0.1';
 
     $self->log->debug("VNC proxy listening on: $ip:$port");
 
-    print 'VNC server for zone ' . $self->name . " console started on $ip:$port\n";
-    $self->utils->exec('socat', [ "TCP-LISTEN:$port,bind=$ip,reuseaddr,fork",
-        'UNIX-CONNECT:' . $self->vncsocket ]);
+    if (!$self->opts->{web}) {
+        print 'VNC server for zone ' . $self->name . " console started on $ip:$port\n";
+        $self->utils->exec('socat', [ "TCP-LISTEN:$port,bind=$ip,reuseaddr,fork",
+            'UNIX-CONNECT:' . $self->vncsocket ]);
+    }
+    else {
+        # Zadm::NoVNC is expensive to load and only used for web VNC support.
+        # To avoid having the penalty of loading it even when it is
+        # not used we dynamically load it on demand
+        Mojo::Exception->throw("ERROR: failed to load 'Zadm::NoVNC'.\n")
+            if load_class 'Zadm::NoVNC';
+
+        Zadm::NoVNC->new(log => $self->log, sock => $self->vncsocket, novnc => $self->gconf->{VNC}->{novnc_path})
+            ->start(qw(daemon -m production -l), "http://$ip:$port");
+    }
 }
 
 sub monitor($self) {
@@ -417,7 +434,7 @@ where 'command' is one of the following:
     reset <zone_name>
     console [extra_args] <zone_name>
     monitor <zone_name>
-    vnc [<[bind_addr:]port>] <zone_name>
+    vnc [-w] [<[bind_addr:]port>] <zone_name>
     log <zone_name>
     help [-b <brand>]
     doc [-b <brand>] [-a <attribute>]
