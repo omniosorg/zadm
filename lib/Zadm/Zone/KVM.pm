@@ -24,6 +24,20 @@ my $cpuCount = sub($vcpus) {
     return join '/', map { $cpu{$_} // '1' } qw(sockets cores threads);
 };
 
+my $getIPPort = sub($self, $listen) {
+    $self->log->warn('WARNING: zone', $self->name, 'is not running')
+        if !$self->is('running');
+
+    Mojo::Exception->throw('ERROR: vnc is not set up for zone ' . $self->name . "\n")
+        if !$self->config->{vnc} || $self->config->{vnc} eq 'off';
+
+    my ($ip, $port) = $listen =~ /^(?:(\*|$IPv4_re|$IPv6_re):)?(\d+)$/;
+    Mojo::Exception->throw("ERROR: '$listen' is not valid\n") if !$port;
+    $ip //= '127.0.0.1';
+
+    return ($ip, $port);
+};
+
 # attributes
 has template => sub($self) {
     my $name = $self->name;
@@ -70,7 +84,7 @@ has vncsocket => sub($self) {
 
     return Mojo::File->new($self->config->{zonepath}, 'root', ($socket || 'tmp/vm.vnc'));
 };
-has public    => sub { [ qw(nmi vnc monitor) ] };
+has public    => sub { [ qw(nmi vnc webvnc monitor) ] };
 has diskattr  => sub($self) {
     my %diskattr;
     for my $type (qw(disk bootdisk)) {
@@ -362,32 +376,28 @@ sub nmi($self) {
 }
 
 sub vnc($self, $listen = '5900') {
-    $self->log->warn('WARNING: zone', $self->name, 'is not running')
-        if !$self->is('running');
-    Mojo::Exception->throw('ERROR: vnc is not set up for zone ' . $self->name . "\n")
-        if !$self->config->{vnc} || $self->config->{vnc} eq 'off';
+    return $self->webvnc($listen) if $self->opts->{web};
 
-    my ($ip, $port) = $listen =~ /^(?:($IPv4_re|$IPv6_re):)?(\d+)$/;
-    Mojo::Exception->throw("ERROR: '$listen' is not valid\n") if !$port;
-    $ip //= '127.0.0.1';
+    my ($ip, $port) = $self->$getIPPort($listen);
 
-    $self->log->debug("VNC proxy listening on: $ip:$port");
+    print 'VNC server for zone ' . $self->name . " console started on $ip:$port\n";
+    # socat does not accept the '*' wildcard
+    $ip =~ s/\*/0.0.0.0/;
+    $self->utils->exec('socat', [ "TCP-LISTEN:$port,bind=$ip,reuseaddr,fork",
+        'UNIX-CONNECT:' . $self->vncsocket ]);
+}
 
-    if (!$self->opts->{web}) {
-        print 'VNC server for zone ' . $self->name . " console started on $ip:$port\n";
-        $self->utils->exec('socat', [ "TCP-LISTEN:$port,bind=$ip,reuseaddr,fork",
-            'UNIX-CONNECT:' . $self->vncsocket ]);
-    }
-    else {
-        # Zadm::NoVNC is expensive to load and only used for web VNC support.
-        # To avoid having the penalty of loading it even when it is
-        # not used we dynamically load it on demand
-        Mojo::Exception->throw("ERROR: failed to load 'Zadm::NoVNC'.\n")
-            if load_class 'Zadm::NoVNC';
+sub webvnc($self, $listen = '8000') {
+    # Zadm::NoVNC is expensive to load and only used for web VNC support.
+    # To avoid having the penalty of loading it even when it is
+    # not used we dynamically load it on demand
+    Mojo::Exception->throw("ERROR: failed to load 'Zadm::NoVNC'.\n")
+        if load_class 'Zadm::NoVNC';
 
-        Zadm::NoVNC->new(log => $self->log, sock => $self->vncsocket, novnc => $self->gconf->{VNC}->{novnc_path})
-            ->start(qw(daemon -m production -l), "http://$ip:$port");
-    }
+    my ($ip, $port) = $self->$getIPPort($listen);
+
+    Zadm::NoVNC->new(log => $self->log, sock => $self->vncsocket, novnc => $self->gconf->{VNC}->{novnc_path})
+        ->start(qw(daemon -m production -l), "http://$ip:$port");
 }
 
 sub monitor($self) {
@@ -435,6 +445,7 @@ where 'command' is one of the following:
     console [extra_args] <zone_name>
     monitor <zone_name>
     vnc [-w] [<[bind_addr:]port>] <zone_name>
+    webvnc [<[bind_addr:]port>] <zone_name>
     log <zone_name>
     help [-b <brand>]
     doc [-b <brand>] [-a <attribute>]
