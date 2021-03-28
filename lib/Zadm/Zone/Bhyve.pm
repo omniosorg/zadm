@@ -3,7 +3,7 @@ use Mojo::Base 'Zadm::Zone::KVM', -signatures;
 
 # reset public interface as the inherited list
 # from KVM will have additional methods
-has public  => sub { [ qw(nmi vnc fw) ] };
+has public  => sub { [ qw(nmi vnc webvnc fw) ] };
 has options => sub($self) {
     return {
         %{$self->SUPER::options},
@@ -124,6 +124,7 @@ where 'command' is one of the following:
     nmi <zone_name>
     console [extra_args] <zone_name>
     vnc [-w] [<[bind_addr:]port>] <zone_name>
+    webvnc [<[bind_addr:]port>] <zone_name>
     log <zone_name>
     fw [-r] [-d] [-t] [-m] [-e ipf|ipf6|ipnat] <zone_name>
     help [-b <brand>]
