@@ -176,6 +176,14 @@ $SCHEMA = sub($self) {
         validator   => $self->sv->hostbridge,
         'x-attr'    => 1,
     },
+    rng         => {
+        optional    => 1,
+        description => 'attach VirtIO random number generator (RNG) to the guest',
+        default     => 'off',
+        example     => '"rng" : "on"',
+        validator   => $self->sv->elemOf(qw(on off)),
+        'x-attr'    => 1,
+    },
     vga         => {
         optional    => 1,
         description => 'type of VGA emulation to use',
