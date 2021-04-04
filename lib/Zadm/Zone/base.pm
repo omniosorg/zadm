@@ -794,7 +794,7 @@ where 'command' is one of the following:
     set <zone_name> <property=value>
     install [-f] <zone_name>
     uninstall <zone_name>
-    show [zone_name [property]]
+    show [zone_name [property[,property]...]]
     list
     memstat
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]

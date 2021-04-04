@@ -13,7 +13,7 @@ zone_state $z installed
 name="set ram"
 zadm set $z ram=123M && result "$name" PASS || result "$name" FAIL
 name="show $name"
-zadm show $z ram | egrep -s -e '^"123M"' \
+zadm show $z ram | egrep -s -e '"ram" : "123M"' \
     && result "$name" PASS || result "$name" FAIL
 
 # Add an extra device to test that it is pre-processed properly during
@@ -28,7 +28,7 @@ zadm show $z
 name="set hostbridge"
 zadm set $z hostbridge=q35 && result "$name" PASS || result "$name" FAIL
 name="show $name"
-zadm show $z hostbridge | egrep -s -e '^"q35' \
+zadm show $z hostbridge | egrep -s -e '"hostbridge" : "q35"' \
     && result "$name" PASS || result "$name" FAIL
 
 stop_environment
