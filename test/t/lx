@@ -45,7 +45,7 @@ name="install lx $z"
 validate $z "lx $z"
 
 name="install lx $z files"
-path=`zadm show $z zonepath | tr -d '"'`
+path=`zadm show $z zonepath | jq -r .zonepath`
 [ -n "$path" -a -x "$path/root/bin/ls" ] \
     && result "$name" PASS || result "$name" FAIL
 

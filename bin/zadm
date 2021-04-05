@@ -184,16 +184,15 @@ sub main {
         };
         /^show$/ && do {
             my $zName = shift @ARGV;
-            my $prop  = shift @ARGV;
+            my $props = shift @ARGV;
 
             my $config = $zones->config($zName);
 
-            $prop && do {
-                die "ERROR: attribute '$prop' not found in zone configuration.\n"
-                    if !exists $config->{$prop};
-
-                $config = $config->{$prop};
-            };
+            $config = {
+                map {
+                    $_ => $config->{$_} // die "ERROR: attribute '$_' not found in zone configuration.\n"
+                } split /,/, $props
+            } if $props;
 
             print $zones->utils->encodeJSON($config);
 
@@ -376,7 +375,7 @@ where 'command' is one of the following:
     set <zone_name> <property=value>
     install [-f] <zone_name>
     uninstall <zone_name>
-    show [zone_name [property]]
+    show [zone_name [property[,property]...]]
     list
     memstat
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
