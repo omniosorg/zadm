@@ -11,9 +11,9 @@ use Pod::Text;
 use Pod::Usage;
 use Storable qw(dclone freeze);
 use Term::ANSIColor qw(colored);
-use Zadm::Zones;
 use Zadm::Utils;
 use Zadm::Validator;
+use Zadm::Zones;
 
 # constants/definitions
 has statemap   => sub {
@@ -276,7 +276,6 @@ my $zoneCmd = sub($self, $cmd, $opts = [], $fork = 0) {
 };
 
 # private static methods
-
 # not using pod_write from Data::Processor as we want a different formatting
 my $genDoc;
 $genDoc = sub($schema, $over = 0) {

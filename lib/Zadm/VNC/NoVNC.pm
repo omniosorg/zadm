@@ -1,14 +1,21 @@
 # taken from https://github.com/jberger/Mojo-Websockify
-package Zadm::NoVNC;
+package Zadm::VNC::NoVNC;
 use Mojo::Base 'Mojolicious', -signatures;
 
 use Mojo::Home;
 use Mojo::IOLoop;
+use Zadm::Privilege qw(:CONSTANTS privSet);
 
+# constants
 my $NOVNC = Mojo::Home->new->detect(__PACKAGE__)->rel_file('novnc')->to_string;
 
 sub startup($self) {
     my $r = $self->routes;
+
+    $self->hook(before_server_start => sub($server, $app) {
+        privSet(PRIV_FILE_READ, PRIV_NET_ACCESS, $self->{port} < 1024 ? PRIV_NET_PRIVADDR : ());
+    });
+    Mojo::IOLoop->next_tick(sub($ioloop) { privSet(PRIV_FILE_READ) });
 
     my $novnc = $self->{novnc} || $NOVNC;
     Mojo::Exception->throw("noVNC not found under '$novnc'\n")

@@ -101,10 +101,8 @@ my $list = sub($self) {
     return \%zoneList;
 };
 
-
 # attributes
-has loglvl  => 'warn'; # override to 'debug' for development
-has log     => sub($self) { Mojo::Log->new(level => $self->loglvl) };
+has log     => sub { Mojo::Log->new(level => $ENV{__ZADMDEBUG} ? 'debug' : 'warn') };
 has utils   => sub($self) { Zadm::Utils->new(log => $self->log) };
 has images  => sub($self) {
     # Zadm::Images uses some modules which are expensive to load.
@@ -245,7 +243,7 @@ sub dump($self) {
                     CPUS   => $self->utils->ncpus,
                     SHARES => $self->utils->shares,
                 }
-            })
+            });
         },
         @zones
     )->then(sub(@stats) {
