@@ -8,9 +8,9 @@ my $FWPATH = '/usr/share/bhyve/firmware/';
 my $SCHEMA;
 has schema => sub($self) {
     my $kvmschema = $self->SUPER::schema;
-    # we need to drop the parent diskif entry since merging would result in checking both validators;
+    # we need to drop these parent entries since merging would result in checking parent validators too;
     # the additional options from the bhyve brand would fail the check from the parent
-    delete $kvmschema->{diskif};
+    delete $kvmschema->{$_} for qw(diskif netif);
 
     my $dp = Data::Processor->new($kvmschema);
     my $ec = $dp->merge_schema($self->$SCHEMA);
@@ -133,12 +133,18 @@ $SCHEMA = sub($self) {
                 validator   => $self->sv->regexp(qr/^(?:0x[[:xdigit:]]+|\d+)$/i, 'expected a numeric value'),
                 'x-netprop' => 1,
             },
+            netif => {
+                optional    => 1,
+                description => 'network interface type',
+                validator   => $self->sv->elemOf(qw(virtio virtio-net-viona virtio-net e1000)),
+                'x-netprop' => 1,
+            },
         },
     },
     ppt         => {
         optional    => 1,
         array       => 1,
-        description => 'PCI devices to pass-through',
+        description => 'PCI devices to pass through',
         example     => '"ppt" : [ "ppt0" ]',
         validator   => $self->sv->ppt,
         transformer => $self->sv->toArray,
@@ -174,6 +180,14 @@ $SCHEMA = sub($self) {
         default     => 'i440fx',
         example     => '"hostbridge" : "i440fx"',
         validator   => $self->sv->hostbridge,
+        'x-attr'    => 1,
+    },
+    netif       => {
+        optional    => 1,
+        description => 'network interface type',
+        default     => 'virtio',
+        example     => '"netif" : "virtio"',
+        validator   => $self->sv->elemOf(qw(virtio virtio-net-viona virtio-net e1000)),
         'x-attr'    => 1,
     },
     rng         => {

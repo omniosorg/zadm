@@ -143,7 +143,7 @@ $SCHEMA = sub($self) {
     },
     netif       => {
         optional    => 1,
-        description => 'network type',
+        description => 'network interface type',
         default     => 'virtio',
         example     => '"netif" : "virtio"',
         validator   => $self->sv->elemOf(qw(virtio e1000)),
