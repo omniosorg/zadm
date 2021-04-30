@@ -10,7 +10,7 @@ use Pod::Usage;
 use File::Basename qw(basename);
 use Getopt::Long qw(:config posix_default no_ignore_case);
 use Mojo::Promise;
-
+use Zadm::Privilege qw(privInit);
 use Zadm::Zones;
 
 my $VERSION = '0.dev'; # VERSION
@@ -28,7 +28,10 @@ sub main {
     my $mainOpt = shift // 'list';
     my $ret = 0;
 
-    my $zones = Zadm::Zones->new($ENV{__ZADMDEBUG} ? (loglvl => 'debug') : ());
+    # set our privileges to the minimum required by the code path of the command
+    privInit($mainOpt);
+
+    my $zones = Zadm::Zones->new;
 
     # check if we are in global zone
     $zones->isGZ or die "ERROR: $PROG can only be run from global zone\n";

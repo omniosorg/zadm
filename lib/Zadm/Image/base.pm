@@ -8,6 +8,7 @@ use Digest::SHA;
 use Time::Piece;
 use Time::Seconds qw(ONE_DAY);
 use Zadm::Images;
+use Zadm::Utils;
 
 # attributes
 has log      => sub { Mojo::Log->new(level => 'debug') };
@@ -20,7 +21,7 @@ has cache    => sub($self) {
     -d $cache || $cache->make_path
         or Mojo::Exception->throw("ERROR: cannot create cache directory $self->cache\n");
 
-    return $cache
+    return $cache;
 };
 has baseurl => sub { Mojo::Exception->throw("ERROR: baseurl must be specified in derived class.\n") };
 has index   => sub { Mojo::Exception->throw("ERROR: index must be specified in derived class.\n") };

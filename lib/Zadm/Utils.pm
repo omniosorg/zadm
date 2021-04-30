@@ -71,13 +71,11 @@ has swap     => sub($self) {
 
 # private methods
 my $edit = sub($self, $json) {
-    my $fh = File::Temp->new(SUFFIX => '.json');
-    close $fh;
-
+    my $fh   = File::Temp->new(SUFFIX => '.json', OPEN => 0);
     my $file = Mojo::File->new($fh->filename);
     $file->spurt($json);
 
-    my $modified = $file->stat->mtime;
+    my $mtime = $file->stat->mtime;
 
     local $@;
     eval {
@@ -94,9 +92,7 @@ my $edit = sub($self, $json) {
 
     $json = $file->slurp;
 
-    $modified = $file->stat->mtime != $modified;
-
-    return ($modified, $json);
+    return ($file->stat->mtime != $mtime, $json);
 };
 
 # public methods

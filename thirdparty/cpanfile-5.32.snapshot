@@ -275,7 +275,6 @@ DISTRIBUTIONS
       Mojolicious::Lite undef
       Mojolicious::Plugin undef
       Mojolicious::Plugin::Config undef
-      Mojolicious::Plugin::Config::Sandbox undef
       Mojolicious::Plugin::DefaultHelpers undef
       Mojolicious::Plugin::EPLRenderer undef
       Mojolicious::Plugin::EPRenderer undef

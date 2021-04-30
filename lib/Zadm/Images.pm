@@ -12,6 +12,7 @@ use File::Temp;
 use Time::Piece;
 use Time::Seconds qw(ONE_DAY);
 use Zadm::Image;
+use Zadm::Utils;
 
 # constants
 my $MODPREFIX = 'Zadm::Image';
@@ -54,7 +55,14 @@ my $fetchImages = sub($self, $force = 0) {
 has log      => sub { Mojo::Log->new(level => 'debug') };
 has utils    => sub($self) { Zadm::Utils->new(log => $self->log) };
 has datadir  => sub { Mojo::Home->new->detect(__PACKAGE__)->rel_file('var')->to_string };
-has cache    => sub($self) { Mojo::File->new($self->datadir, 'cache') };
+has cache    => sub($self) {
+    my $cache = Mojo::File->new($self->datadir, 'cache');
+    # check if cache directory exists
+    -d $cache || $cache->make_path
+        or Mojo::Exception->throw("ERROR: cannot create cache directory $self->cache\n");
+
+    return $cache;
+};
 has images   => sub($self) { $self->$fetchImages };
 has editing  => 0;
 has ua       => sub { Mojo::UserAgent->new->max_redirects(8) };
@@ -116,11 +124,15 @@ sub image($self, $uuid, $brand, $opts = {}) {
 sub curl($self, $files, $opts = {}) {
     return if !@$files;
 
+    -w $_->{path}->dirname or Mojo::Exception->throw("ERROR: permission denied writing to '"
+        . $_->{path}->dirname . "'.\n") for @$files;
+
     # default to bail out if a download failed
     $opts->{fatal} //= 1;
     my $err = '';
 
     $self->log->debug("downloading $_->{url}...") for @$files;
+
     Mojo::Promise->map(
         sub { $opts->{silent} ? $self->ua->get_p($_->{url}) : $self->uaprog->get_p($_->{url}) },
         @$files

@@ -7,7 +7,6 @@ use Mojo::JSON qw(decode_json);
 use File::Basename qw(dirname);
 use Regexp::IPv4 qw($IPv4_re);
 use Regexp::IPv6 qw($IPv6_re);
-
 use Zadm::Utils;
 
 # constants
@@ -66,9 +65,8 @@ my $checkBlockSize = sub($blkSize, $name, $min, $max) {
 };
 
 # attributes
-has log   => sub { Mojo::Log->new(level => 'debug') };
-has utils => sub($self) { Zadm::Utils->new(log => $self->log) };
-
+has log     => sub { Mojo::Log->new(level => 'debug') };
+has utils   => sub($self) { Zadm::Utils->new(log => $self->log) };
 has vnicmap => sub {
     my $i = 0;
     return { map { $_ => $i++ } @VNICATTR };
@@ -237,8 +235,8 @@ sub zvol($self) {
                 local $SIG{__DIE__};
 
                 $self->utils->exec('zfs', \@cmd);
-
             };
+
             return $@ if $@;
         }
         else {

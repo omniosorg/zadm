@@ -8,6 +8,7 @@ use IO::Socket::UNIX qw(SOCK_STREAM);
 use IO::Select;
 use Regexp::IPv4 qw($IPv4_re);
 use Regexp::IPv6 qw($IPv6_re);
+use Zadm::Privilege qw(:CONSTANTS privSet);
 
 # gobals
 my $ZVOLDEV  = '/dev/zvol/rdsk';
@@ -378,26 +379,39 @@ sub nmi($self) {
 sub vnc($self, $listen = '5900') {
     return $self->webvnc($listen) if $self->opts->{web};
 
+    Mojo::Exception->throw("ERROR: permission denied accessing zone root.\n")
+        if !-x Mojo::File->new($self->config->{zonepath}, 'root');
+
     my ($ip, $port) = $self->$getIPPort($listen);
 
     print 'VNC server for zone ' . $self->name . " console started on $ip:$port\n";
     # socat does not accept the '*' wildcard
     $ip =~ s/\*/0.0.0.0/;
+
+    privSet(PRIV_FILE_READ, PRIV_NET_ACCESS, PRIV_PROC_FORK, PRIV_PROC_EXEC,
+        $port < 1024 ? PRIV_NET_PRIVADDR : ());
     $self->utils->exec('socat', [ "TCP-LISTEN:$port,bind=$ip,reuseaddr,fork",
         'UNIX-CONNECT:' . $self->vncsocket ]);
 }
 
 sub webvnc($self, $listen = '8000') {
-    # Zadm::NoVNC is expensive to load and only used for web VNC support.
+    Mojo::Exception->throw("ERROR: permission denied accessing zone root.\n")
+        if !-x Mojo::File->new($self->config->{zonepath}, 'root');
+
+    # Zadm::VNC::NoVNC is expensive to load and only used for web VNC support.
     # To avoid having the penalty of loading it even when it is
     # not used we dynamically load it on demand
-    Mojo::Exception->throw("ERROR: failed to load 'Zadm::NoVNC'.\n")
-        if load_class 'Zadm::NoVNC';
+    Mojo::Exception->throw("ERROR: failed to load 'Zadm::VNC::NoVNC'.\n")
+        if load_class 'Zadm::VNC::NoVNC';
 
     my ($ip, $port) = $self->$getIPPort($listen);
 
-    Zadm::NoVNC->new(log => $self->log, sock => $self->vncsocket, novnc => $self->gconf->{VNC}->{novnc_path})
-        ->start(qw(daemon -m production -l), "http://$ip:$port");
+    Zadm::VNC::NoVNC->new(
+        log   => $self->log,
+        sock  => $self->vncsocket,
+        novnc => $self->gconf->{VNC}->{novnc_path},
+        port  => $port,
+    )->start(qw(daemon -m production -l), "http://$ip:$port");
 }
 
 sub monitor($self) {
