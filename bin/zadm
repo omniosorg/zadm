@@ -13,6 +13,8 @@ use Mojo::Promise;
 use Zadm::Privilege qw(privInit);
 use Zadm::Zones;
 
+privInit;
+
 my $VERSION = '0.dev'; # VERSION
 my $PROG    = basename $0;
 
@@ -27,9 +29,6 @@ $ENV{PERLDOC_PAGER} ||= '/usr/bin/less -rins' if -x '/usr/bin/less';
 sub main {
     my $mainOpt = shift // 'list';
     my $ret = 0;
-
-    # set our privileges to the minimum required by the code path of the command
-    privInit($mainOpt);
 
     my $zones = Zadm::Zones->new;
 

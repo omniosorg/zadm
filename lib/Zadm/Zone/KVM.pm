@@ -388,10 +388,10 @@ sub vnc($self, $listen = '5900') {
     # socat does not accept the '*' wildcard
     $ip =~ s/\*/0.0.0.0/;
 
-    privSet(PRIV_FILE_READ, PRIV_NET_ACCESS, PRIV_PROC_FORK, PRIV_PROC_EXEC,
-        $port < 1024 ? PRIV_NET_PRIVADDR : ());
+    privSet({ add => 1, lock => 1 }, PRIV_NET_ACCESS, $port < 1024 ? PRIV_NET_PRIVADDR : ());
     $self->utils->exec('socat', [ "TCP-LISTEN:$port,bind=$ip,reuseaddr,fork",
         'UNIX-CONNECT:' . $self->vncsocket ]);
+    privSet({ reset => 1 });
 }
 
 sub webvnc($self, $listen = '8000') {

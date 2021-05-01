@@ -11,6 +11,7 @@ use Pod::Text;
 use Pod::Usage;
 use Storable qw(dclone freeze);
 use Term::ANSIColor qw(colored);
+use Zadm::Privilege qw(privSet);
 use Zadm::Utils;
 use Zadm::Validator;
 use Zadm::Zones;
@@ -271,8 +272,10 @@ my $zoneCmd = sub($self, $cmd, $opts = [], $fork = 0) {
         return 0;
     };
 
+    privSet({ all => 1 });
     $self->utils->exec('zoneadm', [ '-z', $name, $cmd, @$opts ],
         "cannot $cmd zone $name", $fork);
+    privSet({ reset => 1 });
 };
 
 # private static methods

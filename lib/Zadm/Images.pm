@@ -12,6 +12,7 @@ use File::Temp;
 use Time::Piece;
 use Time::Seconds qw(ONE_DAY);
 use Zadm::Image;
+use Zadm::Privilege qw(:CONSTANTS privSet);
 use Zadm::Utils;
 
 # constants
@@ -133,6 +134,7 @@ sub curl($self, $files, $opts = {}) {
 
     $self->log->debug("downloading $_->{url}...") for @$files;
 
+    privSet({ add => 1 }, PRIV_NET_ACCESS);
     Mojo::Promise->map(
         sub { $opts->{silent} ? $self->ua->get_p($_->{url}) : $self->uaprog->get_p($_->{url}) },
         @$files
@@ -161,6 +163,7 @@ sub curl($self, $files, $opts = {}) {
     })->catch(sub($error) {
         $err .= $error;
     })->wait;
+    privSet({ remove => 1 }, PRIV_NET_ACCESS);
 
     Mojo::Exception->throw($err) if $err && $opts->{fatal};
 }
@@ -170,7 +173,10 @@ sub zfsRecv($self, $file, $ds) {
 
     $self->log->debug(@cmd);
 
+    privSet({ add => 1, inherit => 1 }, PRIV_SYS_MOUNT);
     open my $zfs, '|-', @cmd or Mojo::Exception->throw("ERROR: receiving zfs stream: $!\n");
+    privSet({ remove => 1, inherit => 1 }, PRIV_SYS_MOUNT);
+
     my $decomp = IO::Uncompress::AnyUncompress->new($file->to_string)
         or Mojo::Exception->throw("ERROR: decompressing '$file' failed: $AnyUncompressError\n");
 
