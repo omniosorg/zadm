@@ -7,6 +7,7 @@ use Mojo::JSON qw(decode_json);
 use File::Basename qw(dirname);
 use Regexp::IPv4 qw($IPv4_re);
 use Regexp::IPv6 qw($IPv6_re);
+use Zadm::Privilege qw(:CONSTANTS privSet);
 use Zadm::Utils;
 
 # constants
@@ -234,7 +235,9 @@ sub zvol($self) {
             eval {
                 local $SIG{__DIE__};
 
+                privSet({ add => 1, inherit => 1 }, PRIV_SYS_MOUNT);
                 $self->utils->exec('zfs', \@cmd);
+                privSet({ remove => 1, inherit => 1}, PRIV_SYS_MOUNT);
             };
 
             return $@ if $@;

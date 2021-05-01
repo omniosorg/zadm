@@ -9,23 +9,29 @@ use constant {
     PRIV_FILE_DAC_WRITE => 'file_dac_write',
     PRIV_INHERITABLE    => 'Inheritable',
     PRIV_LIMIT          => 'Limit',
+    PRIV_OFF            => 1,
+    PRIV_ON             => 0,
     PRIV_PERMITTED      => 'Permitted',
     PRIV_SET            => 2,
     PRIV_STR_LIT        => 1,
     PRIV_STR_PORT       => 0,
+    PRIV_SYS_MOUNT      => 'sys_mount',
 };
 
 my @constants = qw(PRIV_DEBUG PRIV_EFFECTIVE PRIV_FILE_DAC_WRITE PRIV_INHERITABLE
-    PRIV_LIMIT PRIV_PERMITTED PRIV_SET PRIV_STR_LIT PRIV_STR_PORT);
+    PRIV_LIMIT PRIV_OFF PRIV_ON PRIV_PERMITTED PRIV_SET PRIV_STR_LIT PRIV_STR_PORT
+    PRIV_SYS_MOUNT);
 
-our @EXPORT_OK = (@constants, qw(getppriv priv_addset priv_intersect priv_set_to_str
-    priv_str_to_seti setpflags setppriv));
+our @EXPORT_OK = (@constants, qw(getppriv priv_addset priv_emptyset priv_fillset
+    priv_intersect priv_set_to_str priv_str_to_set setpflags setppriv));
 our %EXPORT_TAGS = (ALL => \@EXPORT_OK, CONSTANTS => \@constants);
 
 sub getppriv { }
 sub priv_addset { }
+sub priv_emptyset { }
+sub priv_fillset { }
 sub priv_intersect { }
-sub priv_set_to_str { }
+sub priv_set_to_str { '' }
 sub priv_str_to_set { }
 sub setpflags { }
 sub setppriv { }

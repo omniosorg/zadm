@@ -10,52 +10,26 @@ use Sun::Solaris::Privilege qw(:ALL);
 # re-export CONSTANTS from Sun::Solaris::Privilege so consumers of this module
 # don't require to also include Sun::Solaris::Privilege
 my @constants    = @{$Sun::Solaris::Privilege::EXPORT_TAGS{CONSTANTS}};
-our @EXPORT_OK   = (@constants, qw(privInit privSet privReset));
+our @EXPORT_OK   = (@constants, qw(privInit privSet));
 our %EXPORT_TAGS = (CONSTANTS => \@constants);
 
-# defining the permitted privileges here for each (command depending) code path
-# commands not defined here will use __default. individual blocks can then
-# still be privilege bracketed where it seems appropriate to be more restrictive
-my %PLIMIT = (
-    __default     => 'basic,!file_link_any,!net_access,!proc_info,!proc_secflags,!proc_session',
-    __empty       => 'basic,!file_link_any,!file_read,!file_write,!net_access,!proc_exec,'
-                   . '!proc_fork,!proc_info,!proc_secflags,!proc_session',
-    boot          => 'all', # booting a zone currently requires a full set
-    console       => 'all', # attaching to a zone's console currently requires a full set
-    create        => 'basic,sys_mount,!file_link_any,!proc_info,!proc_secflags,!proc_session',
-    edit          => 'basic,sys_mount,!file_link_any,!proc_info,!proc_secflags,!proc_session',
-    halt          => 'all', # halting a zone currently requires a full set
-    install       => 'basic,sys_mount,!file_link_any,!proc_info,!proc_secflags,!proc_session',
-    'list-images' => 'basic,!file_link_any,!proc_info,!proc_secflags,!proc_session',
-    login         => 'all', # login to a zone currently requires a full set
-    pull          => 'basic,!file_link_any,!proc_info,!proc_secflags,!proc_session',
-    reboot        => 'all', # rebooting a zone currently requires a full set
-    shutdown      => 'all', # shutting down a zone currently requires a full set
-    vnc           => 'basic,priv_net_privaddr,!file_link_any,!proc_info,!proc_secflags,!proc_session',
-    webvnc        => 'basic,priv_net_privaddr,!file_link_any,!proc_info,!proc_secflags,!proc_session',
-);
-
-my %ALIASMAP = (
-    start    => 'boot',
-    stop     => 'shutdown',
-    poweroff => 'halt',
-    restart  => 'reboot',
-    reset    => 'halt',
+my %PSETS = (
+    default => 'basic,!file_link_any,!net_access,!proc_info,!proc_secflags,!proc_session',
+    empty   => 'basic,!file_link_any,!file_read,!file_write,!net_access,!proc_exec,'
+               . '!proc_fork,!proc_info,!proc_secflags,!proc_session',
 );
 
 my $log = Mojo::Log->new(level => $ENV{__ZADMDEBUG} ? 'debug' : 'warn');
 
 my $getPrivSet = sub {
-    my $cmd = shift // '';
+    my $set = shift // 'default';
 
-    my $pstr = exists $PLIMIT{$cmd}   ? $PLIMIT{$cmd}
-             : exists $ALIASMAP{$cmd} ? $PLIMIT{$ALIASMAP{$cmd}}
-             :                          $PLIMIT{__default};
+    my $pstr = $PSETS{$set};
 
     # build target privileges
     my $targprivs = priv_str_to_set($pstr, ',');
     # We keep FILE_DAC_WRITE if the caller has it
-    priv_addset($targprivs, PRIV_FILE_DAC_WRITE) if $cmd ne '__empty';
+    priv_addset($targprivs, PRIV_FILE_DAC_WRITE) if $set ne 'empty';
 
     # get the current permitted privileges
     my $curprivs = getppriv(PRIV_PERMITTED);
@@ -68,37 +42,49 @@ my $getPrivSet = sub {
 };
 
 # public functions
-sub privInit {
-    my $cmd = shift // '';
+sub privSet {
+    my $opts  = shift || {};
+    my @privs = @_;
 
+    my $pset = $opts->{reset}                  ? $getPrivSet->('default')
+             : $opts->{add} || $opts->{remove} ? priv_emptyset
+             : $opts->{all}                    ? priv_fillset
+             :                                   $getPrivSet->('empty');
+
+    priv_addset($pset, $_) for @privs;
+
+    my @sets = $opts->{inherit} ? (PRIV_EFFECTIVE, PRIV_INHERITABLE) : (PRIV_EFFECTIVE);
+    if ($opts->{remove}) {
+        $log->debug(q{Releasing effective privilege '}
+            . priv_set_to_str($pset, ',', PRIV_STR_LIT) . q{'.});
+        setppriv(PRIV_OFF, $_, $pset) for @sets;
+    }
+    elsif ($opts->{add}) {
+        $log->debug(q{Acquiring effective privilege '}
+            . priv_set_to_str($pset, ',', PRIV_STR_LIT) . q{'.});
+        setppriv(PRIV_ON, $_, $pset) for @sets;
+    }
+    else {
+        $log->debug(q{Setting effective privileges to '}
+            . priv_set_to_str($pset, ',',
+            $opts->{all} || $opts->{reset} ? PRIV_STR_PORT : PRIV_STR_LIT) . q{'.});
+        setppriv(PRIV_SET, $_, $pset) for @sets;
+    }
+
+    if ($opts->{lock}) {
+        my $eset = getppriv(PRIV_EFFECTIVE);
+
+        $log->debug('Locking privileges.');
+        setppriv(PRIV_SET, $_, $eset) for qw(PRIV_PERMITTED PRIV_LIMIT);
+    }
+}
+
+sub privInit {
     # enable privilege debugging globally
     setpflags(PRIV_DEBUG, 1) if $ENV{__ZADMDEBUG};
 
-    my $pset = $getPrivSet->($cmd);
-
-    $log->debug(q{Setting permitted privileges to '}
-        . priv_set_to_str($pset, ',', PRIV_STR_PORT) . q{'.});
-    setppriv(PRIV_SET, $_, $pset) for (PRIV_PERMITTED, PRIV_LIMIT, PRIV_INHERITABLE);
+    privSet({ reset => 1 });
 }
-
-sub privSet {
-    my @privs = @_;
-
-    my $pset = $getPrivSet->('__empty');
-    priv_addset($pset, $_) for @privs;
-
-    $log->debug(q{Setting effective privileges to '}
-        . priv_set_to_str($pset, ',', PRIV_STR_LIT) . q{'.});
-    setppriv(PRIV_SET, PRIV_EFFECTIVE, $pset)
-}
-
-sub privReset {
-    my $pset = getppriv(PRIV_PERMITTED);
-
-    $log->debug("Setting effective privileges to permitted.");
-    setppriv(PRIV_SET, PRIV_EFFECTIVE, $pset);
-}
-
 
 1;
 
