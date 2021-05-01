@@ -564,7 +564,9 @@ sub login($self) {
     Mojo::Exception->throw("ERROR: '$name' is not running, cannot login.\n")
         if !$self->is('running');
 
+    privSet({ all => 1 });
     $self->utils->exec('zlogin', [ $name ], "cannot login to $name");
+    privSet({ reset => 1 });
 }
 
 sub console($self, $cOpts = []) {
@@ -575,8 +577,10 @@ sub console($self, $cOpts = []) {
     push @$cOpts, '-e', $self->gconf->{CONSOLE}->{escape_char}
         if $self->gconf->{CONSOLE}->{escape_char} && !grep { /^-e.?$/ } @$cOpts;
 
+    privSet({ all => 1 });
     $self->utils->exec('zlogin', [ '-C', @$cOpts, $name ],
         "cannot attach to $name zone console");
+    privSet({ reset => 1 });
 }
 
 sub create($self, $props) {
