@@ -354,8 +354,10 @@ sub install($self, @args) {
         $self->zones->images->zfsRecv($img->{_file}, $self->config->{bootdisk}->{path});
         # TODO: '-x volsize' for zfs recv seems not to work so we must reset the
         # volsize to the original value after receive
+        privSet({ add => 1, inherit => 1 }, PRIV_SYS_MOUNT);
         $self->utils->exec('zfs', [ 'set', 'volsize=' . $self->config->{bootdisk}->{size},
             $self->config->{bootdisk}->{path} ]);
+        privSet({ remove => 1, inherit => 1 }, PRIV_SYS_MOUNT);
 
         $self->SUPER::install;
     }
