@@ -11,7 +11,7 @@ use Pod::Text;
 use Pod::Usage;
 use Storable qw(dclone freeze);
 use Term::ANSIColor qw(colored);
-use Zadm::Privilege qw(privSet);
+use Zadm::Privilege qw(:CONSTANTS privSet);
 use Zadm::Utils;
 use Zadm::Validator;
 use Zadm::Zones;
@@ -705,7 +705,9 @@ sub fw($self) {
     return if !$self->is('running');
 
     if ($opts->{disable}) {
+        privSet({ add => 1, inherit => 1 }, PRIV_SYS_IP_CONFIG);
         $self->utils->exec('ipf', [ '-GD', $name ]);
+        privSet({ remove => 1, inherit => 1 }, PRIV_SYS_IP_CONFIG);
 
         return;
     }
@@ -713,6 +715,8 @@ sub fw($self) {
     if ($opts->{reload}) {
         $self->log->debug("reloading ipf/ipnat for zone '$name'...");
 
+        # bracket the whole block rather than each call to ipf/ipnat individually
+        privSet({ add => 1, inherit => 1 }, PRIV_SYS_IP_CONFIG);
         $self->utils->exec('ipf', [ '-GE', $name ]);
 
         my $f = Mojo::File->new($self->config->{zonepath}, 'etc', 'ipf.conf');
@@ -728,19 +732,24 @@ sub fw($self) {
             if -r $f && (!$opts->{edit} || $opts->{edit} eq 'ipnat');
 
         $self->utils->exec('ipf', [ '-Gy', $name ]);
+        privSet({ remove => 1, inherit => 1 }, PRIV_SYS_IP_CONFIG);
 
         return;
     }
 
     if ($opts->{monitor}) {
+        privSet({ add => 1, inherit => 1 }, PRIV_SYS_IP_CONFIG);
         # ignore the return code of ipmon since ^C'ing it will return non-null
         $self->utils->exec('ipmon', [ '-aG', $name ], undef, undef, 1);
+        privSet({ remove => 1, inherit => 1 }, PRIV_SYS_IP_CONFIG);
 
         return;
     }
 
     if ($opts->{top}) {
+        privSet({ add => 1, inherit => 1 }, PRIV_SYS_IP_CONFIG);
         $self->utils->exec('ipfstat', [ '-tG', $name ]);
+        privSet({ remove => 1, inherit => 1 }, PRIV_SYS_IP_CONFIG);
 
         return;
     }
@@ -756,6 +765,8 @@ sub fw($self) {
         '-o6G'  => colored("==> outbound IPv6 ipf rules for $name:", 'ansi208'),
     );
 
+    # bracket the whole block rather than each call to ipfstat/ipnat individually
+    privSet({ add => 1, inherit => 1 }, PRIV_SYS_IP_CONFIG);
     for my $ipf (qw(-iG -i6G -oG -o6G)) {
         my $rules = $self->utils->readProc('ipfstat', [ $ipf, $name ]);
         next if !@$rules;
@@ -770,6 +781,8 @@ sub fw($self) {
     }
 
     my $rules = $self->utils->readProc('ipnat', [ '-lG', $name ]);
+    privSet({ remove => 1, inherit => 1 }, PRIV_SYS_IP_CONFIG);
+
     my @rules;
     for my $rule (@$rules) {
         next if !$rule || $rule =~ /active\s+MAP/;
