@@ -386,6 +386,21 @@ sub hostbridge($self) {
     }
 }
 
+sub secFlags($self) {
+    return sub($flags, @) {
+        my @flags = split /,/, $flags;
+
+        return undef if @flags == 1 && $flags[0] eq 'none';
+        return "'none' cannot be used with other security flags"
+            if @flags > 1 && grep { $_ eq 'none' } @flags;
+
+        my %flagmap = map { $_ => undef } qw(aslr forbidnullmap noexecstack);
+        exists $flagmap{$_} || return "'$_' is not a valid security-flag" for @flags;
+
+        return undef;
+    }
+}
+
 sub noVNC($self) {
     return sub($path, @) {
         return undef if -r Mojo::File->new($path, 'vnc.html');

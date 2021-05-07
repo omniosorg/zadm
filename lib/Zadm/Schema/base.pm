@@ -164,6 +164,27 @@ has schema => sub($self) {
             },
         },
     },
+    'security-flags' => {
+        optional     => 1,
+        description  => 'Process security flag settings',
+        members      => {
+            lower    => {
+                optional    => 1,
+                description => 'The lower security flag limit for zone processes',
+                validator   => $self->sv->secFlags,
+            },
+            upper    => {
+                optional    => 1,
+                description => 'The upper security flag limit for zone processes',
+                validator   => $self->sv->secFlags,
+            },
+            default  => {
+                optional    => 1,
+                description => 'The default security flags for zone processes',
+                validator   => $self->sv->secFlags,
+            },
+        },
+    },
     dataset => {
         optional    => 1,
         array       => 1,
