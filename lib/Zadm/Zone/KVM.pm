@@ -384,16 +384,21 @@ sub vnc($self, $listen = '5900') {
     Mojo::Exception->throw("ERROR: permission denied accessing zone root.\n")
         if !-x Mojo::File->new($self->config->{zonepath}, 'root');
 
-    my ($ip, $port) = $self->$getIPPort($listen);
+    # Zadm::VNC::Proxy is expensive to load and only used for VNC proxying.
+    # To avoid having the penalty of loading it even when it is
+    # not used we dynamically load it on demand
+    Mojo::Exception->throw("ERROR: failed to load 'Zadm::VNC::Proxy'.\n")
+        if load_class 'Zadm::VNC::Proxy';
 
-    print 'VNC server for zone ' . $self->name . " console started on $ip:$port\n";
-    # socat does not accept the '*' wildcard
+    my ($ip, $port) = $self->$getIPPort($listen);
     $ip =~ s/\*/0.0.0.0/;
 
-    privSet({ add => 1, lock => 1 }, PRIV_NET_ACCESS, $port < 1024 ? PRIV_NET_PRIVADDR : ());
-    $self->utils->exec('socat', [ "TCP-LISTEN:$port,bind=$ip,reuseaddr,fork",
-        'UNIX-CONNECT:' . $self->vncsocket ]);
-    privSet({ reset => 1 });
+    Zadm::VNC::Proxy->new(
+        log   => $self->log,
+        sock  => $self->vncsocket,
+        addr  => $ip,
+        port  => $port,
+    )->start;
 }
 
 sub webvnc($self, $listen = '8000') {
