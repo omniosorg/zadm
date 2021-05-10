@@ -26,7 +26,6 @@ my %CMDS = (
     editor      => $ENV{VISUAL} || $ENV{EDITOR} || '/usr/bin/vi',
     zfs         => '/usr/sbin/zfs',
     pkg         => '/usr/bin/pkg',
-    socat       => '/usr/bin/socat',
     nc          => '/usr/bin/nc',
     pager       => $ENV{PAGER} || '/usr/bin/less -eimnqX',
     domainname  => '/usr/bin/domainname',
