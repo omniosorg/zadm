@@ -37,7 +37,7 @@ has schema => sub($self) {
     limitpriv   => {
         description => 'the maximum set of privileges any process in this zone can obtain',
         default     => 'default',
-        validator   => $self->sv->regexp(qr/^[-\w,]+$/, 'limitpriv not valid'),
+        validator   => $self->sv->regexp(qr/^[-+!\w,]+$/, 'limitpriv not valid'),
     },
     brand       => {
         description => "the zone's brand type",
@@ -171,17 +171,17 @@ has schema => sub($self) {
             lower    => {
                 optional    => 1,
                 description => 'The lower security flag limit for zone processes',
-                validator   => $self->sv->secFlags,
+                validator   => $self->sv->regexp(qr/^[-+!\w,]+$/, 'lower security-flags not valid'),
             },
             upper    => {
                 optional    => 1,
                 description => 'The upper security flag limit for zone processes',
-                validator   => $self->sv->secFlags,
+                validator   => $self->sv->regexp(qr/^[-+!\w,]+$/, 'upper security-flags not valid'),
             },
             default  => {
                 optional    => 1,
                 description => 'The default security flags for zone processes',
-                validator   => $self->sv->secFlags,
+                validator   => $self->sv->regexp(qr/^[-+!\w,]+$/, 'default security-flags not valid'),
             },
         },
     },
