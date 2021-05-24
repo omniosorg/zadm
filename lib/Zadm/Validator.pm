@@ -90,6 +90,13 @@ sub bool($self) {
     return $self->elemOf(qw(true false));
 }
 
+sub numRange($self, $min, $max) {
+    return sub($num, @) {
+        return "'$num' is not numeric" if !$numeric->($num);
+        return $num >= $min && $num <= $max ? undef : "'$num' is out of range (expected $min-$max)";
+    }
+}
+
 sub ipv4($self) {
     return $self->regexp(qr/^$IPv4_re$/, 'not a valid IPv4 address');
 }
