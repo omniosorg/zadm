@@ -14,7 +14,7 @@ our @EXPORT_OK   = (@constants, qw(privInit privSet));
 our %EXPORT_TAGS = (CONSTANTS => \@constants);
 
 my %PSETS = (
-    default => 'basic,!file_link_any,!net_access,!proc_info,!proc_secflags,!proc_session',
+    default => 'basic,!file_link_any,!net_access,!proc_info,!proc_session',
     empty   => 'basic,!file_link_any,!file_read,!file_write,!net_access,!proc_exec,'
                . '!proc_fork,!proc_info,!proc_secflags,!proc_session',
 );
