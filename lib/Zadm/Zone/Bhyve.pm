@@ -39,7 +39,10 @@ sub getPostProcess($self, $cfg) {
         for (my $i = $#{$cfg->{attr}}; $i >= 0; $i--) {
             next if $cfg->{attr}->[$i]->{name} !~ /^ppt\d+$/;
 
-            push @{$cfg->{ppt}}, $cfg->{attr}->[$i]->{name};
+            push @{$cfg->{ppt}}, {
+                device => $cfg->{attr}->[$i]->{name},
+                state  => $cfg->{attr}->[$i]->{value},
+            };
             splice @{$cfg->{attr}}, $i, 1;
         }
     }
@@ -50,7 +53,7 @@ sub getPostProcess($self, $cfg) {
     if ($cfg->{ppt} && ref $cfg->{ppt} eq ref [] && $cfg->{device} && ref $cfg->{device} eq ref []) {
         for (my $i = $#{$cfg->{device}}; $i >= 0; $i--) {
             splice @{$cfg->{device}}, $i, 1
-                if grep { $_ && $cfg->{device}->[$i]->{match} =~ m!^/dev/$_$! } @{$cfg->{ppt}};
+                if grep { $cfg->{device}->[$i]->{match} eq "/dev/$_->{device}" } @{$cfg->{ppt}};
         }
     }
 
@@ -64,15 +67,14 @@ sub setPreProcess($self, $cfg) {
     # add device for ppt
     if ($cfg->{ppt} && ref $cfg->{ppt} eq ref []) {
         for (my $i = 0; $i < @{$cfg->{ppt}}; $i++) {
-            next if !$cfg->{ppt}->[$i];
-
             push @{$cfg->{attr}}, {
-                name    => $cfg->{ppt}->[$i],
+                name    => $cfg->{ppt}->[$i]->{device},
                 type    => 'string',
-                value   => 'on',
+                value   => $cfg->{ppt}->[$i]->{state},
             };
 
-            push @{$cfg->{device}}, { match => "/dev/$cfg->{ppt}->[$i]" };
+            push @{$cfg->{device}}, { match => "/dev/$cfg->{ppt}->[$i]->{device}" }
+                if $cfg->{ppt}->[$i]->{state} ne 'off';
         }
 
         delete $cfg->{ppt};

@@ -187,9 +187,20 @@ $SCHEMA = sub($self) {
         optional    => 1,
         array       => 1,
         description => 'PCI devices to pass through',
-        example     => '"ppt" : [ "ppt0" ]',
-        validator   => $self->sv->ppt,
-        transformer => $self->sv->toArray,
+        members     => {
+            device => {
+                description => 'PCI device to pass through',
+                example     => '"device" : "ppt0"',
+                validator   => $self->sv->ppt,
+            },
+            state  => {
+                description => 'PCI device state',
+                default     => 'on',
+                example     => '"state" : "on"',
+                validator   => $self->sv->elemOf(qw(on off), map { "slot$_" } 0 .. 7),
+            },
+        },
+        transformer => $self->sv->toHash('device', 1),
         'x-attr'    => 1,
     },
     acpi        => {
