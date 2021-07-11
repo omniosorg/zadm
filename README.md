@@ -9,7 +9,7 @@ Version: 0.9.8
 
 Date: 2021-07-09
 
-`zadm` is a zone admin tool.
+`zadm` - zone management tool.
 
 Setup
 -----
