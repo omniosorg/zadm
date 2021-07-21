@@ -242,9 +242,10 @@ sub zvol($self) {
             eval {
                 local $SIG{__DIE__};
 
-                privSet({ add => 1, inherit => 1 }, PRIV_SYS_MOUNT);
+                # prevent parent dataset ending up with a temporary setuid property set to 'off'
+                privSet({ all => 1 });
                 $self->utils->exec('zfs', \@cmd);
-                privSet({ remove => 1, inherit => 1}, PRIV_SYS_MOUNT);
+                privSet({ reset => 1 });
             };
 
             return $@ if $@;
