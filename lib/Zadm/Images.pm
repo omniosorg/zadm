@@ -125,14 +125,15 @@ sub image($self, $uuid, $brand, $opts = {}) {
 sub curl($self, $files, $opts = {}) {
     return if !@$files;
 
-    -w $_->{path}->dirname or Mojo::Exception->throw("ERROR: permission denied writing to '"
-        . $_->{path}->dirname . "'.\n") for @$files;
-
     # default to bail out if a download failed
     $opts->{fatal} //= 1;
-    my $err = '';
+
+    $opts->{fatal} && !-w $_->{path}->dirname and Mojo::Exception->throw(
+        "ERROR: permission denied writing to '" . $_->{path}->dirname . "'.\n") for @$files;
 
     $self->log->debug("downloading $_->{url}...") for @$files;
+
+    my @err;
 
     privSet({ add => 1 }, PRIV_NET_ACCESS);
     Mojo::Promise->map(
@@ -143,8 +144,8 @@ sub curl($self, $files, $opts = {}) {
             my $res = $tx[$i]->[0]->result;
 
             if (!$res->is_success) {
-                $err .= "ERROR: Failed to download file from $files->[$i]->{url} - "
-                    . $res->code . ' ' . $res->default_message . "\n";
+                push @err, "Failed to download file from $files->[$i]->{url} - "
+                    . $res->code . ' ' . $res->default_message;
 
                 next;
             }
@@ -157,15 +158,18 @@ sub curl($self, $files, $opts = {}) {
             };
 
             if ($@) {
-                $err .= "ERROR: Failed to write file to $files->[$i]->{path}.\n";
+                push @err, "Failed to write file to $files->[$i]->{path}.";
             }
         }
     })->catch(sub($error) {
-        $err .= $error;
+        push @err, $error;
     })->wait;
     privSet({ remove => 1 }, PRIV_NET_ACCESS);
 
-    Mojo::Exception->throw($err) if $err && $opts->{fatal};
+    if (@err) {
+        Mojo::Exception->throw(join "\n", map { "ERROR: $_" } @err) if $opts->{fatal};
+        $self->log->warn(join "\n", map { "WARNING: $_" } @err);
+    }
 }
 
 sub zfsRecv($self, $file, $ds) {
