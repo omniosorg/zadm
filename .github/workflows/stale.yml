@@ -1,0 +1,27 @@
+name: Close stale issues
+
+on:
+  schedule:
+    - cron: '47 1 * * *'
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v4
+        with:
+            days-before-stale: 30
+            days-before-close: 7
+            days-before-pr-stale: 60
+            days-before-pr-close: 14
+            exempt-all-assignees: true
+            remove-stale-when-updated: true
+            stale-issue-label: 'stale'
+            stale-pr-label: 'stale'
+            stale-issue-message: 'This issue has been automatically marked as stale because it has not had recent activity. It will be closed if no further activity occurs. Thank you for your contributions.'
+            stale-pr-message: 'This pull request has been automatically marked as stale because it has not had recent activity. It will be closed if no further activity occurs. Thank you for your contributions.'
+
