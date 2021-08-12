@@ -37,6 +37,8 @@ my %CMDS = (
     ipfstat     => '/usr/sbin/ipfstat',
     ipmon       => '/usr/sbin/ipmon',
     ipnat       => '/usr/sbin/ipnat',
+    file        => '/usr/bin/file',
+    dd          => '/usr/bin/dd',
 );
 
 my %ENVARGS = map {
@@ -263,6 +265,13 @@ sub getZfsProp($self, $ds, $prop = []) {
     my $vals = $self->readProc('zfs', [ qw(get -H -o value), join (',', @$prop), $ds ]);
 
     return { map { $prop->[$_] => $vals->[$_] } (0 .. $#$prop) };
+}
+
+sub getFileType($self, $data, $suffix = '') {
+    my $f = Mojo::File->new(File::Temp->new($suffix ? (SUFFIX => $suffix) : ()));
+    $f->spurt($data);
+
+    return $self->readProc('file', [ '-b', $f ])->[0];
 }
 
 sub domain($self) {

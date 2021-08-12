@@ -353,7 +353,7 @@ sub install($self, @args) {
     }
 
     if ($check !~ /^no?$/i) {
-        $self->zones->images->zfsRecv($img->{_file}, $self->config->{bootdisk}->{path});
+        $self->zones->images->seedZvol($img->{_file}, $self->config->{bootdisk}->{path});
         # TODO: '-x volsize' for zfs recv seems not to work so we must reset the
         # volsize to the original value after receive
         privSet({ add => 1, inherit => 1 }, PRIV_SYS_MOUNT);
