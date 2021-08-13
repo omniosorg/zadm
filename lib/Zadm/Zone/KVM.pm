@@ -318,10 +318,8 @@ sub setPreProcess($self, $cfg) {
 }
 
 sub install($self, @args) {
-    my $img = $self->hasimg ? $self->image->image : {};
     # just install the zone if no image was provided for the bootdisk
-    return $self->SUPER::install
-        if !%$img;
+    return $self->SUPER::install if !$self->hasimg;
 
     $self->config->{bootdisk} || do {
         $self->log->warn('WARNING: no bootdisk attribute specified. Not installing image');
@@ -333,6 +331,10 @@ sub install($self, @args) {
         [ qw(list -t snapshot -d1 -H -o name), $self->config->{bootdisk}->{path} ]);
     Mojo::Exception->throw("ERROR: destination has snapshots (eg. $snapshots->[0])\n"
         . "must destroy them to overwrite it\n") if @$snapshots;
+
+    my $img = $self->image->image;
+    # just install the zone if no valid image was provided for the bootdisk
+    return $self->SUPER::install if !%$img;
 
     $img->{_file} && -r $img->{_file} || do {
         $self->log->warn('WARNING: no valid image path given. Not installing image');
@@ -351,7 +353,7 @@ sub install($self, @args) {
     }
 
     if ($check !~ /^no?$/i) {
-        $self->zones->images->zfsRecv($img->{_file}, $self->config->{bootdisk}->{path});
+        $self->zones->images->seedZvol($img->{_file}, $self->config->{bootdisk}->{path});
         # TODO: '-x volsize' for zfs recv seems not to work so we must reset the
         # volsize to the original value after receive
         privSet({ add => 1, inherit => 1 }, PRIV_SYS_MOUNT);

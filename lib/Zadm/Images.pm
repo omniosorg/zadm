@@ -172,25 +172,32 @@ sub curl($self, $files, $opts = {}) {
     }
 }
 
-sub zfsRecv($self, $file, $ds) {
-    my @cmd = ($self->utils->getCmd('zfs'), qw(recv -Fv), $ds);
-
-    $self->log->debug(@cmd);
-
-    privSet({ add => 1, inherit => 1 }, PRIV_SYS_MOUNT);
-    open my $zfs, '|-', @cmd or Mojo::Exception->throw("ERROR: receiving zfs stream: $!\n");
-    privSet({ remove => 1, inherit => 1 }, PRIV_SYS_MOUNT);
-
+sub seedZvol($self, $file, $ds) {
     my $decomp = IO::Uncompress::AnyUncompress->new($file->to_string)
         or Mojo::Exception->throw("ERROR: decompressing '$file' failed: $AnyUncompressError\n");
 
     my $bytes = 0;
     my $start = my $last = time;
+    my $zvol;
     while (my $status = $decomp->read(my $buffer)) {
         Mojo::Exception->throw("ERROR: decompressing '$file' failed: $AnyUncompressError\n")
             if $status < 0;
 
-        print $zfs $buffer;
+        # detect image file type
+        if ($bytes == 0) {
+            my $type = $self->utils->getFileType($buffer, '.' . $file->extname) // '';
+
+            my @cmd = $type eq 'ZFS snapshot stream' ? ($self->utils->getCmd('zfs'), qw(recv -Fv), $ds)
+                    :                                  ($self->utils->getCmd('dd'), "of=/dev/zvol/dsk/$ds", 'bs=1M');
+
+            $self->log->debug(@cmd);
+
+            privSet({ add => 1, inherit => 1 }, PRIV_SYS_MOUNT);
+            open $zvol, '|-', @cmd or Mojo::Exception->throw("ERROR: receiving zfs stream: $!\n");
+            privSet({ remove => 1, inherit => 1 }, PRIV_SYS_MOUNT);
+        }
+
+        print $zvol $buffer;
         $bytes += $status;
 
         my $now = time;
