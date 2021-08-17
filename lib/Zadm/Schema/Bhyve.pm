@@ -219,6 +219,14 @@ $SCHEMA = sub($self) {
         validator   => $self->sv->elemOf(map { basename($_, '.fd') } glob "$FWPATH/*.fd"),
         'x-attr'    => 1,
     },
+    'cloud-init' => {
+        optional    => 1,
+        description => 'provide cloud-init data - on|off|file path|URL',
+        default     => 'off',
+        example     => '"cloud-init" : "on"',
+        validator   => $self->sv->cloudinit,
+        'x-attr'    => 1,
+    },
     diskif      => {
         optional    => 1,
         description => 'disk type',
@@ -243,12 +251,27 @@ $SCHEMA = sub($self) {
         validator   => $self->sv->elemOf(qw(virtio virtio-net-viona virtio-net e1000)),
         'x-attr'    => 1,
     },
+    password    => {
+        optional    => 1,
+        description => 'provide cloud-init password/hash or path to file',
+        example     => '"password" : "$6$SEeDRaFR$...5/"',
+        validator   => $self->sv->stringorfile,
+        transformer => $self->sv->toPWHash,
+        'x-attr'    => 1,
+    },
     rng         => {
         optional    => 1,
         description => 'attach VirtIO random number generator (RNG) to the guest',
         default     => 'off',
         example     => '"rng" : "on"',
         validator   => $self->sv->elemOf(qw(on off)),
+        'x-attr'    => 1,
+    },
+    sshkey      => {
+        optional    => 1,
+        description => 'provide cloud-init public SSH key - string or path to file',
+        example     => '"sshkey" : "/root/.ssh/id_rsa.pub"',
+        validator   => $self->sv->stringorfile,
         'x-attr'    => 1,
     },
     vga         => {

@@ -5,6 +5,7 @@
    "bootorder" : "cd",
    "bootrom" : "BHYVE",
    "brand" : "bhyve",
+   "cloud-init" : "off",
    "diskif" : "virtio",
    "fs-allowed" : "",
    "hostbridge" : "i440fx",

@@ -353,6 +353,13 @@ sub isaTTY($self) {
     return isatty(*STDIN);
 }
 
+sub isPWHash($self, $str) {
+    # since we are feeding the password to clound-init we use the same
+    # logic for detecting whether the password is hashed or not
+
+    return $str =~ /^\$(?:1|2a|2y|5|6)(?:\$[^\$]+){2}$/;
+}
+
 sub getSTDIN($self) {
     return $self->isaTTY() ? [] : [ split /\r\n|\n|\r/, do { local $/; <STDIN>; } ];
 }

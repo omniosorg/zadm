@@ -18,6 +18,7 @@
    "bootorder" : "cd",
    "bootrom" : "BHYVE",
    "brand" : "bhyve",
+   "cloud-init" : "off",
    "device" : [
       {
          "match" : "/dev/zvol/rdsk/__DATASET__/hdd-bhyve99"
