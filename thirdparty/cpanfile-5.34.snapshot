@@ -1,5 +1,19 @@
 # carton snapshot format: version 1.0
 DISTRIBUTIONS
+  Bytes-Random-Secure-0.29
+    pathname: D/DA/DAVIDO/Bytes-Random-Secure-0.29.tar.gz
+    provides:
+      Bytes::Random::Secure 0.29
+    requirements:
+      Carp 0
+      Crypt::Random::Seed 0
+      ExtUtils::MakeMaker 6.56
+      MIME::Base64 0
+      MIME::QuotedPrint 3.03
+      Math::Random::ISAAC 0
+      Scalar::Util 1.21
+      Test::More 0.98
+      perl 5.006000
   Compress-Raw-Lzma-2.101
     pathname: P/PM/PMQS/Compress-Raw-Lzma-2.101.tar.gz
     provides:
@@ -22,6 +36,34 @@ DISTRIBUTIONS
       Module::Build 0.4005
       parent 0
       perl 5.008001
+  Crypt-Random-Seed-0.03
+    pathname: D/DA/DANAJ/Crypt-Random-Seed-0.03.tar.gz
+    provides:
+      Crypt::Random::Seed 0.03
+    requirements:
+      Carp 0
+      Crypt::Random::TESHA2 0
+      Exporter 5.562
+      ExtUtils::MakeMaker 0
+      Fcntl 0
+      Test::More 0.45
+      base 0
+      constant 0
+      perl 5.006002
+  Crypt-Random-TESHA2-0.01
+    pathname: D/DA/DANAJ/Crypt-Random-TESHA2-0.01.tar.gz
+    provides:
+      Crypt::Random::TESHA2 0.01
+      Crypt::Random::TESHA2::Config 0.01
+    requirements:
+      Carp 0
+      Digest::SHA 5.22
+      Exporter 5.562
+      ExtUtils::MakeMaker 0
+      Test::More 0.45
+      Time::HiRes 1.9711
+      base 0
+      perl 5.006002
   Data-Processor-1.0.6
     pathname: M/MB/MBP/Data-Processor-1.0.6.tar.gz
     provides:
@@ -85,6 +127,15 @@ DISTRIBUTIONS
       Mozilla::CA 0
       Net::SSLeay 1.46
       Scalar::Util 0
+  Math-Random-ISAAC-1.004
+    pathname: J/JA/JAWNSY/Math-Random-ISAAC-1.004.tar.gz
+    provides:
+      Math::Random::ISAAC 1.004
+      Math::Random::ISAAC::PP 1.004
+    requirements:
+      ExtUtils::MakeMaker 6.31
+      Test::More 0.62
+      Test::NoWarnings 0.084
   Module-Build-0.4231
     pathname: L/LE/LEONT/Module-Build-0.4231.tar.gz
     provides:
@@ -282,3 +333,12 @@ DISTRIBUTIONS
       Regexp::IPv6 0.03
     requirements:
       ExtUtils::MakeMaker 0
+  Test-NoWarnings-1.06
+    pathname: H/HA/HAARG/Test-NoWarnings-1.06.tar.gz
+    provides:
+      Test::NoWarnings 1.06
+      Test::NoWarnings::Warning 1.06
+    requirements:
+      ExtUtils::MakeMaker 0
+      Test::Builder 0.86
+      perl 5.006
