@@ -1,3 +1,4 @@
+requires 'Bytes::Random::Secure', '== 0.29';
 requires 'Data::Processor', '== 1.0.6';
 requires 'Mojolicious', '== 9.19';
 requires 'IO::Socket::SSL', '== 2.071';

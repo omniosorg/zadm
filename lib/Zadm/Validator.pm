@@ -3,7 +3,10 @@ use Mojo::Base -base, -signatures;
 
 use Mojo::Log;
 use Mojo::Exception;
+use Mojo::File;
 use Mojo::JSON qw(decode_json);
+use Mojo::Util qw(b64_encode);
+use Bytes::Random::Secure qw(random_bytes);
 use File::Basename qw(dirname);
 use Regexp::IPv4 qw($IPv4_re);
 use Regexp::IPv6 qw($IPv6_re);
@@ -366,6 +369,17 @@ sub toArray($self) {
     }
 }
 
+sub toPWHash($self) {
+    return sub($str, @) {
+        return $str if $self->utils->isPWHash($str);
+
+        my $seed = b64_encode(random_bytes(12)); # gives 16 bytes
+        $seed =~ s/\+/./g;
+
+        return crypt ($str, "\$6\$$seed");
+    }
+}
+
 sub vnc($self, $brand) {
     return sub($vnc, @) {
         return undef if $vnc =~ m!(?:^|,)unix[:=]/!;
@@ -391,6 +405,22 @@ sub hostbridge($self) {
     return sub($hb, @) {
         return undef if $hb =~ /^vendor=(?:0x[[:xdigit:]]+|\d+),device=(?:0x[[:xdigit:]]+|\d+)$/i;
         return $self->elemOf(qw(i440fx q35 amd netapp none))->($hb);
+    }
+}
+
+sub cloudinit($self) {
+    return sub($ci, @) {
+        return undef if $ci =~ m!^https?://!;
+        return $self->file('<', 'No such file,')->($ci) if Mojo::File->new($ci)->is_abs;
+        return 'Expected a URL, file path, on or off' if $self->elemOf(qw(on off))->($ci);
+        return undef;
+    }
+}
+
+sub stringorfile($self) {
+    return sub($arg, @) {
+        return $self->file('<', 'No such file,')->($arg) if Mojo::File->new($arg)->is_abs;
+        return $self->regexp(qr/^.*$/, 'Expected a string')->($arg);
     }
 }
 
