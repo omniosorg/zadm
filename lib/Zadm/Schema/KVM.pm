@@ -8,8 +8,11 @@ has schema => sub($self) {
 
     $ec->count and Mojo::Exception->throw(join ("\n", map { $_->stringify } @{$ec->{errors}}));
 
-    # KVM and derived zones do not have 'dns-domain' or 'resolvers' properties; drop them
-    delete $dp->schema->{$_} for qw(dns-domain resolvers);
+    # KVM brand does not support 'dns-domain' or 'resolvers' properties;
+    # but derived brands do
+    if ($self->brand eq 'kvm') {
+        delete $dp->schema->{$_} for qw(dns-domain resolvers);
+    }
 
     return $dp->schema;
 };

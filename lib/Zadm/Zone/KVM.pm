@@ -44,8 +44,12 @@ has template => sub($self) {
     my $name = $self->name;
 
     my $template = $self->SUPER::template;
-    # KVM and derived zones do not have 'dns-domain' or 'resolvers' properties; drop them
-    delete $template->{$_} for qw(dns-domain resolvers);
+
+    # KVM brand does not support 'dns-domain' or 'resolvers' properties;
+    # but derived brands do
+    if ($self->brand eq 'kvm') {
+        delete $template->{$_} for qw(dns-domain resolvers);
+    }
 
     return {
         %$template,
