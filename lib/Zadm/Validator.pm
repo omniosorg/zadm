@@ -371,7 +371,7 @@ sub toArray($self) {
 
 sub toPWHash($self) {
     return sub($str, @) {
-        return $str if $self->utils->isPWHash($str);
+        return $str if $self->utils->isPWHash($str) || Mojo::File->new($str)->is_abs;
 
         my $seed = b64_encode(random_bytes(12)); # gives 16 bytes
         $seed =~ s/\+/./g;
