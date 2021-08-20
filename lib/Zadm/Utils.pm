@@ -13,6 +13,7 @@ use IPC::Open3;
 use File::Temp;
 use Text::ParseWords qw(shellwords);
 use Sun::Solaris::Kstat;
+use Zadm::Privilege qw(:CONSTANTS privSet);
 
 # commands
 my %CMDS = (
@@ -370,6 +371,35 @@ sub genmap($self, $arr) {
 
 sub getMods($self, $namespace) {
     return [ grep { !/base$/ } find_modules $namespace ];
+}
+
+sub snapshot($self, $op, $ds, $snap = '', $args = []) {
+    Mojo::Exception->throw("ERROR: dataset must not be empty.\n") if !$ds;
+
+    return $self->readProc('zfs', [ qw(list -H -t snapshot -d1 -o name -s creation), @$args, $ds ])
+        if $op eq 'list';
+
+    Mojo::Exception->throw("ERROR: snapshot must not be empty.\n") if !$snap;
+
+    privSet({ add => 1, inherit => 1 }, PRIV_SYS_MOUNT);
+    $self->exec('zfs', [ $op, @$args, "$ds\@$snap" ]);
+    privSet({ remove => 1, inherit => 1 }, PRIV_SYS_MOUNT);
+}
+
+sub getMntDs($self, $path = '') {
+    open my $fh, '<', '/etc/mnttab'
+        or Mojo::Exception->throw("ERROR: opening '/etc/mnttab' for reading: $!\n");
+
+    $path =~ s!/+$!!; # remove trailing slashes
+
+    while (<$fh>) {
+        my ($ds, $mnt, $type) = split /\s+/;
+        next if $type ne 'zfs';
+
+        return $ds if $mnt eq $path;
+    }
+
+    return undef;
 }
 
 1;

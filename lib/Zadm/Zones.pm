@@ -28,7 +28,7 @@ my $PKGPREFIX = 'system/zones/brand';
 my $SCHEMA = sub($self) {
     my $sv = Zadm::Validator->new(log => $self->log);
     return {
-    CONSOLE => {
+    CONSOLE  => {
         optional => 1,
         members  => {
             auto_connect    => {
@@ -51,7 +51,7 @@ my $SCHEMA = sub($self) {
             },
         },
     },
-    VNC     => {
+    VNC      => {
         optional => 1,
         members  => {
             novnc_path      => {
@@ -59,6 +59,17 @@ my $SCHEMA = sub($self) {
                 description => 'path to noVNC',
                 example     => '"novnc_path" : "/path/to/novnc"',
                 validator   => $sv->noVNC,
+            },
+        },
+    },
+    SNAPSHOT => {
+        optional => 1,
+        members  => {
+            prefix          => {
+                optional    => 1,
+                description => 'prefix for snapshot names created by zadm',
+                example     => '"prefix" : "zadm__"',
+                validator   => $sv->regexp(qr/^[-\w]*$/, 'expected a string containing alphanumeric, _ or - characters'),
             },
         },
     },

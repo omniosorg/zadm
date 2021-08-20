@@ -31,6 +31,8 @@ has options => sub($self) {
     }
 };
 
+has beaware => 0;
+
 sub install($self, @args) {
     my $img = $self->hasimg ? $self->image->image : {};
     $img->{_file} && -r $img->{_file} || do {
@@ -72,6 +74,8 @@ where 'command' is one of the following:
     console [extra_args] <zone_name>
     log <zone_name>
     fw [-r] [-d] [-t] [-m] [-e ipf|ipf6|ipnat] <zone_name>
+    snapshot [-d] <zone_name> [<snapname>]
+    rollback [-r] <zone_name> <snapname>
     help [-b <brand>]
     doc [-b <brand>] [-a <attribute>]
     man

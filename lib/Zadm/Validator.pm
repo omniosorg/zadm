@@ -285,16 +285,7 @@ sub zonePath($self) {
     return sub($path, @) {
         my $parent = dirname $path;
 
-        open my $fh, '<', '/etc/mnttab'
-            or Mojo::Exception->throw("ERROR: opening '/etc/mnttab' for reading: $!\n");
-
-        while (<$fh>) {
-            my (undef, $mnt, $type) = split /\s+/;
-            next if $type ne 'zfs';
-
-            return undef if $parent eq $mnt;
-        }
-
+        return undef if $self->utils->getMntDs($parent);
         return "could not find parent dataset for '$path'. Make sure that '$parent' is a ZFS dataset";
     }
 }
