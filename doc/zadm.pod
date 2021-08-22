@@ -314,7 +314,7 @@ With no arguments, B<snapshot> displays a list of current snapshots for the
 zone. If called with a snapshot name argument, a new snapshot is taken. For
 bhyve or KVM zones, this snapshot encompasses the boot disk and for other
 zones it includes the datasets that make up the zone root. To delete a snapshot
-use the optional B<-d> flag.
+use the optional B<-d> flag before the zone name.
 
   -d|--destroy                Remove the named snapshot.
 
