@@ -1,10 +1,13 @@
 {
-    "CONSOLE" : {
+    "CONSOLE"  : {
         "auto_connect"    : "off",
         "auto_disconnect" : "on",
         "escape_char"     : "_"
     },
-    "VNC"     : {
+    "VNC"      : {
         "novnc_path"      : "/path/to/novnc"
+    },
+    "SNAPSHOT" : {
+        "prefix"          : "zadm__"
     }
 }

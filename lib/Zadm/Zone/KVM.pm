@@ -105,6 +105,9 @@ has diskattr  => sub($self) {
 # install image can be either for kvm or bhyve
 has ibrand   => sub { qr/kvm|bhyve/ };
 
+has beaware  => 0;
+has rootds   => sub($self) { $self->config->{bootdisk}->{path} };
+
 # private methods
 my $queryMonitor = sub($self, $query, $nowait = 0) {
     my $socket = IO::Socket::UNIX->new(
@@ -331,8 +334,7 @@ sub install($self, @args) {
     };
 
     # cannot zfs recv if snapshots are present
-    my $snapshots = $self->utils->readProc('zfs',
-        [ qw(list -t snapshot -d1 -H -o name), $self->config->{bootdisk}->{path} ]);
+    my $snapshots = $self->utils->snapshot('list', $self->rootds);
     Mojo::Exception->throw("ERROR: destination has snapshots (eg. $snapshots->[0])\n"
         . "must destroy them to overwrite it\n") if @$snapshots;
 
@@ -351,18 +353,18 @@ sub install($self, @args) {
         $check = 'yes';
     }
     else {
-        print "Going to overwrite the boot disk '" . $self->config->{bootdisk}->{path}
+        print "Going to overwrite the boot disk '" . $self->rootds
             . "'\nwith the provided image. Do you want to continue [Y/n]? ";
         chomp ($check = <STDIN>);
     }
 
     if ($check !~ /^no?$/i) {
-        $self->zones->images->seedZvol($img->{_file}, $self->config->{bootdisk}->{path});
+        $self->zones->images->seedZvol($img->{_file}, $self->rootds);
         # TODO: '-x volsize' for zfs recv seems not to work so we must reset the
         # volsize to the original value after receive
         privSet({ add => 1, inherit => 1 }, PRIV_SYS_MOUNT);
         $self->utils->exec('zfs', [ 'set', 'volsize=' . $self->config->{bootdisk}->{size},
-            $self->config->{bootdisk}->{path} ]);
+            $self->rootds ]);
         privSet({ remove => 1, inherit => 1 }, PRIV_SYS_MOUNT);
 
         $self->SUPER::install;
@@ -474,6 +476,8 @@ where 'command' is one of the following:
     vnc [-w] [<[bind_addr:]port>] <zone_name>
     webvnc [<[bind_addr:]port>] <zone_name>
     log <zone_name>
+    snapshot [-d] <zone_name> [<snapname>]
+    rollback [-r] <zone_name> <snapname>
     help [-b <brand>]
     doc [-b <brand>] [-a <attribute>]
     man

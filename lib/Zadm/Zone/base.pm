@@ -338,6 +338,10 @@ has logfile => sub($self) {
     return -r $zlog ? $zlog : $self->config->{zonepath} . '/log/zone.log';
 };
 
+has rootds  => sub($self) { $self->utils->getMntDs($self->config->{zonepath}) };
+has snappf  => sub($self) { $self->gconf->{SNAPSHOT}->{prefix} // 'zadm__' };
+has beaware => 1;
+
 has config  => sub($self) {
     return $self->$getConfig if $self->exists;
 
@@ -636,6 +640,30 @@ sub zStats($self) {
     };
 }
 
+sub snapshot($self, $snapname, $opts) {
+    my $snappf = $self->snappf;
+
+    if (!$snapname) {
+        print "$_\n" for map {
+            /^[^@]+\@$snappf([^@]+)$/
+        } @{$self->utils->snapshot('list', $self->rootds)};
+
+        return 1;
+    }
+
+    my $op = $opts->{destroy} ? 'destroy' : 'snapshot';
+
+    $self->utils->snapshot($op, $self->rootds, $self->snappf . $snapname);
+}
+
+sub rollback($self, $snapname, $opts) {
+    return warn "WARNING: rollback is not supported on BE-aware brands.\n"
+        if $self->beaware;
+
+    $self->utils->snapshot('rollback', $self->rootds, $self->snappf . $snapname,
+        $opts->{r} ? [ qw(-r) ] : []);
+}
+
 sub usage($self) {
     my $mod = $self->mod;
 
@@ -828,6 +856,8 @@ where 'command' is one of the following:
     console [extra_args] <zone_name>
     log <zone_name>
     fw [-r] [-d] [-t] [-m] [-e ipf|ipf6|ipnat] <zone_name>
+    snapshot [-d] <zone_name> [<snapname>]
+    rollback [-r] <zone_name> <snapname>
     help [-b <brand>]
     doc [-b <brand>] [-a <attribute>]
     man

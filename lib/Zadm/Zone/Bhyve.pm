@@ -129,6 +129,8 @@ where 'command' is one of the following:
     webvnc [<[bind_addr:]port>] <zone_name>
     log <zone_name>
     fw [-r] [-d] [-t] [-m] [-e ipf|ipf6|ipnat] <zone_name>
+    snapshot [-d] <zone_name> [<snapname>]
+    rollback [-r] <zone_name> <snapname>
     help [-b <brand>]
     doc [-b <brand>] [-a <attribute>]
     man

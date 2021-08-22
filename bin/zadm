@@ -286,6 +286,32 @@ sub main {
 
             last;
         };
+        /^snapshot$/ && do {
+            my $opts = {};
+            {
+                local $SIG{__WARN__} = sub { };
+                GetOptions($opts, qw(destroy|d)) or pod2usage(1);
+            }
+            my $zName = shift @ARGV or pod2usage(1);
+            pod2usage(1) if @ARGV > 1;
+
+            $zones->zone($zName)->snapshot(shift @ARGV, $opts);
+
+            last;
+        };
+        /^rollback$/ && do {
+            my $opts = {};
+            {
+                local $SIG{__WARN__} = sub { };
+                GetOptions($opts, qw(r)) or pod2usage(1);
+            }
+            my $zName = shift @ARGV or pod2usage(1);
+            pod2usage(1) if @ARGV != 1;
+
+            $zones->zone($zName)->rollback(shift @ARGV, $opts);
+
+            last;
+        };
         /^log$/ && do {
             my $zName = shift @ARGV or pod2usage(1);
 
@@ -393,6 +419,8 @@ where 'command' is one of the following:
     console [extra_args] <zone_name>
     log <zone_name>
     fw [-r] [-d] [-t] [-m] [-e ipf|ipf6|ipnat] <zone_name>
+    snapshot [-d] <zone_name> [<snapname>]
+    rollback [-r] <zone_name> <snapname>
     help [-b <brand>]
     doc [-b <brand>] [-a <attribute>]
     man
@@ -519,6 +547,31 @@ firewall and NAT rules for the zone.
   -e|--edit <ipf|ipf6|ipnat>  Open a zone firewall configuration file in an editor.
   -d|--disable                Disable the zone firewall. It will be re-enabled
                               on zone reboot or with -r|--reload
+
+=head2 B<snapshot>
+
+Manages snapshots for a zone. A snapshot is a point-in-time copy that can
+be easily restored in the future using the B<rollback> command.  This command
+is not available for zones that use boot environments, such as I<lipkg>
+zones; for these zones, use the B<beadm create beName@snapshot> and
+B<beadm rollback beName@snapshot> commands from inside the zone to achieve
+the same result.
+
+With no arguments, B<snapshot> displays a list of current snapshots for the
+zone. If called with a snapshot name argument, a new snapshot is taken. For
+bhyve or KVM zones, this snapshot encompasses the boot disk and for other
+zones it includes the datasets that make up the zone root. To delete a snapshot
+use the optional B<-d> flag before the zone name.
+
+  -d|--destroy                Remove the named snapshot.
+
+=head2 B<rollback>
+
+Rolls back a zone to a previously taken snapshot. See the B<snapshot> command
+for more details.
+
+  -r                          Destroy any snapshots and bookmarks more recent
+                              than the one specified.
 
 =head2 B<doc>
 
