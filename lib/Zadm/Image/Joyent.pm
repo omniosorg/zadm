@@ -4,6 +4,7 @@ use Mojo::Base 'Zadm::Image::base', -signatures;
 use Mojo::JSON qw(decode_json);
 use Mojo::File;
 use Mojo::URL;
+use Zadm::Privilege qw(:CONSTANTS privSet);
 
 has baseurl  => sub { Mojo::URL->new('https://images.joyent.com') };
 has index    => sub($self) { Mojo::URL->new('/images')->base($self->baseurl)->to_abs };
@@ -42,9 +43,19 @@ sub postInstall($self, $brand, $opts = {}) {
     # this into place while keeping within the same filesystem to avoid
     # unecessary copying.
 
+    privSet({ all => 1 });
+    $self->utils->exec('zoneadm', [ '-z', $opts->{zonename}, 'mount' ]);
+    privSet({ reset => 1 });
+
     my $root = Mojo::File->new($opts->{zonepath}, 'root');
     my $newroot = $root->child('root');
-    return if !-d $newroot->path;
+    if (!-d $newroot->path) {
+        privSet({ all => 1 });
+        $self->utils->exec('zoneadm', [ '-z', $opts->{zonename}, 'unmount' ]);
+        privSet({ reset => 1 });
+
+        return;
+    }
 
     $root->list({ dir => 1 })
         ->grep(sub { $_->path ne $newroot->path })
@@ -58,6 +69,10 @@ sub postInstall($self, $brand, $opts = {}) {
     });
     $newroot->remove_tree;
     $root->chmod(0755);
+
+    privSet({ all => 1 });
+    $self->utils->exec('zoneadm', [ '-z', $opts->{zonename}, 'unmount' ]);
+    privSet({ reset => 1 });
 }
 
 sub preSetConfig($self, $brand, $cfg, $opts = {}) {

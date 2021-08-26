@@ -34,8 +34,11 @@ sub install($self, @args) {
     };
     $self->SUPER::install($img->{_instopt} // '-s', $img->{_file});
 
-    $self->image->provider->postInstall($self->brand, { zonepath => $self->config->{zonepath} })
-        if $self->hasimg;
+    $self->image->provider->postInstall($self->brand, {
+        zonename => $self->name,
+        zonepath => $self->config->{zonepath}
+    }) if $self->hasimg;
+
 }
 
 1;
