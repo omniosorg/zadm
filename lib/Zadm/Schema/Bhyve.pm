@@ -197,7 +197,7 @@ $SCHEMA = sub($self) {
                 description => 'PCI device state',
                 default     => 'on',
                 example     => '"state" : "on"',
-                validator   => $self->sv->elemOf(qw(on off), map { "slot$_" } 0 .. 7),
+                validator   => $self->sv->bool(map { "slot$_" } 0 .. 7),
             },
         },
         transformer => $self->sv->toHash('device', 1),
@@ -208,7 +208,7 @@ $SCHEMA = sub($self) {
         description => 'generate ACPI tables for the guest',
         default     => 'on',
         example     => '"acpi" : "on"',
-        validator   => $self->sv->elemOf(qw(on off)),
+        validator   => $self->sv->bool,
         'x-attr'    => 1,
     },
     bootrom     => {
@@ -264,7 +264,7 @@ $SCHEMA = sub($self) {
         description => 'attach VirtIO random number generator (RNG) to the guest',
         default     => 'off',
         example     => '"rng" : "on"',
-        validator   => $self->sv->elemOf(qw(on off)),
+        validator   => $self->sv->bool,
         'x-attr'    => 1,
     },
     sshkey      => {
@@ -278,7 +278,7 @@ $SCHEMA = sub($self) {
         optional    => 1,
         description => 'type of VGA emulation to use',
         example     => '"vga" : "on"',
-        validator   => $self->sv->elemOf(qw(on off io)),
+        validator   => $self->sv->elemOf(qw(on off io)), # change to bool once bhyve supports it
         'x-attr'    => 1,
     },
     xhci        => {
@@ -286,7 +286,7 @@ $SCHEMA = sub($self) {
         description => 'emulated USB tablet interface',
         default     => 'on',
         example     => '"xhci" : "off"',
-        validator   => $self->sv->elemOf(qw(on off)),
+        validator   => $self->sv->bool,
         'x-attr'    => 1,
     },
 

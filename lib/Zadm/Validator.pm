@@ -89,8 +89,8 @@ sub elemOf($self, @elems) {
     }
 }
 
-sub bool($self) {
-    return $self->elemOf(qw(true false));
+sub bool($self, @extraElems) {
+    return $self->elemOf(qw(true false on off yes no 1 0), @extraElems);
 }
 
 sub numRange($self, $min, $max) {
@@ -234,10 +234,10 @@ sub zvol($self) {
             # considering adding an option to Data::Processor to specify the validation order
             return undef if $disk->{blocksize} && $self->blockSize->($disk->{blocksize})
                 || $disk->{size} && $self->regexp(qr/^\d+[bkmgtpe]$/i)->($disk->{size})
-                || $disk->{sparse} && $self->elemOf(qw(true false))->($disk->{sparse});
+                || $disk->{sparse} && $self->bool->($disk->{sparse});
 
             my @cmd = (qw(create -p),
-                ($disk->{sparse} && $disk->{sparse} eq 'true' ? qw(-s) : ()),
+                ($self->utils->boolIsTrue($disk->{sparse}) ? qw(-s) : ()),
                 ($disk->{blocksize} ? ('-o', "volblocksize=$disk->{blocksize}") : ()),
                 '-V', ($disk->{size} // '10G'), $path);
 
@@ -262,7 +262,8 @@ sub zvol($self) {
             $self->log->warn("WARNING: block size cannot be changed for existing disk '$path'")
                 if $disk->{blocksize} && $toBytes->($disk->{blocksize}) != $toBytes->($props->{volblocksize});
             $self->log->warn("WARNING: sparse attribute cannot be changed for existing disk '$path'")
-                if $disk->{sparse} && $disk->{sparse} ne ($props->{refreservation} eq 'none' ? 'true' : 'false');
+                if $props->{refreservation} eq 'none' && !$self->utils->boolIsTrue($disk->{sparse})
+                    || $props->{refreservation} ne 'none' && $self->utils->boolIsTrue($disk->{sparse});
 
             my $diskSize    = $toBytes->($props->{volsize});
             my $newDiskSize = $toBytes->($disk->{size});
@@ -374,7 +375,7 @@ sub toPWHash($self) {
 sub vnc($self, $brand) {
     return sub($vnc, @) {
         return undef if $vnc =~ m!(?:^|,)unix[:=]/!;
-        return $self->elemOf(qw(on off), $brand eq 'bhyve' ? qw(wait) : ())->($vnc);
+        return $self->bool($brand eq 'bhyve' ? qw(wait) : ())->($vnc);
     }
 }
 
@@ -403,7 +404,7 @@ sub cloudinit($self) {
     return sub($ci, @) {
         return undef if $ci =~ m!^https?://!;
         return $self->file('<', 'No such file,')->($ci) if Mojo::File->new($ci)->is_abs;
-        return 'Expected a URL, file path, on or off' if $self->elemOf(qw(on off))->($ci);
+        return 'Expected a URL, file path, on or off' if $self->bool->($ci);
         return undef;
     }
 }

@@ -74,7 +74,7 @@ sub setPreProcess($self, $cfg) {
             };
 
             push @{$cfg->{device}}, { match => "/dev/$cfg->{ppt}->[$i]->{device}" }
-                if $cfg->{ppt}->[$i]->{state} ne 'off';
+                if $self->utils->boolIsTrue($cfg->{ppt}->[$i]->{state});
         }
 
         delete $cfg->{ppt};

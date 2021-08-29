@@ -47,7 +47,7 @@ $SCHEMA = sub($self) {
                 optional    => 1,
                 description => 'sparse zvol',
                 example     => '"sparse" : "true"',
-                validator   => $self->sv->elemOf(qw(true false)),
+                validator   => $self->sv->bool,
             },
             serial      => {
                 optional    => 1,
@@ -82,7 +82,7 @@ $SCHEMA = sub($self) {
         optional    => 1,
         description => 'console',
         example     => '"console" : "socket,/tmp/vm.com1,wait"',
-        validator   => sub { return undef; },
+        validator   => $self->sv->regexp(qr/^.+$/, 'expected a string'),
         'x-attr'    => 1,
     },
     disk        => {
@@ -115,7 +115,7 @@ $SCHEMA = sub($self) {
                 optional    => 1,
                 description => 'sparse zvol',
                 example     => '"sparse" : "true"',
-                validator   => $self->sv->elemOf(qw(true false)),
+                validator   => $self->sv->bool,
             },
             serial      => {
                 optional    => 1,
@@ -141,7 +141,7 @@ $SCHEMA = sub($self) {
         description => 'extra parameters',
         default     => '',
         example     => '"extra" : "<parameters>"',
-        validator   => sub { return undef; },
+        validator   => $self->sv->regexp(qr/^.+$/, 'expected a string'),
         'x-attr'    => 1,
     },
     netif       => {

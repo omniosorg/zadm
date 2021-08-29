@@ -361,6 +361,11 @@ sub isPWHash($self, $str) {
     return $str =~ /^\$(?:1|2a|2y|5|6)(?:\$[^\$]+){2}$/;
 }
 
+# non-boolean values are considered true
+sub boolIsTrue($self, $val) {
+    return $val && !grep { $_ eq $val } qw(false off no);
+}
+
 sub getSTDIN($self) {
     return $self->isaTTY() ? [] : [ split /\r\n|\n|\r/, do { local $/; <STDIN>; } ];
 }

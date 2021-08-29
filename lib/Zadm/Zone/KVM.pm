@@ -30,7 +30,7 @@ my $getIPPort = sub($self, $listen) {
         if !$self->is('running');
 
     Mojo::Exception->throw('ERROR: vnc is not set up for zone ' . $self->name . "\n")
-        if !$self->config->{vnc} || $self->config->{vnc} eq 'off';
+        if !$self->utils->boolIsTrue($self->config->{vnc});
 
     my ($ip, $port) = $listen =~ /^(?:(\*|$IPv4_re|$IPv6_re):)?(\d+)$/;
     Mojo::Exception->throw("ERROR: '$listen' is not valid\n") if !$port;
@@ -155,7 +155,7 @@ my $setDiskAttr = sub($self, $type, $disk = {}) {
     for my $attr (keys %{$self->diskattr->{$type}}) {
         $attrstr .= !$disk->{$attr}                   ? ''
                   # boolean attr handling
-                  : $self->diskattr->{$type}->{$attr} ? ($disk->{$attr} eq 'true' ? ",$attr" : '')
+                  : $self->diskattr->{$type}->{$attr} ? ($self->utils->boolIsTrue($disk->{$attr}) ? ",$attr" : '')
                   # non-boolean attr handling
                   :                                     ",$attr=$disk->{$attr}";
     }
