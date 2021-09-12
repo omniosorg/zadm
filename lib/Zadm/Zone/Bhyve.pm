@@ -1,6 +1,8 @@
 package Zadm::Zone::Bhyve;
 use Mojo::Base 'Zadm::Zone::KVM', -signatures;
 
+use Mojo::Exception;
+
 # reset public interface as the inherited list
 # from KVM will have additional methods
 has public  => sub { [ qw(nmi vnc webvnc fw) ] };
@@ -32,17 +34,37 @@ my $bhyveCtl = sub($self, $cmd) {
 };
 
 sub getPostProcess($self, $cfg) {
-    $cfg->{ppt} = [];
+    $cfg->{$_} = [] for qw(ppt virtfs);
 
-    # handle ppt before the default getPostProcess
-    if ($cfg->{attr} && ref $cfg->{attr} eq ref []) {
-        for (my $i = $#{$cfg->{attr}}; $i >= 0; $i--) {
-            next if $cfg->{attr}->[$i]->{name} !~ /^ppt\d+$/;
+    # handle ppt/virtfs before the default getPostProcess
+    if ($self->utils->isArrRef($cfg->{attr})) {
+        ATTR: for (my $i = $#{$cfg->{attr}}; $i >= 0; $i--) {
+            for ($cfg->{attr}->[$i]->{name}) {
+                /^ppt\d+$/ && do {
+                    unshift @{$cfg->{ppt}}, {
+                        device => $cfg->{attr}->[$i]->{name},
+                        state  => $cfg->{attr}->[$i]->{value},
+                    };
 
-            push @{$cfg->{ppt}}, {
-                device => $cfg->{attr}->[$i]->{name},
-                state  => $cfg->{attr}->[$i]->{value},
-            };
+                    last;
+                };
+                /^virtfs\d+$/ && do {
+                    my ($name, $path, $ro) = split /,/, $cfg->{attr}->[$i]->{value}, 3;
+                    $ro = $ro && $ro eq 'ro' ? 'true' : 'false';
+
+                    unshift @{$cfg->{virtfs}}, {
+                        name => $name // '',
+                        path => $path // '',
+                        ro   => $ro,
+                    };
+
+                    last;
+                };
+
+                # default
+                next ATTR;
+            }
+
             splice @{$cfg->{attr}}, $i, 1;
         }
     }
@@ -50,22 +72,30 @@ sub getPostProcess($self, $cfg) {
     $cfg = $self->SUPER::getPostProcess($cfg);
 
     # remove device for ppt
-    if ($cfg->{ppt} && ref $cfg->{ppt} eq ref [] && $cfg->{device} && ref $cfg->{device} eq ref []) {
+    if ($self->utils->isArrRef($cfg->{ppt}) && $self->utils->isArrRef($cfg->{device})) {
         for (my $i = $#{$cfg->{device}}; $i >= 0; $i--) {
             splice @{$cfg->{device}}, $i, 1
                 if grep { $cfg->{device}->[$i]->{match} eq "/dev/$_->{device}" } @{$cfg->{ppt}};
         }
     }
 
-    # remove ppt/device if empty
-    $cfg->{$_} && ref $cfg->{$_} eq ref [] && !@{$cfg->{$_}} && delete $cfg->{$_} for qw(ppt device);
+    # remove lofs mounts for virtfs
+    if ($self->utils->isArrRef($cfg->{virtfs}) && $self->utils->isArrRef($cfg->{fs})) {
+        for (my $i = $#{$cfg->{fs}}; $i >= 0; $i--) {
+            splice @{$cfg->{fs}}, $i, 1
+                if grep { $cfg->{fs}->[$i]->{dir} eq $_->{path} } @{$cfg->{virtfs}};
+        }
+    }
+
+    # remove ppt/device/virtfs/fs if empty
+    $self->utils->isArrRef($cfg->{$_}) && !@{$cfg->{$_}} && delete $cfg->{$_} for qw(ppt device virtfs fs);
 
     return $cfg;
 }
 
 sub setPreProcess($self, $cfg) {
     # add device for ppt
-    if ($cfg->{ppt} && ref $cfg->{ppt} eq ref []) {
+    if ($self->utils->isArrRef($cfg->{ppt})) {
         for (my $i = 0; $i < @{$cfg->{ppt}}; $i++) {
             push @{$cfg->{attr}}, {
                 name    => $cfg->{ppt}->[$i]->{device},
@@ -78,6 +108,50 @@ sub setPreProcess($self, $cfg) {
         }
 
         delete $cfg->{ppt};
+    }
+
+    # add lofs for virtfs
+    if ($self->utils->isArrRef($cfg->{virtfs})) {
+        for (my $i = 0; $i < @{$cfg->{virtfs}}; $i++) {
+            my $val  = join ',', $cfg->{virtfs}->[$i]->{name}, $cfg->{virtfs}->[$i]->{path};
+            my $isRO = $self->utils->boolIsTrue($cfg->{virtfs}->[$i]->{ro});
+            $val .= ',ro' if $isRO;
+
+            push @{$cfg->{attr}}, {
+                name    => "virtfs$i",
+                type    => 'string',
+                value   => $val,
+            };
+
+            # check whether a delegated dataset for path exists
+            if ($self->utils->isArrRef($cfg->{dataset})) {
+                my $ds = $self->utils->getMntDs($cfg->{virtfs}->[$i]->{path}, 0);
+
+                next if $ds && grep { $_->{name} eq $ds } @{$cfg->{dataset}};
+            }
+
+            # the virtfs path validator checks whether either a dataset with
+            # the correct mountpoint or the path exists (i.e. is mounted in the GZ)
+            # therefore, if we get to this point, any non-existent paths should be
+            # provided by a dataset and the check above has not found one.
+            Mojo::Exception->throw("ERROR: dataset for '$cfg->{virtfs}->[$i]->{path}' is not delegated.\n")
+                if !-d $cfg->{virtfs}->[$i]->{path};
+
+            # check whether a lofs mount for path exists
+            if ($self->utils->isArrRef($cfg->{fs})) {
+                next if grep { $_->{dir} eq $cfg->{virtfs}->[$i]->{path} } @{$cfg->{fs}};
+            }
+
+            # add lofs mount
+            push @{$cfg->{fs}}, {
+                dir     => $cfg->{virtfs}->[$i]->{path},
+                options => [ qw(nodevices), $isRO ? qw(ro) : () ],
+                special => $cfg->{virtfs}->[$i]->{path},
+                type    => 'lofs',
+            };
+        }
+
+        delete $cfg->{virtfs};
     }
 
     return $self->SUPER::setPreProcess($cfg);

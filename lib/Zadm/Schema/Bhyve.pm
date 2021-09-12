@@ -201,7 +201,29 @@ $SCHEMA = sub($self) {
             },
         },
         transformer => $self->sv->toHash('device', 1),
-        'x-attr'    => 1,
+    },
+    virtfs      => {
+        optional    => 1,
+        array       => 1,
+        description => 'Share a filesystem to the guest using Virtio 9p (VirtFS)',
+        members     => {
+            name   => {
+                description => 'VirtFS filesystem name',
+                example     => '"name" : "share0"',
+                validator   => $self->sv->regexp(qr/^.+$/, 'expected a string'),
+            },
+            path   => {
+                description => 'VirtFS filesystem path',
+                example     => '"path" : "/data/share0"',
+                validator   => $self->sv->virtfsPath,
+            },
+            ro     => {
+                optional    => 1,
+                description => 'set share read-only',
+                example     => '"ro" : "true"',
+                validator   => $self->sv->bool,
+            },
+        },
     },
     acpi        => {
         optional    => 1,

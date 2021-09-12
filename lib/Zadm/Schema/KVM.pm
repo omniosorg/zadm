@@ -76,7 +76,6 @@ $SCHEMA = sub($self) {
         example     => '"cdrom" : [ "/tmp/omnios-bloody.iso" ]',
         validator   => $self->sv->file('<', 'cannot open cdrom path'),
         transformer => $self->sv->toArray,
-        'x-attr'    => 1,
     },
     console     => {
         optional    => 1,
@@ -126,7 +125,6 @@ $SCHEMA = sub($self) {
             },
         },
         transformer => $self->sv->toHash('path', 1),
-        'x-attr'    => 1,
     },
     diskif      => {
         optional    => 1,
