@@ -108,13 +108,13 @@ my $getVal = sub($self, $res, $prop, $val) {
 
     return $self->$propIsArray($res, $prop) ? $self->$getArray($val)
          : $self->$propIsHash($res, $prop)  ? $self->$getHash($val)
-         : $val;
+         :                                    $val;
 };
 
 my $setVal = sub($self, $prop) {
-    return ref $prop eq ref [] ? $self->$setArray($prop)
-         : ref $prop eq ref {}  ? $self->$setHash($prop)
-         : $prop;
+    return $self->utils->isArrRef($prop)  ? $self->$setArray($prop)
+         : $self->utils->isHashRef($prop) ? $self->$setHash($prop)
+         :                                  $prop;
 };
 
 my $isRes = sub($self, $prop) {
@@ -164,7 +164,7 @@ my $encodeProp = sub($self, $res, $prop, $val) {
         if ($res ne 'net' || (exists $self->schema->{$res}->{members}->{$prop}
             && !$self->schema->{$res}->{members}->{$prop}->{'x-netprop'}));
 
-    $val = ref $val eq ref [] ? qq{(name=$prop,value="} . join (',', @$val) . '")'
+    $val = $self->utils->isArrRef($val) ? qq{(name=$prop,value="} . join (',', @$val) . '")'
          : qq{(name=$prop,value="$val")};
 
     return (qw(add property), $val, ';');
@@ -432,7 +432,7 @@ sub setPreProcess($self, $cfg) {
             type => 'string',
         );
 
-        $elem{value} = ref $cfg->{$res} eq ref []
+        $elem{value} = $self->utils->isArrRef($cfg->{$res})
                      ? join (',', @{$cfg->{$res}})
                      : $cfg->{$res};
 
@@ -477,7 +477,7 @@ sub setConfig($self, $config) {
         # skip props that cannot be changed once the zone is installed
         next if $installed && exists $self->createpropmap->{$prop};
 
-        if (ref $cfg->{$prop} eq ref []) {
+        if ($self->utils->isArrRef($cfg->{$prop})) {
             $self->log->debug("property '$prop' is a resource array");
 
             $self->addResource($prop, $_) for (@{$cfg->{$prop}});
@@ -707,7 +707,7 @@ sub fw($self) {
         $self->usage if $opts->{edit} !~ /^(?:ipf6?|ipnat)$/;
 
         my $f = Mojo::File->new($self->config->{zonepath}, 'etc', $opts->{edit} . '.conf');
-        my $mtime = -e $f ? $f->stat->mtime : 0;
+        my $mtime = -f $f ? $f->stat->mtime : 0;
 
         local $@;
         eval {
@@ -726,7 +726,7 @@ sub fw($self) {
             $f->spurt(join ("\n", @{$self->utils->getSTDIN}), "\n");
         }
 
-        return if !-e $f || $mtime == $f->stat->mtime;
+        return if !-f $f || $mtime == $f->stat->mtime;
         $opts->{reload} = 1;
     }
 

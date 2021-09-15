@@ -224,7 +224,7 @@ sub zvol($self) {
     return sub($path, $disk) {
         $path =~ s|^/dev/zvol/r?dsk/||;
 
-        if (!-e "/dev/zvol/rdsk/$path") {
+        if (!-d "/dev/zvol/rdsk/$path") {
             # TODO: need to re-validate blocksize, size and sparse here as we don't
             # know in which order they have been validated. i.e. if they have all been
             # validated already so it is ok to use them here
@@ -291,6 +291,14 @@ sub zonePath($self) {
     }
 }
 
+sub virtfsPath($self) {
+    return sub($path, @) {
+        return undef if -d $path || $self->utils->getMntDs($path, 0);
+
+        return "$path does neither exist nor is a delegated/zoned dataset";
+    }
+}
+
 sub blockSize($self) {
     return sub($blksize, @) {
         return $checkBlockSize->($blksize, 'blocksize', '512', '128k');
@@ -349,7 +357,7 @@ sub toHash($self, $attr, $isarray = 0) {
     return sub($value, @) {
         my $elems = $isarray ? $self->toArray->($value) : $value;
 
-        return ref $elems eq ref []
+        return $self->utils->isArrRef($elems)
             ? [ map { $toHash->($attr, $_) } @$elems ]
             : $toHash->($attr, $elems);
     }
@@ -357,7 +365,7 @@ sub toHash($self, $attr, $isarray = 0) {
 
 sub toArray($self) {
     return sub($elem, @) {
-        return ref $elem eq ref [] ? $elem : [ $elem ];
+        return $self->utils->isArrRef($elem) ? $elem : [ $elem ];
     }
 }
 
@@ -386,7 +394,7 @@ sub ppt($self) {
         my $ppts = decode_json join ' ', @{$self->utils->readProc('pptadm', [ qw(list -aj) ])};
 
         return "ppt device '$dev' does not exist"
-            if !$ppts->{devices} || ref $ppts->{devices} ne ref []
+            if !$self->utils->isArrRef($ppts->{devices})
                 || !grep { $_->{dev} eq "/dev/$dev" } @{$ppts->{devices}};
 
         return undef;

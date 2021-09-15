@@ -97,6 +97,17 @@ my $edit = sub($self, $json) {
     return ($file->stat->mtime != $mtime, $json);
 };
 
+my $getDsMntMap = sub($self, $mounted = 1) {
+    if ($mounted) {
+        open my $fh, '<', '/etc/mnttab'
+            or Mojo::Exception->throw("ERROR: opening '/etc/mnttab' for reading: $!\n");
+
+        return { map { /^(\S+)\s+(\S+)\s+zfs/ } (<$fh>) };
+    }
+
+    return { map { split /\s+/, $_, 2 } @{$self->readProc('zfs', [ qw(list -H -o), 'name,mountpoint' ])} };
+};
+
 # public methods
 sub getCmd($self, $cmd) {
     Mojo::Exception->throw("ERROR: command '$cmd' not defined.\n")
@@ -391,20 +402,28 @@ sub snapshot($self, $op, $ds, $snap = '', $args = []) {
     privSet({ remove => 1, inherit => 1 }, PRIV_SYS_MOUNT);
 }
 
-sub getMntDs($self, $path = '') {
-    open my $fh, '<', '/etc/mnttab'
-        or Mojo::Exception->throw("ERROR: opening '/etc/mnttab' for reading: $!\n");
+sub getMntDs($self, $path, $mounted = 1) {
+    my $mnt = $self->$getDsMntMap($mounted);
 
     $path =~ s!/+$!!; # remove trailing slashes
 
-    while (<$fh>) {
-        my ($ds, $mnt, $type) = split /\s+/;
-        next if $type ne 'zfs';
-
-        return $ds if $mnt eq $path;
-    }
+    $mnt->{$_} eq $path && return $_ for keys %$mnt;
 
     return undef;
+}
+
+sub getDsMnt($self, $ds, $mounted = 1) {
+    my $mnt = $self->$getDsMntMap($mounted);
+
+    return $mnt->{$ds};
+}
+
+sub isArrRef($self, $val) {
+    return $val && ref $val eq ref [];
+}
+
+sub isHashRef($self, $val) {
+    return $val && ref $val eq ref {};
 }
 
 1;

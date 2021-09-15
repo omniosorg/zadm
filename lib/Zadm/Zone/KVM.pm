@@ -188,7 +188,7 @@ sub getPostProcess($self, $cfg) {
     my $disk;
     $cfg->{disk} = [];
     # handle disks before the default getPostProcess
-    if ($cfg->{attr} && ref $cfg->{attr} eq ref []) {
+    if ($self->utils->isArrRef($cfg->{attr})) {
         for (my $i = $#{$cfg->{attr}}; $i >= 0; $i--) {
             my ($boot, $index) = $cfg->{attr}->[$i]->{name} =~ /^(boot)?disk(\d+)?$/
                 or next;
@@ -219,7 +219,7 @@ sub getPostProcess($self, $cfg) {
 
     $cfg->{cdrom} = [];
     # handle cdroms before the default getPostProcess
-    if ($cfg->{attr} && ref $cfg->{attr} eq ref []) {
+    if ($self->utils->isArrRef($cfg->{attr})) {
         for (my $i = $#{$cfg->{attr}}; $i >= 0; $i--) {
             my ($index) = $cfg->{attr}->[$i]->{name} =~ /^cdrom(\d+)?$/
                 or next;
@@ -236,7 +236,7 @@ sub getPostProcess($self, $cfg) {
     $cfg = $self->SUPER::getPostProcess($cfg);
 
     # remove cdrom lofs mount from config
-    if ($cfg->{cdrom} && ref $cfg->{cdrom} eq ref [] && $cfg->{fs} && ref $cfg->{fs} eq ref []) {
+    if ($self->utils->isArrRef($cfg->{cdrom}) && $self->utils->isArrRef($cfg->{fs})) {
         for (my $i = $#{$cfg->{fs}}; $i >= 0; $i--) {
             splice @{$cfg->{fs}}, $i, 1
                 # cdroms are indexed and there might be empty slots
@@ -246,27 +246,27 @@ sub getPostProcess($self, $cfg) {
 
     # remove device for bootdisk
     $cfg->{device} = [ grep { $_->{match} !~ m!^(?:$ZVOLRX)?$cfg->{bootdisk}->{path}$! } @{$cfg->{device}} ]
-        if (exists $cfg->{bootdisk} && ref $cfg->{bootdisk} eq ref {} && $cfg->{device} && ref $cfg->{device} eq ref []);
+        if ($self->utils->isHashRef($cfg->{bootdisk}) && $self->utils->isArrRef($cfg->{device}));
 
     # remove device for disk
-    if ($cfg->{disk} && ref $cfg->{disk} eq ref [] && $cfg->{device} && ref $cfg->{device} eq ref []) {
+    if ($self->utils->isArrRef($cfg->{disk}) && $self->utils->isArrRef($cfg->{device})) {
         for (my $i = $#{$cfg->{device}}; $i >= 0; $i--) {
             splice @{$cfg->{device}}, $i, 1
                 # disks are indexed and there might be empty slots
-                if grep { $_ && ref $_ eq ref {} && $cfg->{device}->[$i]->{match} =~ m!^(?:$ZVOLRX)?$_->{path}$! } @{$cfg->{disk}};
+                if grep { $self->utils->isHashRef($_) && $cfg->{device}->[$i]->{match} =~ m!^(?:$ZVOLRX)?$_->{path}$! } @{$cfg->{disk}};
         }
 
     }
 
     # remove fs/device/disk/cdrom if empty
-    $cfg->{$_} && ref $cfg->{$_} eq ref [] && !@{$cfg->{$_}} && delete $cfg->{$_} for qw(fs device disk cdrom);
+    $self->utils->isArrRef($cfg->{$_}) && !@{$cfg->{$_}} && delete $cfg->{$_} for qw(fs device disk cdrom);
 
     return $cfg;
 }
 
 sub setPreProcess($self, $cfg) {
     # add cdrom lofs mount to zone config
-    if ($cfg->{cdrom} && ref $cfg->{cdrom} eq ref []) {
+    if ($self->utils->isArrRef($cfg->{cdrom})) {
         for (my $i = 0; $i < @{$cfg->{cdrom}}; $i++) {
             next if !$cfg->{cdrom}->[$i];
 
@@ -302,9 +302,9 @@ sub setPreProcess($self, $cfg) {
     }
 
     # handle disks
-    if ($cfg->{disk} && ref $cfg->{disk} eq ref []) {
+    if ($self->utils->isArrRef($cfg->{disk})) {
         for (my $i = 0; $i < @{$cfg->{disk}}; $i++) {
-            next if !$cfg->{disk}->[$i] || (ref $cfg->{disk}->[$i] eq ref {} && !%{$cfg->{disk}->[$i]});
+            next if !$cfg->{disk}->[$i] || ($self->utils->isHashRef($cfg->{disk}->[$i]) && !%{$cfg->{disk}->[$i]});
 
             my $disk = $cfg->{disk}->[$i]->{path};
             $disk =~ s!^$ZVOLRX!!;
