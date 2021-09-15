@@ -291,11 +291,13 @@ sub zonePath($self) {
     }
 }
 
-sub virtfsPath($self) {
+sub absPath($self, $exists = 1) {
     return sub($path, @) {
-        return undef if -d $path || $self->utils->getMntDs($path, 0);
+        my $f = Mojo::File->new($path);
 
-        return "$path does neither exist nor is a delegated/zoned dataset";
+        return "$path is not an absolute path" if !$f->is_abs;
+        return "$path does not exist" if $exists && !-e $f;
+        return undef;
     }
 }
 

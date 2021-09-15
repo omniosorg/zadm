@@ -230,16 +230,16 @@ has schema => sub($self) {
         members     => {
             dir     => {
                 description => 'directory of the mounted filesystem',
-                validator   => $self->sv->regexp(qr/^\/[-\w\/\.]+$/, 'dir is not a valid directory'),
+                validator   => $self->sv->absPath(0),
             },
             special => {
                 description => 'path of fs to be mounted',
-                validator   => $self->sv->regexp(qr/^[-\w\/\.]+$/, 'special is not valid'),
+                validator   => $self->sv->absPath,
             },
             raw     => {
                 optional    => 1,
                 description => 'path of raw disk',
-                validator   => $self->sv->regexp(qr/^\/[-\w\/]+$/, 'raw is not valid'),
+                validator   => $self->sv->absPath,
             },
             type    => {
                 description => 'type of fs',
