@@ -215,7 +215,7 @@ $SCHEMA = sub($self) {
             path   => {
                 description => 'VirtFS filesystem path',
                 example     => '"path" : "/data/share0"',
-                validator   => $self->sv->virtfsPath,
+                validator   => $self->sv->absPath(0),
             },
             ro     => {
                 optional    => 1,

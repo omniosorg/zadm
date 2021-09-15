@@ -82,8 +82,10 @@ sub getPostProcess($self, $cfg) {
     # remove lofs mounts for virtfs
     if ($self->utils->isArrRef($cfg->{virtfs}) && $self->utils->isArrRef($cfg->{fs})) {
         for (my $i = $#{$cfg->{fs}}; $i >= 0; $i--) {
-            splice @{$cfg->{fs}}, $i, 1
-                if grep { $cfg->{fs}->[$i]->{dir} eq $_->{path} } @{$cfg->{virtfs}};
+            splice @{$cfg->{fs}}, $i, 1 if grep {
+                $cfg->{fs}->[$i]->{dir} eq $_->{path}
+                && $cfg->{fs}->[$i]->{special} eq $_->{path}
+            } @{$cfg->{virtfs}};
         }
     }
 
@@ -130,17 +132,18 @@ sub setPreProcess($self, $cfg) {
                 next if $ds && grep { $_->{name} eq $ds } @{$cfg->{dataset}};
             }
 
-            # the virtfs path validator checks whether either a dataset with
-            # the correct mountpoint or the path exists (i.e. is mounted in the GZ)
-            # therefore, if we get to this point, any non-existent paths should be
-            # provided by a dataset and the check above has not found one.
-            Mojo::Exception->throw("ERROR: dataset for '$cfg->{virtfs}->[$i]->{path}' is not delegated.\n")
-                if !-d $cfg->{virtfs}->[$i]->{path};
-
             # check whether a lofs mount for path exists
             if ($self->utils->isArrRef($cfg->{fs})) {
                 next if grep { $_->{dir} eq $cfg->{virtfs}->[$i]->{path} } @{$cfg->{fs}};
             }
+
+            # the user neither provided a delegated dataset nor a lofs mount
+            # only add an automatic lofs mount if the path exists
+            Mojo::Exception->throw(<<"HDEND"
+ERROR: neither a delegated dataset nor a lofs mount for '$cfg->{virtfs}->[$i]->{path}'
+have been provided; and the path does not exist.
+HDEND
+            ) if !-d $cfg->{virtfs}->[$i]->{path};
 
             # add lofs mount
             push @{$cfg->{fs}}, {
