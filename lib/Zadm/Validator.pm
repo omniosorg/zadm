@@ -220,9 +220,15 @@ sub vcpus($self) {
     }
 }
 
-sub zvol($self) {
+sub fileOrZvol($self) {
     return sub($path, $disk) {
         $path =~ s|^/dev/zvol/r?dsk/||;
+
+        my $f = Mojo::File->new($path);
+        if ($f->is_abs) {
+            return undef if -f $f;
+            return "file '$f' does not exist, did you mean to configure a zvol?";
+        }
 
         if (!-d "/dev/zvol/rdsk/$path") {
             # TODO: need to re-validate blocksize, size and sparse here as we don't

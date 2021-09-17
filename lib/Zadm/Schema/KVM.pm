@@ -26,7 +26,7 @@ $SCHEMA = sub($self) {
             path        => {
                 description => 'path of zvol',
                 example     => '"path" : "rpool/hdd-bhyve0"',
-                validator   => $self->sv->zvol,
+                validator   => $self->sv->fileOrZvol,
                 transformer => $self->sv->stripDev,
             },
             size        => {
@@ -93,7 +93,7 @@ $SCHEMA = sub($self) {
             path        => {
                 description => 'path of zvol',
                 example     => '"path" : "rpool/hdd-bhyve0"',
-                validator   => $self->sv->zvol,
+                validator   => $self->sv->fileOrZvol,
                 transformer => $self->sv->stripDev,
             },
             size        => {
