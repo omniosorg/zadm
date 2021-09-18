@@ -164,19 +164,22 @@ my $setDiskAttr = sub($self, $type, $disk = {}) {
 };
 
 my $getDiskProps = sub($self, $prop) {
-    my ($zvol, $attrstr) = split /,/, $prop, 2;
+    my ($path, $attrstr) = split /,/, $prop, 2;
 
     my $attr = $self->$getDiskAttr($attrstr);
 
     # TODO: /dev... needs to be removed here already so zvol properties can be queried
     # this is also done in the transformer as well as the validator
-    $zvol =~ s|^/dev/zvol/r?dsk/||;
+    $path =~ s!^$ZVOLRX!!;
 
-    my $props = $self->utils->getZfsProp($zvol, [ qw(volsize volblocksize refreservation) ]);
+    # file backed disk
+    return { path => $path, %$attr } if Mojo::File->new($path)->is_abs;
+
+    my $props = $self->utils->getZfsProp($path, [ qw(volsize volblocksize refreservation) ]);
 
     # TODO: extract defaults from schema
     return {
-        path        => $zvol,
+        path        => $path,
         size        => $props->{volsize} // '10G',
         blocksize   => $props->{volblocksize} // '8K',
         sparse      => ($props->{refreservation} // '') eq 'none' ? 'true' : 'false',
@@ -245,7 +248,7 @@ sub getPostProcess($self, $cfg) {
     }
 
     # remove device for bootdisk
-    $cfg->{device} = [ grep { $_->{match} !~ m!^(?:$ZVOLRX)?$cfg->{bootdisk}->{path}$! } @{$cfg->{device}} ]
+    $cfg->{device} = [ grep { $_->{match} !~ m!^$ZVOLRX?$cfg->{bootdisk}->{path}$! } @{$cfg->{device}} ]
         if ($self->utils->isHashRef($cfg->{bootdisk}) && $self->utils->isArrRef($cfg->{device}));
 
     # remove device for disk
@@ -253,7 +256,7 @@ sub getPostProcess($self, $cfg) {
         for (my $i = $#{$cfg->{device}}; $i >= 0; $i--) {
             splice @{$cfg->{device}}, $i, 1
                 # disks are indexed and there might be empty slots
-                if grep { $self->utils->isHashRef($_) && $cfg->{device}->[$i]->{match} =~ m!^(?:$ZVOLRX)?$_->{path}$! } @{$cfg->{disk}};
+                if grep { $self->utils->isHashRef($_) && $cfg->{device}->[$i]->{match} =~ m!^$ZVOLRX?$_->{path}$! } @{$cfg->{disk}};
         }
 
     }
@@ -288,7 +291,7 @@ sub setPreProcess($self, $cfg) {
         delete $cfg->{cdrom};
     }
 
-    # add device for bootdisk
+    # handle bootdisk
     if ($cfg->{bootdisk}) {
         my $disksize = $cfg->{bootdisk}->{size};
         my $diskattr = $self->$setDiskAttr('bootdisk', $cfg->{bootdisk});
@@ -296,9 +299,11 @@ sub setPreProcess($self, $cfg) {
         $cfg->{bootdisk} = $cfg->{bootdisk}->{path};
         $cfg->{bootdisk} =~ s!^$ZVOLRX!!;
 
-        push @{$cfg->{device}}, { match => "$ZVOLDEV/$cfg->{bootdisk}" };
-        $cfg->{bootdisk} .= $diskattr;
+        # add device if disk is zvol backed
+        push @{$cfg->{device}}, { match => "$ZVOLDEV/$cfg->{bootdisk}" }
+            if !Mojo::File->new($cfg->{bootdisk})->is_abs;
 
+        $cfg->{bootdisk} .= $diskattr;
     }
 
     # handle disks
@@ -315,7 +320,9 @@ sub setPreProcess($self, $cfg) {
                 value   => $disk . $self->$setDiskAttr('disk', $cfg->{disk}->[$i]),
             };
 
-            push @{$cfg->{device}}, { match => "$ZVOLDEV/$disk" };
+            # add device if disk is zvol backed
+            push @{$cfg->{device}}, { match => "$ZVOLDEV/$disk" }
+                if !Mojo::File->new($disk)->is_abs;
         }
 
         delete $cfg->{disk};
