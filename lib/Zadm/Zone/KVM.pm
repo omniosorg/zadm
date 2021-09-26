@@ -32,9 +32,10 @@ my $getIPPort = sub($self, $listen) {
     Mojo::Exception->throw('ERROR: vnc is not set up for zone ' . $self->name . "\n")
         if !$self->utils->boolIsTrue($self->config->{vnc});
 
-    my ($ip, $port) = $listen =~ /^(?:(\*|$IPv4_re|$IPv6_re):)?(\d+)$/;
+    my ($ip, $port) = $listen =~ /^(?:(\*|$IPv4_re|(?:\[?(?:$IPv6_re|::)\]?)):)?(\d+)$/;
     Mojo::Exception->throw("ERROR: '$listen' is not valid\n") if !$port;
     $ip //= '127.0.0.1';
+    $ip = '[::]' if $ip eq '*';
 
     return ($ip, $port);
 };
@@ -406,7 +407,6 @@ sub vnc($self, $listen = '5900') {
         if load_class 'Zadm::VNC::Proxy';
 
     my ($ip, $port) = $self->$getIPPort($listen);
-    $ip =~ s/\*/0.0.0.0/;
 
     Zadm::VNC::Proxy->new(
         log   => $self->log,
