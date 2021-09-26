@@ -129,7 +129,7 @@ sub setPreProcess($self, $cfg) {
             if ($self->utils->isArrRef($cfg->{dataset})) {
                 my $ds = $self->utils->getMntDs($cfg->{virtfs}->[$i]->{path}, 0);
 
-                next if $ds && grep { $_->{name} eq $ds } @{$cfg->{dataset}};
+                next if $ds && grep { $ds =~ m!^\Q$_->{name}\E(?:/|$)! } @{$cfg->{dataset}};
             }
 
             # check whether a lofs mount for path exists
