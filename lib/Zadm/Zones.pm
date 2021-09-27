@@ -11,6 +11,8 @@ use Mojo::Promise;
 use Mojo::IOLoop::Subprocess;
 use Data::Processor;
 use List::Util qw(min);
+use Regexp::IPv4 qw($IPv4_re);
+use Regexp::IPv6 qw($IPv6_re);
 use Term::ANSIColor qw(colored);
 use Zadm::Utils;
 use Zadm::Validator;
@@ -54,6 +56,12 @@ my $SCHEMA = sub($self) {
     VNC      => {
         optional => 1,
         members  => {
+            bind_address    => {
+                optional    => 1,
+                description => 'default address to bind',
+                example     => '"bind_address" : "[::1]"',
+                validator   => $sv->regexp(qr/^(?:\*|$IPv4_re|(?:\[?(?:$IPv6_re|::)\]?))$/, 'not a valid IP address'),
+            },
             novnc_path      => {
                 optional    => 1,
                 description => 'path to noVNC',
