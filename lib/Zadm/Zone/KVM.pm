@@ -34,7 +34,7 @@ my $getIPPort = sub($self, $listen) {
 
     my ($ip, $port) = $listen =~ /^(?:(\*|$IPv4_re|(?:\[?(?:$IPv6_re|::)\]?)):)?(\d+)$/;
     Mojo::Exception->throw("ERROR: '$listen' is not valid\n") if !$port;
-    $ip //= '127.0.0.1';
+    $ip = $self->gconf->{VNC}->{bind_address} || '127.0.0.1' if !$ip;
     $ip = '[::]' if $ip eq '*';
 
     return ($ip, $port);

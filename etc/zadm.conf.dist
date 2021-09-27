@@ -5,6 +5,7 @@
         "escape_char"     : "_"
     },
     "VNC"      : {
+        "bind_address"    : "[::1]",
         "novnc_path"      : "/path/to/novnc"
     },
     "SNAPSHOT" : {
