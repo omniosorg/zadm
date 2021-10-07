@@ -66,7 +66,14 @@ has cache    => sub($self) {
 };
 has images   => sub($self) { $self->$fetchImages };
 has editing  => 0;
-has ua       => sub { Mojo::UserAgent->new->max_redirects(8) };
+has ua       => sub {
+    my $ua = Mojo::UserAgent->new;
+
+    $ua->max_redirects(8);
+    $ua->transactor->name('zadm (OmniOS)');
+
+    return $ua;
+};
 has uaprog   => sub($self) {
     my $ua = $self->ua->new;
 
