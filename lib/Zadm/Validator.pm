@@ -230,7 +230,7 @@ sub fileOrZvol($self) {
             return "file '$f' does not exist, did you mean to configure a zvol?";
         }
 
-        if (!-d "/dev/zvol/rdsk/$path") {
+        if (!-e "/dev/zvol/rdsk/$path") {
             # TODO: need to re-validate blocksize, size and sparse here as we don't
             # know in which order they have been validated. i.e. if they have all been
             # validated already so it is ok to use them here
