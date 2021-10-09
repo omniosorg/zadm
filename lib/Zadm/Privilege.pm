@@ -53,7 +53,9 @@ sub privSet {
 
     priv_addset($pset, $_) for @privs;
 
-    my @sets = $opts->{inherit} ? (PRIV_EFFECTIVE, PRIV_INHERITABLE) : (PRIV_EFFECTIVE);
+    my @sets = $opts->{inherit} || $opts->{reset} ? (PRIV_EFFECTIVE, PRIV_INHERITABLE)
+             :                                      (PRIV_EFFECTIVE);
+
     if ($opts->{remove}) {
         $log->debug(q{Releasing effective privilege '}
             . priv_set_to_str($pset, ',', PRIV_STR_LIT) . q{'.});
