@@ -4,7 +4,9 @@ use Mojo::Base -base, -signatures;
 use Mojo::File;
 use Mojo::Log;
 use Mojo::Home;
+use Mojo::IOLoop::Subprocess;
 use Mojo::Loader qw(load_class);
+use Mojo::Promise;
 use Mojo::Util qw(class_to_path);
 use Data::Processor;
 use Pod::Text;
@@ -644,16 +646,40 @@ sub snapshot($self, $snapname, $opts) {
     my $snappf = $self->snappf;
 
     if (!$snapname) {
-        print "$_\n" for map {
-            /^[^@]+\@$snappf([^@]+)$/
-        } @{$self->utils->snapshot('list', $self->rootds)};
+        my @snaps = grep { /^[^@]+\@\Q$snappf\E/ } @{$self->utils->snapshot('list', $self->rootds)};
+
+        return say 'no zadm snapshots for ' . $self->name if !@snaps;
+
+        my $format = "%-18s%6s   %s\n";
+        my @props  = qw(used creation);
+        my @header = (qw(NAME), map { uc } @props);
+
+        printf $format, @header;
+
+        Mojo::Promise->map(
+            { concurrency => $self->utils->ncpus },
+            sub($snap) {
+                Mojo::IOLoop::Subprocess->new->run_p(sub {
+                    $self->utils->getZfsProp($snap, \@props)
+                });
+            }, @snaps
+        )->then(sub(@stats) {
+            for my $i (0 .. $#snaps) {
+                my ($name) = $snaps[$i] =~ /^[^@]+\@\Q$snappf\E([^@]+)$/;
+                printf $format, $name, map { $stats[$i]->[0]->{$_} } @props;
+            }
+        })->wait;
 
         return 1;
     }
 
-    my $op = $opts->{destroy} ? 'destroy' : 'snapshot';
+    if ($opts->{destroy}) {
+        $self->utils->snapshot('destroy', $self->rootds, $self->snappf . $snapname);
+        return say "snapshot $snapname destroyed for " . $self->name;
+    }
 
-    $self->utils->snapshot($op, $self->rootds, $self->snappf . $snapname);
+    $self->utils->snapshot('snapshot', $self->rootds, $self->snappf . $snapname);
+    say "snapshot $snapname created for " . $self->name;
 }
 
 sub rollback($self, $snapname, $opts) {

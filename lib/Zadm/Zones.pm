@@ -266,17 +266,15 @@ sub dump($self) {
         },
         @zones
     )->then(sub(@stats) {
-        $zStats = { map { $zones[$_] => $stats[$_]->[0] } (0 .. $#zones) }
+        for my $i (0 .. $#zones) {
+            printf $format, $zones[$i],
+                # TODO: printf string length breaks with coloured strings
+                $statecol->($list->{$zones[$i]}->{state})
+                    . (' ' x (11 - length (substr ($list->{$zones[$i]}->{state}, 0, 10)))),
+                $list->{$zones[$i]}->{brand},
+                map { $stats[$i]->[0]->{$_} } @zStats,
+        }
     })->wait;
-
-    for my $zone (@zones) {
-        printf $format, $zone,
-            # TODO: printf string length breaks with coloured strings
-            $statecol->($list->{$zone}->{state})
-                . (' ' x (11 - length (substr ($list->{$zone}->{state}, 0, 10)))),
-            $list->{$zone}->{brand},
-            map { $zStats->{$zone}->{$_} } @zStats,
-    }
 }
 
 sub memstat($self) {
