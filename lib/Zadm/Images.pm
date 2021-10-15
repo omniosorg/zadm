@@ -75,7 +75,10 @@ has ua       => sub {
     return $ua;
 };
 has uaprog   => sub($self) {
-    my $ua = $self->ua->new;
+    my $ua = Mojo::UserAgent->new;
+
+    $ua->max_redirects(8);
+    $ua->transactor->name('zadm (OmniOS)');
 
     $ua->on(start => sub($ua, $tx) {
         my $start = my $last = time;
