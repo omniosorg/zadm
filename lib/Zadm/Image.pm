@@ -32,19 +32,16 @@ has metadata => sub($self) {
 
     if ($uuid =~ /^http/) {
         $self->attr(image => sub {
-            my $tmpimgdir = File::Temp->newdir(DIR => $self->images->cache);
-            my $fileName  = Mojo::File->new($self->uuid)->basename;
-            my $file      = Mojo::File->new($tmpimgdir, $fileName);
+            my $file = Mojo::File->new(File::Temp->new(DIR => $self->images->cache, OPEN => 0));
 
             $self->images->curl([{ path => $file, url => $self->uuid }]);
             # TODO: add a check whether we got a tarball or zfs stream
             # and not e.g. a html document
 
-            # adding a reference to the tmpdir object. once it gets out of scope
-            # i.e. after zone install the temporary directory will be removed
+            # once the reference to $file gets out of scope
+            # i.e. after zone install the temporary file will be removed
             return {
-                __tmpdir__ => $tmpimgdir,
-                _file      => $file,
+                _file => $file,
             };
         });
 
