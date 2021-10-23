@@ -262,14 +262,18 @@ sub fileOrZvol($self) {
         else {
             my $props = $self->utils->getZfsProp($path, [ qw(volsize volblocksize refreservation) ]);
 
-            # TODO: this is done in the transformer for size, still we don't know about the execution order
-            $disk->{size} = $self->toInt->($disk->{size});
-
             $self->log->warn("WARNING: block size cannot be changed for existing disk '$path'")
                 if $disk->{blocksize} && $toBytes->($disk->{blocksize}) != $toBytes->($props->{volblocksize});
             $self->log->warn("WARNING: sparse attribute cannot be changed for existing disk '$path'")
                 if $props->{refreservation} eq 'none' && !$self->utils->boolIsTrue($disk->{sparse})
                     || $props->{refreservation} ne 'none' && $self->utils->boolIsTrue($disk->{sparse});
+
+            # if size is not set we'll keep the current zvol size
+            return undef if !$disk->{size};
+
+            # TODO: this is done in the transformer for size; since we don't know about the execution order
+            # we run the transformation here, too
+            $disk->{size} = $self->toInt->($disk->{size});
 
             my $diskSize    = $toBytes->($props->{volsize});
             my $newDiskSize = $toBytes->($disk->{size});
