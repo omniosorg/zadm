@@ -280,7 +280,9 @@ sub fileOrZvol($self) {
             elsif ($newDiskSize > $diskSize) {
                 $self->log->debug("enlarging disk '$path' to $disk->{size}");
 
+                privSet({ add => 1, inherit => 1 }, PRIV_SYS_MOUNT);
                 $self->utils->exec('zfs', [ 'set', "volsize=$disk->{size}", $path ]);
+                privSet({ remove => 1, inherit => 1 }, PRIV_SYS_MOUNT);
             }
         }
 
