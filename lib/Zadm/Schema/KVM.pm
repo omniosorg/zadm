@@ -31,7 +31,6 @@ $SCHEMA = sub($self) {
             },
             size        => {
                 optional    => 1,
-                default     => '10G',
                 description => 'zvol disk size. according to zfs syntax',
                 example     => '"size" : "10G"',
                 validator   => $self->sv->regexp(qr/^\d+[bkmgtpe]$/i),
@@ -98,7 +97,6 @@ $SCHEMA = sub($self) {
             },
             size        => {
                 optional    => 1,
-                default     => '10G',
                 description => 'zvol disk size. according to zfs syntax',
                 example     => '"size" : "10G"',
                 validator   => $self->sv->regexp(qr/^\d+[bkmgtpe]$/i),
