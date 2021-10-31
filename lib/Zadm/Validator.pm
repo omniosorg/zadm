@@ -231,13 +231,11 @@ sub fileOrZvol($self) {
         }
 
         if (!-e "/dev/zvol/rdsk/$path") {
-            # TODO: need to re-validate blocksize, size and sparse here as we don't
-            # know in which order they have been validated. i.e. if they have all been
-            # validated already so it is ok to use them here
-            # for now just returning undef (i.e. successful validation) as the properties
+            # TODO: need to re-validate blocksize, size and sparse here
+            # although we could specify the validation order we cannot check whether
+            # the validators succeeded or failed
+            # returning undef (i.e. successful validation) as the properties
             # validator will return a specific error message already, but don't create a volume
-            #
-            # considering adding an option to Data::Processor to specify the validation order
             return undef if $disk->{blocksize} && $self->blockSize->($disk->{blocksize})
                 || $disk->{size} && $self->regexp(qr/^\d+[bkmgtpe]$/i)->($disk->{size})
                 || $disk->{sparse} && $self->bool->($disk->{sparse});
@@ -270,10 +268,6 @@ sub fileOrZvol($self) {
 
             # if size is not set we'll keep the current zvol size
             return undef if !$disk->{size};
-
-            # TODO: this is done in the transformer for size; since we don't know about the execution order
-            # we run the transformation here, too
-            $disk->{size} = $self->toInt->($disk->{size});
 
             my $diskSize    = $toBytes->($props->{volsize});
             my $newDiskSize = $toBytes->($disk->{size});
