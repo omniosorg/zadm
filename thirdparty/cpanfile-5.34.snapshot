@@ -64,10 +64,10 @@ DISTRIBUTIONS
       Time::HiRes 1.9711
       base 0
       perl 5.006002
-  Data-Processor-1.0.6
-    pathname: M/MB/MBP/Data-Processor-1.0.6.tar.gz
+  Data-Processor-1.0.7
+    pathname: M/MB/MBP/Data-Processor-1.0.7.tar.gz
     provides:
-      Data::Processor 1.000006
+      Data::Processor 1.000007
       Data::Processor::Error::Collection undef
       Data::Processor::Error::Instance undef
       Data::Processor::Generator undef
@@ -332,6 +332,23 @@ DISTRIBUTIONS
       Regexp::IPv6 0.03
     requirements:
       ExtUtils::MakeMaker 0
+  TOML-Tiny-0.15
+    pathname: J/JE/JEFFOBER/TOML-Tiny-0.15.tar.gz
+    provides:
+      TOML::Tiny 0.15
+      TOML::Tiny::Grammar 0.15
+      TOML::Tiny::Parser 0.15
+      TOML::Tiny::Tokenizer 0.15
+      TOML::Tiny::Util 0.15
+      TOML::Tiny::Writer 0.15
+    requirements:
+      Carp 0
+      Data::Dumper 0
+      Encode 0
+      Exporter 0
+      ExtUtils::MakeMaker 0
+      Math::BigInt 1.999718
+      perl 5.018
   Test-NoWarnings-1.06
     pathname: H/HA/HAARG/Test-NoWarnings-1.06.tar.gz
     provides:
@@ -341,3 +358,12 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 0
       Test::Builder 0.86
       perl 5.006
+  YAML-LibYAML-0.83
+    pathname: T/TI/TINITA/YAML-LibYAML-0.83.tar.gz
+    provides:
+      YAML::LibYAML 0.83
+      YAML::XS 0.83
+      YAML::XS::LibYAML undef
+    requirements:
+      ExtUtils::MakeMaker 0
+      perl 5.008001

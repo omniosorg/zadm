@@ -62,8 +62,8 @@ has options => sub {
 
 # private methods
 my $gconfIs = sub($self, $sect, $elem, $val) {
-    return $self->gconf->{$sect}->{$elem}
-        && $self->gconf->{$sect}->{$elem} eq $val;
+    return $self->utils->gconf->{$sect}->{$elem}
+        && $self->utils->gconf->{$sect}->{$elem} eq $val;
 };
 my $resIsArray = sub($self, $res) {
     return exists $self->schema->{$res} && $self->schema->{$res}->{array};
@@ -327,8 +327,6 @@ has opts    => sub { {} };
 has mod     => sub($self) { ref $self };
 has smod    => sub($self) { my $mod = $self->mod; $mod =~ s/Zone/Schema/; $mod };
 has exists  => sub($self) { $self->zones->exists($self->name) };
-has gconf   => sub { {} };
-
 has hasimg  => sub($self) { return $self->opts->{image} };
 has image   => sub($self) {
     Mojo::Exception->throw("ERROR: image option has not been provided\n") if !$self->hasimg;
@@ -341,7 +339,7 @@ has logfile => sub($self) {
 };
 
 has rootds  => sub($self) { $self->utils->getMntDs($self->config->{zonepath}) };
-has snappf  => sub($self) { $self->gconf->{SNAPSHOT}->{prefix} // 'zadm__' };
+has snappf  => sub($self) { $self->utils->gconf->{SNAPSHOT}->{prefix} // 'zadm__' };
 has beaware => 1;
 
 has config  => sub($self) {
@@ -580,8 +578,8 @@ sub console($self, $cOpts = []) {
 
     push @$cOpts, qw(-d) if $self->$gconfIs(qw(CONSOLE auto_disconnect on))
         && !grep { $_ eq '-d' } @$cOpts;
-    push @$cOpts, '-e', $self->gconf->{CONSOLE}->{escape_char}
-        if $self->gconf->{CONSOLE}->{escape_char} && !grep { /^-e.?$/ } @$cOpts;
+    push @$cOpts, '-e', $self->utils->gconf->{CONSOLE}->{escape_char}
+        if $self->utils->gconf->{CONSOLE}->{escape_char} && !grep { /^-e.?$/ } @$cOpts;
 
     privSet({ all => 1 });
     $self->utils->exec('zlogin', [ '-C', @$cOpts, $name ],
