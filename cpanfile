@@ -6,3 +6,5 @@ requires 'IO::Uncompress::UnXz', '== 2.101';
 requires 'IO::Uncompress::UnZstd', '== 2.101';
 requires 'Regexp::IPv4', '== 0.003';
 requires 'Regexp::IPv6', '== 0.03';
+requires 'TOML::Tiny', '== 0.15';
+requires 'YAML::XS', '== 0.83';

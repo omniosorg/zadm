@@ -1,19 +1,97 @@
 package Zadm::Utils;
 use Mojo::Base -base, -signatures;
 
-use POSIX qw(isatty);
-use Mojo::Exception;
+use Data::Processor;
+use File::Temp;
+use IPC::Open3;
 use JSON::PP; # for pretty encoding and 'relaxed' decoding
 use Mojo::Log;
+use Mojo::Exception;
 use Mojo::File;
-use Mojo::Loader qw(find_modules);
+use Mojo::Home;
 use Mojo::IOLoop::Subprocess;
+use Mojo::JSON qw(decode_json);
+use Mojo::Loader qw(find_modules);
 use Mojo::Promise;
-use IPC::Open3;
-use File::Temp;
-use Text::ParseWords qw(shellwords);
+use POSIX qw(isatty);
+use Regexp::IPv4 qw($IPv4_re);
+use Regexp::IPv6 qw($IPv6_re);
 use Sun::Solaris::Kstat;
+use Text::ParseWords qw(shellwords);
+use TOML::Tiny qw(from_toml to_toml);
+use YAML::XS;
 use Zadm::Privilege qw(:CONSTANTS privSet);
+use Zadm::Validator;
+
+# constants
+my $CONFFILE = Mojo::Home->new->detect(__PACKAGE__)->rel_file('etc/zadm.conf')->to_string; # CONFFILE
+
+my $SCHEMA = sub($self) {
+    my $sv = Zadm::Validator->new(log => $self->log);
+    return {
+    CONFIG  => {
+        optional => 1,
+        members  => {
+            format          => {
+                optional    => 1,
+                description => 'config format',
+                example     => '"format" : "toml"',
+                validator   => $sv->elemOf(qw(json toml yaml)),
+            },
+        },
+    },
+    CONSOLE  => {
+        optional => 1,
+        members  => {
+            auto_connect    => {
+                optional    => 1,
+                description => 'automatically connect to the console when booting a zone',
+                example     => '"auto_connect" : "on"',
+                validator   => $sv->elemOf(qw(on off)),
+            },
+            auto_disconnect => {
+                optional    => 1,
+                description => 'automatically disconnect from the console when a zone is shutdown',
+                example     => '"auto_disconnect" : "on"',
+                validator   => $sv->elemOf(qw(on off)),
+            },
+            escape_char     => {
+                optional    => 1,
+                description => 'console escape character',
+                example     => '"escape_char" : "_"',
+                validator   => $sv->regexp(qr/^.$/, 'expected a single character'),
+            },
+        },
+    },
+    SNAPSHOT => {
+        optional => 1,
+        members  => {
+            prefix          => {
+                optional    => 1,
+                description => 'prefix for snapshot names created by zadm',
+                example     => '"prefix" : "zadm__"',
+                validator   => $sv->regexp(qr/^[-\w]*$/, 'expected a string containing alphanumeric, _ or - characters'),
+            },
+        },
+    },
+    VNC      => {
+        optional => 1,
+        members  => {
+            bind_address    => {
+                optional    => 1,
+                description => 'default address to bind',
+                example     => '"bind_address" : "[::1]"',
+                validator   => $sv->regexp(qr/^(?:\*|$IPv4_re|(?:\[?(?:$IPv6_re|::)\]?))$/, 'not a valid IP address'),
+            },
+            novnc_path      => {
+                optional    => 1,
+                description => 'path to noVNC',
+                example     => '"novnc_path" : "/path/to/novnc"',
+                validator   => $sv->noVNC,
+            },
+        },
+    },
+}};
 
 # commands
 my %CMDS = (
@@ -50,6 +128,18 @@ my $ZPATH = ($ENV{__ZADM_ALTROOT} // '') . '/etc/zones';
 
 # attributes
 has log      => sub { Mojo::Log->new(level => 'debug') };
+has gconf    => sub($self) {
+    my $cfgFile = Mojo::File->new($CONFFILE);
+    return {} if !-r $cfgFile;
+
+    $self->log->debug("Global config found at '$cfgFile'. Validating...");
+
+    my $cfg = decode_json do { $cfgFile->slurp };
+    my $dp  = Data::Processor->new($self->$SCHEMA);
+    my $ec  = $dp->validate($cfg);
+    $ec->count and Mojo::Exception->throw(join ("\n", map { $_->stringify } @{$ec->{errors}}) . "\n");
+    return $cfg;
+};
 has kstat    => sub { Sun::Solaris::Kstat->new };
 has ncpus    => sub($self) { $self->readProc('getconf', [ qw(NPROCESSORS_ONLN) ])->[0] // 1 };
 has shares   => sub($self) {
@@ -72,10 +162,11 @@ has swap     => sub($self) {
 };
 
 # private methods
-my $edit = sub($self, $json) {
-    my $fh   = File::Temp->new(SUFFIX => '.json', OPEN => 0);
+my $edit = sub($self, $config) {
+    my $suf  = $self->gconf->{CONFIG}->{format} || 'json';
+    my $fh   = File::Temp->new(SUFFIX => ".$suf", OPEN => 0);
     my $file = Mojo::File->new($fh->filename);
-    $file->spurt($json);
+    $file->spurt($config);
 
     my $mtime = $file->stat->mtime;
 
@@ -89,12 +180,12 @@ my $edit = sub($self, $json) {
         # a return value of -1 indicats the editor could not be executed
         Mojo::Exception->throw("$@\n") if $? == -1;
 
-        return (0, $json);
+        return (0, $config);
     }
 
-    $json = $file->slurp;
+    $config = $file->slurp;
 
-    return ($file->stat->mtime != $mtime, $json);
+    return ($file->stat->mtime != $mtime, $config);
 };
 
 my $getDsMntMap = sub($self, $mounted = 1) {
@@ -107,6 +198,20 @@ my $getDsMntMap = sub($self, $mounted = 1) {
 
     return { map { split /\s+/, $_, 2 } @{$self->readProc('zfs', [ qw(list -H -o), 'name,mountpoint' ])} };
 };
+
+# constructor
+sub new($class, @args) {
+    my $self = $class->SUPER::new(@args);
+
+    # call gconf on instantiation for two reasons:
+    # - fail immediately if the global config is incorrect and not
+    #   when the config is accessed first
+    # - the gconf attribute will be evaluated before we possibly
+    #   fork and therefore would read/validate the config several times
+    $self->gconf;
+
+    return $self;
+}
 
 # public methods
 sub getCmd($self, $cmd) {
@@ -146,8 +251,20 @@ sub exec($self, $cmd, $args = [], $err = "executing '$cmd'", $fork = 0, $ret = 0
     }
 }
 
-sub encodeJSON($self, $data) {
-    return JSON::PP->new->pretty->canonical(1)->encode($data);
+sub encodeConf($self, $data) {
+    for ($self->gconf->{CONFIG}->{format} || 'json') {
+        /^json$/ && return JSON::PP->new->pretty->canonical(1)->encode($data);
+        /^toml$/ && return to_toml($data) . "\n";
+        /^yaml$/ && return YAML::XS::Dump($data);
+    }
+}
+
+sub decodeConf($self, $config) {
+    for ($self->gconf->{CONFIG}->{format} || 'json') {
+        /^json$/ && return JSON::PP->new->relaxed(1)->decode($config);
+        /^toml$/ && return from_toml($config);
+        /^yaml$/ && return YAML::XS::Load($config);
+    }
 }
 
 sub edit($self, $zone, $prop = {}) {
@@ -163,15 +280,15 @@ sub edit($self, $zone, $prop = {}) {
         $backcfg = $xml->slurp
     }
 
-    my $istty = $self->isaTTY || $ENV{__ZADMTEST};
-    my $json  = $self->encodeJSON($zone->config) if !%$prop && $istty;
+    my $istty  = $self->isaTTY || $ENV{__ZADMTEST};
+    my $config = $self->encodeConf($zone->config) if !%$prop && $istty;
 
     my $cfgValid = 0;
 
     while (!$cfgValid) {
-        (my $mod, $json) = %$prop ? (1, '')
-                         : $istty ? $self->$edit($json)
-                         :          (1, join ("\n", @{$self->getSTDIN}));
+        (my $mod, $config) = %$prop ? (1, '')
+                           : $istty ? $self->$edit($config)
+                           :          (1, join ("\n", @{$self->getSTDIN}));
 
         if (!$mod) {
             if ($zone->exists) {
@@ -197,14 +314,14 @@ sub edit($self, $zone, $prop = {}) {
         $self->log->debug("validating JSON");
         my $cfg = eval {
             local $SIG{__DIE__};
-            %$prop ? { %{$zone->config}, %$prop } : JSON::PP->new->relaxed(1)->decode($json);
+            %$prop ? { %{$zone->config}, %$prop } : $self->decodeConf($config);
         };
         if ($@) {
             my ($pre, $off, $post) = $@ =~ /^(.+at)\s+character\s+offset\s+(\d+)\s+(.+\))\s+at\s+/;
 
             if (defined $pre && defined $off && defined $post) {
                 # cut the JSON string at the offset where decoding failed
-                my $jsonerr = substr $json, 0, $off;
+                my $jsonerr = substr $config, 0, $off;
                 # count newlines
                 my $nl = $jsonerr =~ s/(?:\r\n|\n|\r)//sg;
                 $@ = "$pre line " . ($nl + 1) . " $post\n";
@@ -347,7 +464,7 @@ sub loadTemplate($self, $file, $name = '') {
     $template =~ s/__ZONENAME__/$name/g if $name;
 
     # TODO: add proper error handling
-    return JSON::PP->new->relaxed(1)->decode($template);
+    return $self->decodeConf($template);
 }
 
 sub getOverLink($self) {

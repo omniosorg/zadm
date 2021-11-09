@@ -1,14 +1,17 @@
 {
+    "CONFIG"  : {
+        "format"          : "json"
+    },
     "CONSOLE"  : {
         "auto_connect"    : "off",
         "auto_disconnect" : "on",
         "escape_char"     : "_"
     },
+    "SNAPSHOT" : {
+        "prefix"          : "zadm__"
+    },
     "VNC"      : {
         "bind_address"    : "[::1]",
         "novnc_path"      : "/path/to/novnc"
-    },
-    "SNAPSHOT" : {
-        "prefix"          : "zadm__"
     }
 }

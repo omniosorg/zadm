@@ -45,7 +45,7 @@ install-exec-hook:
 	cd "$(DESTDIR)$(exec_prefix)" && $(PERL) -i -p -e 's{.*# LIBDIR}{use lib qw($(libdir)); # LIBDIR}' $(BIN)
 	cd "$(DESTDIR)$(exec_prefix)" && $(PERL) -i -p -e 's{^#!.*perl.*}{#!$(PERL)};' $(BIN)
 	cd "$(DESTDIR)$(libdir)/Zadm" && $(PERL) -i -p -e 's{^my .*# DATADIR}{my \$$DATADIR = "$(localstatedir)"; # DATADIR};' Zones.pm
-	cd "$(DESTDIR)$(libdir)/Zadm" && $(PERL) -i -p -e 's{^my .*# CONFFILE}{my \$$CONFFILE = "$(sysconfdir)/$(SCRIPT_NAME).conf"; # CONFFILE};' Zones.pm
+	cd "$(DESTDIR)$(libdir)/Zadm" && $(PERL) -i -p -e 's{^my .*# CONFFILE}{my \$$CONFFILE = "$(sysconfdir)/$(SCRIPT_NAME).conf"; # CONFFILE};' Utils.pm
 
 test:
 	$(PERL) "-MExtUtils::Command::MM" "-e" "test_harness(0, 'lib','thirdparty/lib/perl5')" $(PERLTESTS)

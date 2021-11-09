@@ -34,7 +34,7 @@ my $getIPPort = sub($self, $listen) {
 
     my ($ip, $port) = $listen =~ /^(?:(\*|$IPv4_re|(?:\[?(?:$IPv6_re|::)\]?)):)?(\d+)$/;
     Mojo::Exception->throw("ERROR: '$listen' is not valid\n") if !$port;
-    $ip = $self->gconf->{VNC}->{bind_address} || '127.0.0.1' if !$ip;
+    $ip = $self->utils->gconf->{VNC}->{bind_address} || '127.0.0.1' if !$ip;
     $ip = '[::]' if $ip eq '*';
 
     return ($ip, $port);
@@ -431,7 +431,7 @@ sub webvnc($self, $listen = '8000') {
     Zadm::VNC::NoVNC->new(
         log   => $self->log,
         sock  => $self->vncsocket,
-        novnc => $self->gconf->{VNC}->{novnc_path},
+        novnc => $self->utils->gconf->{VNC}->{novnc_path},
         port  => $port,
     )->start(qw(daemon -m production -l), "http://$ip:$port");
 }

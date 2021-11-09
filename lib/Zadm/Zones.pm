@@ -5,83 +5,21 @@ use Mojo::File;
 use Mojo::Home;
 use Mojo::Log;
 use Mojo::Exception;
-use Mojo::JSON qw(decode_json);
 use Mojo::Loader qw(load_class);
 use Mojo::Promise;
 use Mojo::IOLoop::Subprocess;
-use Data::Processor;
 use List::Util qw(min);
-use Regexp::IPv4 qw($IPv4_re);
-use Regexp::IPv6 qw($IPv6_re);
 use Term::ANSIColor qw(colored);
 use Zadm::Utils;
-use Zadm::Validator;
 use Zadm::Zone;
 
 # constants
 my @ZONEATTR = qw(zoneid zonename state zonepath uuid brand ip-type debugid);
 
-my $CONFFILE = Mojo::Home->new->detect(__PACKAGE__)->rel_file('etc/zadm.conf')->to_string; # CONFFILE
 my $DATADIR  = Mojo::Home->new->detect(__PACKAGE__)->rel_file('var')->to_string; # DATADIR
 
 my $MODPREFIX = 'Zadm::Zone';
 my $PKGPREFIX = 'system/zones/brand';
-
-my $SCHEMA = sub($self) {
-    my $sv = Zadm::Validator->new(log => $self->log);
-    return {
-    CONSOLE  => {
-        optional => 1,
-        members  => {
-            auto_connect    => {
-                optional    => 1,
-                description => 'automatically connect to the console when booting a zone',
-                example     => '"auto_connect" : "on"',
-                validator   => $sv->elemOf(qw(on off)),
-            },
-            auto_disconnect => {
-                optional    => 1,
-                description => 'automatically disconnect from the console when a zone is shutdown',
-                example     => '"auto_disconnect" : "on"',
-                validator   => $sv->elemOf(qw(on off)),
-            },
-            escape_char     => {
-                optional    => 1,
-                description => 'console escape character',
-                example     => '"escape_char" : "_"',
-                validator   => $sv->regexp(qr/^.$/, 'expected a single character'),
-            },
-        },
-    },
-    VNC      => {
-        optional => 1,
-        members  => {
-            bind_address    => {
-                optional    => 1,
-                description => 'default address to bind',
-                example     => '"bind_address" : "[::1]"',
-                validator   => $sv->regexp(qr/^(?:\*|$IPv4_re|(?:\[?(?:$IPv6_re|::)\]?))$/, 'not a valid IP address'),
-            },
-            novnc_path      => {
-                optional    => 1,
-                description => 'path to noVNC',
-                example     => '"novnc_path" : "/path/to/novnc"',
-                validator   => $sv->noVNC,
-            },
-        },
-    },
-    SNAPSHOT => {
-        optional => 1,
-        members  => {
-            prefix          => {
-                optional    => 1,
-                description => 'prefix for snapshot names created by zadm',
-                example     => '"prefix" : "zadm__"',
-                validator   => $sv->regexp(qr/^[-\w]*$/, 'expected a string containing alphanumeric, _ or - characters'),
-            },
-        },
-    },
-}};
 
 # private static methods
 my $statecol = sub($state) {
@@ -134,18 +72,6 @@ has images  => sub($self) {
     return Zadm::Images->new(log => $self->log, datadir => $self->datadir)
 };
 has datadir => $DATADIR;
-has gconf   => sub($self) {
-    my $cfgFile = Mojo::File->new($CONFFILE);
-    return {} if !-r $cfgFile;
-
-    $self->log->debug("Global config found at '$cfgFile'. Validating...");
-
-    my $cfg = decode_json do { $cfgFile->slurp };
-    my $dp  = Data::Processor->new($self->$SCHEMA);
-    my $ec  = $dp->validate($cfg);
-    $ec->count and Mojo::Exception->throw(join ("\n", map { $_->stringify } @{$ec->{errors}}) . "\n");
-    return $cfg;
-};
 has brands  => sub {
     return [
         map {
@@ -186,20 +112,6 @@ has zonemap => sub {
     my $i = 0;
     return { map { $_ => $i++ } @ZONEATTR };
 };
-
-# constructor
-sub new($class, @args) {
-    my $self = $class->SUPER::new(@args);
-
-    # call gconf on instantiation for two reasons:
-    # - fail immediately if the global config is incorrect and not
-    #   when the config is accessed first
-    # - the gconf attribute will be evaluated before we possibly
-    #   fork and therefore would read/validate the config several times
-    $self->gconf;
-
-    return $self;
-}
 
 # public methods
 sub exists($self, $zName = '') {
@@ -327,7 +239,6 @@ sub zone($self, $zName, %opts) {
         zones => $self,
         log   => $self->log,
         utils => $self->utils,
-        gconf => $self->gconf,
         name  => $zName,
         %opts,
     );
