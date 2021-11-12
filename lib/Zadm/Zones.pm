@@ -66,8 +66,7 @@ has images  => sub($self) {
     # However, Zadm::Images is only used for a few operations.
     # To avoid having the penalty of loading it even when it is
     # not used we dynamically load it on demand
-    Mojo::Exception->throw("ERROR: failed to load 'Zadm::Images'.\n")
-        if load_class 'Zadm::Images';
+    $self->utils->loadMod('Zadm::Images');
 
     return Zadm::Images->new(log => $self->log, datadir => $self->datadir)
 };

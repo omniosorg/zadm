@@ -196,7 +196,7 @@ sub main {
                 } split /,/, $props
             } if $props;
 
-            print $zones->utils->encodeConf($config);
+            print $zones->utils->encconf->($config);
 
             last;
         };
