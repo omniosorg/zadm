@@ -3,7 +3,6 @@ use Mojo::Base 'Zadm::Zone::base', -signatures;
 
 use Mojo::Exception;
 use Mojo::File;
-use Mojo::Loader qw(load_class);
 use IO::Socket::UNIX qw(SOCK_STREAM);
 use IO::Select;
 use Regexp::IPv4 qw($IPv4_re);
@@ -403,8 +402,7 @@ sub vnc($self, $listen = '5900') {
     # Zadm::VNC::Proxy is expensive to load and only used for VNC proxying.
     # To avoid having the penalty of loading it even when it is
     # not used we dynamically load it on demand
-    Mojo::Exception->throw("ERROR: failed to load 'Zadm::VNC::Proxy'.\n")
-        if load_class 'Zadm::VNC::Proxy';
+    $self->utils->loadMod('Zadm::VNC::Proxy');
 
     my ($ip, $port) = $self->$getIPPort($listen);
 
@@ -423,8 +421,7 @@ sub webvnc($self, $listen = '8000') {
     # Zadm::VNC::NoVNC is expensive to load and only used for web VNC support.
     # To avoid having the penalty of loading it even when it is
     # not used we dynamically load it on demand
-    Mojo::Exception->throw("ERROR: failed to load 'Zadm::VNC::NoVNC'.\n")
-        if load_class 'Zadm::VNC::NoVNC';
+    $self->utils->loadMod('Zadm::VNC::NoVNC');
 
     my ($ip, $port) = $self->$getIPPort($listen);
 

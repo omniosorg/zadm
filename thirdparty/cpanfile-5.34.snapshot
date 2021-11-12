@@ -36,6 +36,22 @@ DISTRIBUTIONS
       Module::Build 0.4005
       parent 0
       perl 5.008001
+  Cpanel-JSON-XS-4.27
+    pathname: R/RU/RURBAN/Cpanel-JSON-XS-4.27.tar.gz
+    provides:
+      Cpanel::JSON::XS 4.27
+      Cpanel::JSON::XS::Type undef
+    requirements:
+      Carp 0
+      Config 0
+      Encode 1.9801
+      Exporter 0
+      ExtUtils::MakeMaker 0
+      Pod::Text 2.08
+      XSLoader 0
+      overload 0
+      strict 0
+      warnings 0
   Crypt-Random-Seed-0.03
     pathname: D/DA/DANAJ/Crypt-Random-Seed-0.03.tar.gz
     provides:
@@ -274,7 +290,6 @@ DISTRIBUTIONS
       Mojolicious::Lite undef
       Mojolicious::Plugin undef
       Mojolicious::Plugin::Config undef
-      Mojolicious::Plugin::Config::Sandbox undef
       Mojolicious::Plugin::DefaultHelpers undef
       Mojolicious::Plugin::EPLRenderer undef
       Mojolicious::Plugin::EPRenderer undef

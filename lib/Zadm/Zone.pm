@@ -2,7 +2,6 @@ package Zadm::Zone;
 use Mojo::Base -base, -signatures;
 
 use Mojo::Exception;
-use Mojo::Loader qw(load_class);
 use Mojo::Log;
 use Zadm::Zones;
 
@@ -36,8 +35,7 @@ my $loadModule = sub($self, @args) {
     my $module = $self->zones->modmap->{$brand};
 
     return do {
-        load_class($module)
-            and Mojo::Exception->throw("ERROR: cannot load class '$module'.");
+        $self->zones->utils->loadMod($module);
         $module->new(@args, brand => $brand);
     };
 };

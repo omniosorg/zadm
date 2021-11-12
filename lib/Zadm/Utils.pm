@@ -1,25 +1,22 @@
 package Zadm::Utils;
 use Mojo::Base -base, -signatures;
 
+use Cpanel::JSON::XS;
 use Data::Processor;
 use File::Temp;
 use IPC::Open3;
-use JSON::PP; # for pretty encoding and 'relaxed' decoding
 use Mojo::Log;
 use Mojo::Exception;
 use Mojo::File;
 use Mojo::Home;
 use Mojo::IOLoop::Subprocess;
-use Mojo::JSON qw(decode_json);
-use Mojo::Loader qw(find_modules);
+use Mojo::Loader qw(find_modules load_class);
 use Mojo::Promise;
 use POSIX qw(isatty);
 use Regexp::IPv4 qw($IPv4_re);
 use Regexp::IPv6 qw($IPv6_re);
 use Sun::Solaris::Kstat;
 use Text::ParseWords qw(shellwords);
-use TOML::Tiny qw(from_toml to_toml);
-use YAML::XS;
 use Zadm::Privilege qw(:CONSTANTS privSet);
 use Zadm::Validator;
 
@@ -134,7 +131,7 @@ has gconf    => sub($self) {
 
     $self->log->debug("Global config found at '$cfgFile'. Validating...");
 
-    my $cfg = decode_json do { $cfgFile->slurp };
+    my $cfg = $self->json->decode($cfgFile->slurp);
     my $dp  = Data::Processor->new($self->$SCHEMA);
     my $ec  = $dp->validate($cfg);
     $ec->count and Mojo::Exception->throw(join ("\n", map { $_->stringify } @{$ec->{errors}}) . "\n");
@@ -159,6 +156,36 @@ has swap     => sub($self) {
         or return 0;
 
     return ($used + $avail) * 1024;
+};
+has json     => sub($self) { Cpanel::JSON::XS->new->pretty->canonical(1) };
+has conffmt  => sub($self) {
+    $ENV{__ZADMTEST} || !$self->gconf->{CONFIG}->{format} ? 'json' : $self->gconf->{CONFIG}->{format}
+};
+has encconf  => sub($self) {
+    for ($self->conffmt) {
+        /^json$/ && return sub($data) { $self->json->encode($data) };
+        /^toml$/ && do {
+            $self->loadMod('TOML::Tiny');
+            return sub($data) { TOML::Tiny::to_toml($data) . "\n" };
+        };
+        /^yaml$/ && do {
+            $self->loadMod('YAML::XS');
+            return sub($data) { YAML::XS::Dump($data) };
+        };
+    }
+};
+has decconf  => sub($self) {
+    for ($self->conffmt) {
+        /^json$/ && return sub($data) { $self->json->decode($data) };
+        /^toml$/ && do {
+            $self->loadMod('TOML::Tiny');
+            return sub($data) { TOML::Tiny::from_toml($data) };
+        };
+        /^yaml$/ && do {
+            $self->loadMod('YAML::XS');
+            return sub($data) { YAML::XS::Load($data) };
+        };
+    }
 };
 
 # private methods
@@ -251,22 +278,6 @@ sub exec($self, $cmd, $args = [], $err = "executing '$cmd'", $fork = 0, $ret = 0
     }
 }
 
-sub encodeConf($self, $data) {
-    for ($self->gconf->{CONFIG}->{format} || 'json') {
-        /^json$/ && return JSON::PP->new->pretty->canonical(1)->encode($data);
-        /^toml$/ && return to_toml($data) . "\n";
-        /^yaml$/ && return YAML::XS::Dump($data);
-    }
-}
-
-sub decodeConf($self, $config) {
-    for ($self->gconf->{CONFIG}->{format} || 'json') {
-        /^json$/ && return JSON::PP->new->relaxed(1)->decode($config);
-        /^toml$/ && return from_toml($config);
-        /^yaml$/ && return YAML::XS::Load($config);
-    }
-}
-
 sub edit($self, $zone, $prop = {}) {
     # backup current zone XML so it can be restored when things get hairy
     my $backcfg;
@@ -281,7 +292,7 @@ sub edit($self, $zone, $prop = {}) {
     }
 
     my $istty  = $self->isaTTY || $ENV{__ZADMTEST};
-    my $config = $self->encodeConf($zone->config) if !%$prop && $istty;
+    my $config = $self->encconf->($zone->config) if !%$prop && $istty;
 
     my $cfgValid = 0;
 
@@ -314,7 +325,7 @@ sub edit($self, $zone, $prop = {}) {
         $self->log->debug("validating JSON");
         my $cfg = eval {
             local $SIG{__DIE__};
-            %$prop ? { %{$zone->config}, %$prop } : $self->decodeConf($config);
+            %$prop ? { %{$zone->config}, %$prop } : $self->decconf->($config);
         };
         if ($@) {
             my ($pre, $off, $post) = $@ =~ /^(.+at)\s+character\s+offset\s+(\d+)\s+(.+\))\s+at\s+/;
@@ -464,7 +475,7 @@ sub loadTemplate($self, $file, $name = '') {
     $template =~ s/__ZONENAME__/$name/g if $name;
 
     # TODO: add proper error handling
-    return $self->decodeConf($template);
+    return $self->decconf->($template);
 }
 
 sub getOverLink($self) {
@@ -504,6 +515,11 @@ sub genmap($self, $arr) {
 
 sub getMods($self, $namespace) {
     return [ grep { !/base$/ } find_modules $namespace ];
+}
+
+sub loadMod($self, $mod) {
+    Mojo::Exception->throw("ERROR: failed to load '$mod'.\n")
+        if load_class $mod;
 }
 
 sub snapshot($self, $op, $ds, $snap = '', $args = []) {
