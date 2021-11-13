@@ -16,11 +16,12 @@ my @MON_INFO = qw(block blockstats chardev cpus kvm network pci registers qtree 
 my $RCV_TMO  = 3;
 
 # private static methods
-my $cpuCount = sub($vcpus) {
+my $cpuCount = sub($vcpus, $raw = 0) {
     return $vcpus if !$vcpus || $vcpus =~ /^\d+$/;
 
     my %cpu = map { /^([^=]+)=([^=]+)$/ } split /,/, $vcpus;
 
+    return \%cpu if $raw;
     return join '/', map { $cpu{$_} // '1' } qw(sockets cores threads);
 };
 
@@ -438,11 +439,11 @@ sub monitor($self) {
         'cannot access monitor socket ' . $self->monsocket);
 }
 
-sub zStats($self) {
+sub zStats($self, $raw = 0) {
     return {
         %{$self->SUPER::zStats},
         RAM  => $self->config->{ram} // '-',
-        CPUS => $cpuCount->($self->config->{vcpus})
+        CPUS => $cpuCount->($self->config->{vcpus}, $raw)
             // $self->config->{'capped-cpu'}->{ncpus} // '1',
     };
 }
@@ -464,7 +465,7 @@ where 'command' is one of the following:
     install [-i <image_uuid|image_path_or_uri>] [-f] <zone_name>
     uninstall <zone_name>
     show [zone_name [property[,property]...]]
-    list
+    list [-H] [-F <format>] [zone_name]
     memstat
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     pull <image_uuid>

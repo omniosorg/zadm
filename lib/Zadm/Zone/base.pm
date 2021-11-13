@@ -632,7 +632,7 @@ sub remove($self) {
     };
 }
 
-sub zStats($self) {
+sub zStats($self, $raw = 0) {
     return {
         RAM    => $self->config->{'capped-memory'}->{physical} // '-',
         CPUS   => $self->config->{'capped-cpu'}->{ncpus} // '-',
@@ -866,7 +866,7 @@ where 'command' is one of the following:
     install [-f] <zone_name>
     uninstall <zone_name>
     show [zone_name [property[,property]...]]
-    list
+    list [-H] [-F <format>] [zone_name]
     memstat
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     pull <image_uuid>
