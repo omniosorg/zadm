@@ -15,7 +15,7 @@ where 'command' is one of the following:
     install [-f] <zone_name>
     uninstall <zone_name>
     show [zone_name [property[,property]...]]
-    list
+    list [-H] [-F <format>] [zone_name]
     memstat
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     pull <image_uuid>
@@ -50,7 +50,7 @@ where 'command' is one of the following:
     install [-i <image_uuid|image_path_or_uri>] [-f] <zone_name>
     uninstall <zone_name>
     show [zone_name [property[,property]...]]
-    list
+    list [-H] [-F <format>] [zone_name]
     memstat
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     pull <image_uuid>
@@ -87,7 +87,7 @@ where 'command' is one of the following:
     install -i <image_uuid|image_path_or_uri> [-f] <zone_name>
     uninstall <zone_name>
     show [zone_name [property[,property]...]]
-    list
+    list [-H] [-F <format>] [zone_name]
     memstat
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     pull <image_uuid>
@@ -121,7 +121,7 @@ where 'command' is one of the following:
     install [-i <image_uuid|image_path_or_uri>] [-f] <zone_name>
     uninstall <zone_name>
     show [zone_name [property[,property]...]]
-    list
+    list [-H] [-F <format>] [zone_name]
     memstat
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     pull <image_uuid>
@@ -157,7 +157,7 @@ where 'command' is one of the following:
     install -i <image_uuid|image_path_or_uri> [-f] <zone_name>
     uninstall <zone_name>
     show [zone_name [property[,property]...]]
-    list
+    list [-H] [-F <format>] [zone_name]
     memstat
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     pull <image_uuid>
@@ -231,7 +231,12 @@ if a B<zone_name> is provided.
 
 =head2 B<list>
 
-prints the status of all existing zones.
+prints the status of all existing zones or B<zone_name> if given.
+Available options are:
+
+  -F <format>                 Specify an alternative output format.
+                              The value of format can be json, yaml or toml.
+  -H                          Omit the headers from the listing.
 
 =head2 B<memstat>
 

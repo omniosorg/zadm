@@ -23,6 +23,8 @@ use Zadm::Validator;
 # constants
 my $CONFFILE = Mojo::Home->new->detect(__PACKAGE__)->rel_file('etc/zadm.conf')->to_string; # CONFFILE
 
+my @FORMATS = qw(json toml yaml);
+
 my $SCHEMA = sub($self) {
     my $sv = Zadm::Validator->new(log => $self->log);
     return {
@@ -33,7 +35,7 @@ my $SCHEMA = sub($self) {
                 optional    => 1,
                 description => 'config format',
                 example     => '"format" : "toml"',
-                validator   => $sv->elemOf(qw(json toml yaml)),
+                validator   => $sv->elemOf(@FORMATS),
             },
         },
     },
@@ -162,17 +164,7 @@ has conffmt  => sub($self) {
     $ENV{__ZADMTEST} || !$self->gconf->{CONFIG}->{format} ? 'json' : $self->gconf->{CONFIG}->{format}
 };
 has encconf  => sub($self) {
-    for ($self->conffmt) {
-        /^json$/ && return sub($data) { $self->json->encode($data) };
-        /^toml$/ && do {
-            $self->loadMod('TOML::Tiny');
-            return sub($data) { TOML::Tiny::to_toml($data) . "\n" };
-        };
-        /^yaml$/ && do {
-            $self->loadMod('YAML::XS');
-            return sub($data) { YAML::XS::Dump($data) };
-        };
-    }
+    return sub($data) { $self->encodeData($self->conffmt, $data) };
 };
 has decconf  => sub($self) {
     for ($self->conffmt) {
@@ -241,6 +233,25 @@ sub new($class, @args) {
 }
 
 # public methods
+sub encodeData($self, $fmt = 'json', $data = {}) {
+    if (!grep { $_ eq $fmt } @FORMATS) {
+        warn "WARNING: unknown format '$fmt', defaulting to json.\n";
+        $fmt = 'json';
+    }
+
+    for ($fmt) {
+        /^json$/ && return $self->json->encode($data);
+        /^toml$/ && do {
+            $self->loadMod('TOML::Tiny');
+            return TOML::Tiny::to_toml($data) . "\n";
+        };
+        /^yaml$/ && do {
+            $self->loadMod('YAML::XS');
+            return YAML::XS::Dump($data);
+        };
+    }
+}
+
 sub getCmd($self, $cmd) {
     Mojo::Exception->throw("ERROR: command '$cmd' not defined.\n")
         if !exists $CMDS{$cmd};

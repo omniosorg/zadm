@@ -141,12 +141,12 @@ sub refresh($self) {
     $self->list($self->$list);
 }
 
-sub dump($self) {
+sub dump($self, $zName = undef, $opts = {}) {
     my $format = "%-18s%-11s%-9s%6s%8s%8s\n";
     my @header = qw(NAME STATUS BRAND);
     my @zStats = qw(RAM CPUS SHARES);
 
-    printf $format, @header, @zStats;
+    printf $format, @header, @zStats if !$opts->{H} && !$opts->{F};
 
     my $list  = {
         %{$self->list},
@@ -159,16 +159,22 @@ sub dump($self) {
     # we want the running ones on top and it happens we can just reverse-sort the state
     # also using the original list which does not contain global so we can put it on top
     my @zones = (
+        grep { !$zName || $zName eq $_ }
         'global',
         sort { $list->{$b}->{state} cmp $list->{$a}->{state} || $a cmp $b } keys %{$self->list}
     );
+
+    if (!@zones) {
+        print $self->utils->encodeData($opts->{F}, {}) if $opts->{F};
+        return;
+    }
 
     my $zStats;
     Mojo::Promise->map(
         { concurrency => $self->utils->ncpus },
         sub($name) {
             Mojo::IOLoop::Subprocess->new->run_p(sub {
-                $name ne 'global' ? $self->zone($name)->zStats : {
+                $name ne 'global' ? $self->zone($name)->zStats($opts->{F}) : {
                     RAM    => $self->utils->getPhysMem,
                     CPUS   => $self->utils->ncpus,
                     SHARES => $self->utils->shares,
@@ -177,13 +183,27 @@ sub dump($self) {
         },
         @zones
     )->then(sub(@stats) {
-        for my $i (0 .. $#zones) {
-            printf $format, $zones[$i],
-                # TODO: printf string length breaks with coloured strings
-                $statecol->($list->{$zones[$i]}->{state})
-                    . (' ' x (11 - length (substr ($list->{$zones[$i]}->{state}, 0, 10)))),
-                $list->{$zones[$i]}->{brand},
-                map { $stats[$i]->[0]->{$_} } @zStats,
+        if ($opts->{F}) {
+            my %data = map {
+                my $i = $_;
+                $zones[$i] => {
+                    state => $list->{$zones[$i]}->{state},
+                    brand => $list->{$zones[$i]}->{brand},
+                    map { lc ($_) => $stats[$i]->[0]->{$_} } @zStats,
+                }
+            } (0 .. $#zones);
+
+            print $self->utils->encodeData($opts->{F}, \%data);
+        }
+        else {
+            for my $i (0 .. $#zones) {
+                printf $format, $zones[$i],
+                    # TODO: printf string length breaks with coloured strings
+                    $statecol->($list->{$zones[$i]}->{state})
+                        . (' ' x (11 - length (substr ($list->{$zones[$i]}->{state}, 0, 10)))),
+                    $list->{$zones[$i]}->{brand},
+                    map { $stats[$i]->[0]->{$_} } @zStats,
+            }
         }
     })->wait;
 }
