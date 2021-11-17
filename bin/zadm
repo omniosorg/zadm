@@ -204,7 +204,7 @@ sub main {
             my $opts = {};
             {
                 local $SIG{__WARN__} = sub { };
-                GetOptions($opts, qw(H F=s)) or pod2usage(1);
+                GetOptions($opts, qw(H F=s brand|b=s state|s=s)) or pod2usage(1);
             }
             $zones->dump(pop @ARGV, $opts);
 
@@ -409,7 +409,7 @@ where 'command' is one of the following:
     install [-f] <zone_name>
     uninstall <zone_name>
     show [zone_name [property[,property]...]]
-    list [-H] [-F <format>] [zone_name]
+    list [-H] [-F <format>] [-b <brand>] [-s <state>] [zone_name]
     memstat
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     pull <image_uuid>
@@ -489,6 +489,8 @@ Available options are:
   -F <format>                 Specify an alternative output format.
                               The value of format can be json, yaml or toml.
   -H                          Omit the headers from the listing.
+  -b|--brand <brand>          List status of zones of brand B<brand>.
+  -s|--state <state>          List status of zones in state B<state>.
 
 =head2 B<memstat>
 

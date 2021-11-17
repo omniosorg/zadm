@@ -159,6 +159,8 @@ sub dump($self, $zName = undef, $opts = {}) {
     # we want the running ones on top and it happens we can just reverse-sort the state
     # also using the original list which does not contain global so we can put it on top
     my @zones = (
+        grep { !$opts->{brand} || $opts->{brand} eq $list->{$_}->{brand} }
+        grep { !$opts->{state} || $opts->{state} eq $list->{$_}->{state} }
         grep { !$zName || $zName eq $_ }
         'global',
         sort { $list->{$b}->{state} cmp $list->{$a}->{state} || $a cmp $b } keys %{$self->list}

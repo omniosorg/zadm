@@ -59,7 +59,7 @@ where 'command' is one of the following:
     install -i <image_uuid|image_path_or_uri> [-f] <zone_name>
     uninstall <zone_name>
     show [zone_name [property[,property]...]]
-    list [-H] [-F <format>] [zone_name]
+    list [-H] [-F <format>] [-b <brand>] [-s <state>] [zone_name]
     memstat
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     pull <image_uuid>

@@ -217,13 +217,13 @@ my $getConfig = sub($self) {
         $line =~ s/^(\s*)\[/$1/ && $line =~ s/\]\s*//;
         # drop lines ending with 'not specified'
         next if $line =~ /not\s+specified$/;
-        my ($isres, $prop, $val) = $line =~ /^(\s+)?([^:]+):(?:\s+(.*))?$/;
+        my ($isres, $prop, $val) = $line =~ /^(\s*)([^:\s]+):(?:\s+(.*))?$/;
         # at least property must be valid
-        $prop or do {
+        length ($prop) or do {
             $self->log->warn("could not decode '$line'");
             next;
         };
-        if ($isres) {
+        if (length $isres) {
             # decode property
             ($prop, $val) = $self->$decodeProp($res, $prop, $val);
             # check if property exists in schema
@@ -866,7 +866,7 @@ where 'command' is one of the following:
     install [-f] <zone_name>
     uninstall <zone_name>
     show [zone_name [property[,property]...]]
-    list [-H] [-F <format>] [zone_name]
+    list [-H] [-F <format>] [-b <brand>] [-s <state>] [zone_name]
     memstat
     list-images [--refresh] [--verbose] [-b <brand>] [-p <provider>]
     pull <image_uuid>
