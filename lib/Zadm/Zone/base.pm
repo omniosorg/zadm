@@ -217,13 +217,13 @@ my $getConfig = sub($self) {
         $line =~ s/^(\s*)\[/$1/ && $line =~ s/\]\s*//;
         # drop lines ending with 'not specified'
         next if $line =~ /not\s+specified$/;
-        my ($isres, $prop, $val) = $line =~ /^(\s+)?([^:]+):(?:\s+(.*))?$/;
+        my ($isres, $prop, $val) = $line =~ /^(\s*)([^:\s]+):(?:\s+(.*))?$/;
         # at least property must be valid
-        $prop or do {
+        length ($prop) or do {
             $self->log->warn("could not decode '$line'");
             next;
         };
-        if ($isres) {
+        if (length $isres) {
             # decode property
             ($prop, $val) = $self->$decodeProp($res, $prop, $val);
             # check if property exists in schema

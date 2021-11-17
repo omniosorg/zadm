@@ -171,7 +171,10 @@ has decconf  => sub($self) {
         /^json$/ && return sub($data) { $self->json->decode($data) };
         /^toml$/ && do {
             $self->loadMod('TOML::Tiny');
-            return sub($data) { TOML::Tiny::from_toml($data) };
+            # from_toml in list context will return an error string as second return value
+            # make sure to call it in scalar context that it just returns the data
+            # but dies on error
+            return sub($data) { scalar TOML::Tiny::from_toml($data) };
         };
         /^yaml$/ && do {
             $self->loadMod('YAML::XS');
