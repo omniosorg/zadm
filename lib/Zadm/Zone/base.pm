@@ -596,7 +596,9 @@ sub create($self, $props) {
 }
 
 sub delete($self) {
-    $self->utils->exec('zonecfg', [ '-z', $self->name, 'delete' ]);
+    $self->utils->exec('zonecfg', [
+        '-z', $self->name, 'delete', $self->opts->{force} ? qw(-F) : ()
+    ]);
 }
 
 sub install($self, @args) {
@@ -614,7 +616,7 @@ sub uninstall($self) {
         $self->log->warn('Cannot uninstall a zone inside an alternate root.');
         return 1;
     };
-    $self->$zoneCmd('uninstall');
+    $self->$zoneCmd('uninstall', $self->opts->{force} ? [ qw(-F) ] : []);
 }
 
 sub remove($self) {
@@ -860,11 +862,11 @@ B<zadm> I<command> [I<options...>]
 where 'command' is one of the following:
 
     create -b <brand> [-t <template_path>] <zone_name>
-    delete <zone_name>
+    delete [-f] <zone_name>
     edit <zone_name>
     set <zone_name> <property=value>
     install [-f] <zone_name>
-    uninstall <zone_name>
+    uninstall [-f] <zone_name>
     show [zone_name [property[,property]...]]
     list [-H] [-F <format>] [-b <brand>] [-s <state>] [zone_name]
     memstat
