@@ -52,11 +52,11 @@ B<zadm> I<command> [I<options...>]
 where 'command' is one of the following:
 
     create -b <brand> -i <image_uuid|image_path_or_uri> [-t <template_path>] <zone_name>
-    delete <zone_name>
+    delete [-f] <zone_name>
     edit <zone_name>
     set <zone_name> <property=value>
     install -i <image_uuid|image_path_or_uri> [-f] <zone_name>
-    uninstall <zone_name>
+    uninstall [-f] <zone_name>
     show [zone_name [property[,property]...]]
     list [-H] [-F <format>] [-b <brand>] [-s <state>] [zone_name]
     memstat

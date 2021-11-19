@@ -166,7 +166,13 @@ sub main {
         /^uninstall$/ && do {
             my $zName = pop @ARGV or pod2usage(1);
 
-            my $zone = $zones->zone($zName);
+            my $opts = {};
+            {
+                local $SIG{__WARN__} = sub { };
+                GetOptions($opts, qw(force|f)) or pod2usage(1);
+            }
+
+            my $zone = $zones->zone($zName, opts => $opts);
 
             die "ERROR: zone '$zName' is 'running'. Shut it down first.\n"
                 if $zone->is('running');
@@ -178,7 +184,13 @@ sub main {
         /^delete$/ && do {
             my $zName = pop @ARGV or pod2usage(1);
 
-            my $zone = $zones->zone($zName);
+            my $opts = {};
+            {
+                local $SIG{__WARN__} = sub { };
+                GetOptions($opts, qw(force|f)) or pod2usage(1);
+            }
+
+            my $zone = $zones->zone($zName, opts => $opts);
 
             $zone->remove;
 
@@ -403,11 +415,11 @@ B<zadm> I<command> [I<options...>]
 where 'command' is one of the following:
 
     create -b <brand> [-t <template_path>] <zone_name>
-    delete <zone_name>
+    delete [-f] <zone_name>
     edit <zone_name>
     set <zone_name> <property=value>
     install [-f] <zone_name>
-    uninstall <zone_name>
+    uninstall [-f] <zone_name>
     show [zone_name [property[,property]...]]
     list [-H] [-F <format>] [-b <brand>] [-s <state>] [zone_name]
     memstat
@@ -454,7 +466,7 @@ B<zadm doc -b E<lt>brandE<gt>>.
 
 =head2 B<delete>
 
-deletes zone B<zone_name>.
+deletes zone B<zone_name>. You can use the B<-f> flag to force the action.
 
 =head2 B<edit>
 
@@ -474,7 +486,7 @@ be provided in order to first uninstall the zone.
 
 =head2 B<uninstall>
 
-uninstalls a zone.
+uninstalls a zone. You can use the B<-f> flag to force the action.
 
 =head2 B<show>
 
@@ -489,8 +501,8 @@ Available options are:
   -F <format>                 Specify an alternative output format.
                               The value of format can be json, yaml or toml.
   -H                          Omit the headers from the listing.
-  -b|--brand <brand>          List status of zones of brand B<brand>.
-  -s|--state <state>          List status of zones in state B<state>.
+  -b|--brand <brand>          List status of zones with brand <brand>.
+  -s|--state <state>          List status of zones in state <state>.
 
 =head2 B<memstat>
 
