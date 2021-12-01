@@ -265,6 +265,13 @@ $SCHEMA = sub($self) {
         validator   => $self->sv->hostbridge,
         'x-attr'    => 1,
     },
+    memreserve  => {
+        optional    => 1,
+        description => 'pre-allocate and retain memory even when the zone is shut down',
+        example     => '"memreserve" : "on"',
+        validator   => $self->sv->bool,
+        'x-attr'    => 1,
+    },
     netif       => {
         optional    => 1,
         description => 'network interface type',
