@@ -143,6 +143,9 @@ sub curl($self, $files, $opts = {}) {
 
     $self->log->debug("downloading $_->{url}...") for @$files;
 
+    # possibly large downloads should not use tmpfs for caching
+    $ENV{MOJO_TMPDIR} = $self->cache;
+
     my @err;
 
     privSet({ add => 1 }, PRIV_NET_ACCESS);
@@ -246,6 +249,12 @@ sub dump($self, $opts = {}) {
 }
 
 sub vacuum($self, $opts = {}) {
+    # remove stale cache files
+    for my $f (Mojo::File->new($self->cache)->list->each) {
+        $self->log->debug("removing '$f' from cache...");
+        $f->remove;
+    }
+
     my $ts = localtime->epoch - ($opts->{days} // 30) * ONE_DAY;
 
     $self->provider->{$_}->vacuum($ts) for keys %{$self->provider};
