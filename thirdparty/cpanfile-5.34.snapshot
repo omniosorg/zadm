@@ -126,17 +126,17 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 0
       IO::Compress::Base 2.101
       IO::Uncompress::Base 2.101
-  IO-Socket-SSL-2.072
-    pathname: S/SU/SULLR/IO-Socket-SSL-2.072.tar.gz
+  IO-Socket-SSL-2.073
+    pathname: S/SU/SULLR/IO-Socket-SSL-2.073.tar.gz
     provides:
-      IO::Socket::SSL 2.072
+      IO::Socket::SSL 2.073
       IO::Socket::SSL::Intercept 2.056
-      IO::Socket::SSL::OCSP_Cache 2.072
-      IO::Socket::SSL::OCSP_Resolver 2.072
+      IO::Socket::SSL::OCSP_Cache 2.073
+      IO::Socket::SSL::OCSP_Resolver 2.073
       IO::Socket::SSL::PublicSuffix undef
-      IO::Socket::SSL::SSL_Context 2.072
-      IO::Socket::SSL::SSL_HANDLE 2.072
-      IO::Socket::SSL::Session_Cache 2.072
+      IO::Socket::SSL::SSL_Context 2.073
+      IO::Socket::SSL::SSL_HANDLE 2.073
+      IO::Socket::SSL::Session_Cache 2.073
       IO::Socket::SSL::Utils 2.015
     requirements:
       ExtUtils::MakeMaker 0
@@ -290,7 +290,6 @@ DISTRIBUTIONS
       Mojolicious::Lite undef
       Mojolicious::Plugin undef
       Mojolicious::Plugin::Config undef
-      Mojolicious::Plugin::Config::Sandbox undef
       Mojolicious::Plugin::DefaultHelpers undef
       Mojolicious::Plugin::EPLRenderer undef
       Mojolicious::Plugin::EPRenderer undef
