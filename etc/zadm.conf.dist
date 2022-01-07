@@ -12,6 +12,7 @@
     },
     "VNC"      : {
         "bind_address"    : "[::1]",
-        "novnc_path"      : "/path/to/novnc"
+        "novnc_path"      : "/path/to/novnc",
+        "auto_connect"    : "on"
     }
 }
