@@ -430,6 +430,7 @@ sub webvnc($self, $listen = '8000') {
         log   => $self->log,
         sock  => $self->vncsocket,
         novnc => $self->utils->gconf->{VNC}->{novnc_path},
+        aconn => $self->utils->boolIsTrue($self->utils->gconf->{VNC}->{auto_connect}),
         port  => $port,
     )->start(qw(daemon -m production -l), "http://$ip:$port");
 }

@@ -88,6 +88,12 @@ my $SCHEMA = sub($self) {
                 example     => '"novnc_path" : "/path/to/novnc"',
                 validator   => $sv->noVNC,
             },
+            auto_connect    => {
+                optional    => 1,
+                description => 'automatically connect as soon as the page has finished loading (webvnc only)',
+                example     => '"auto_connect" : "on"',
+                validator   => $sv->bool,
+            },
         },
     },
 }};

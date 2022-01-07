@@ -16,6 +16,8 @@ sub startup($self) {
         privSet(undef, PRIV_FILE_READ, PRIV_NET_ACCESS, $self->{port} < 1024 ? PRIV_NET_PRIVADDR : ());
     });
     $self->hook(before_dispatch => sub($c) {
+        $c->res->headers->cache_control('private, max-age=0, no-cache');
+
         privSet({ add => 1 }, PRIV_FILE_READ);
     });
     $self->hook(after_dispatch => sub($c) {
@@ -67,7 +69,12 @@ sub startup($self) {
         Mojo::IOLoop->next_tick(sub($ioloop) { privSet({ remove => 1 }, PRIV_FILE_READ) });
     });
 
-    $r->get('/' => sub($c) { $c->reply->static('vnc.html') });
+    $r->get('/' => sub($c) {
+        return $c->reply->static('vnc.html')
+            if defined $c->param('autoconnect') || !$self->{aconn};
+
+        $c->redirect_to($c->url_with->query({ autoconnect => 1 }));
+    });
 }
 
 1;
