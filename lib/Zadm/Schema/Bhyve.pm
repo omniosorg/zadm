@@ -238,7 +238,7 @@ $SCHEMA = sub($self) {
         description => 'boot ROM to use for starting the virtual machine',
         default     => 'BHYVE',
         example     => '"bootrom" : "BHYVE_DEBUG"',
-        validator   => $self->sv->elemOf(map { basename($_, '.fd') } glob "$FWPATH/*.fd"),
+        validator   => $self->sv->elemOf(grep { !/^BHYVE_VARS$/ } map { basename($_, '.fd') } glob "$FWPATH/*.fd"),
         'x-attr'    => 1,
     },
     'cloud-init' => {
