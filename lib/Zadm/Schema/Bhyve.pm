@@ -1,10 +1,6 @@
 package Zadm::Schema::Bhyve;
 use Mojo::Base 'Zadm::Schema::KVM', -signatures;
 
-use File::Basename qw(basename);
-
-my $FWPATH = '/usr/share/bhyve/firmware/';
-
 my $SCHEMA;
 has schema => sub($self) {
     my $kvmschema = $self->SUPER::schema;
@@ -238,7 +234,7 @@ $SCHEMA = sub($self) {
         description => 'boot ROM to use for starting the virtual machine',
         default     => 'BHYVE',
         example     => '"bootrom" : "BHYVE_DEBUG"',
-        validator   => $self->sv->elemOf(grep { !/^BHYVE_VARS$/ } map { basename($_, '.fd') } glob "$FWPATH/*.fd"),
+        validator   => $self->sv->bootrom,
         'x-attr'    => 1,
     },
     'cloud-init' => {

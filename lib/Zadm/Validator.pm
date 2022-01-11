@@ -7,7 +7,7 @@ use Mojo::File;
 use Mojo::JSON qw(decode_json);
 use Mojo::Util qw(b64_encode);
 use Bytes::Random::Secure qw(random_bytes);
-use File::Basename qw(dirname);
+use File::Basename qw(basename dirname);
 use Regexp::IPv4 qw($IPv4_re);
 use Regexp::IPv6 qw($IPv6_re);
 use Zadm::Privilege qw(:CONSTANTS privSet);
@@ -15,6 +15,7 @@ use Zadm::Utils;
 
 # constants
 my @VNICATTR = qw(link over vid);
+my $FWPATH   = '/usr/share/bhyve/firmware/';
 
 my %vcpuOptions = (
     sockets => undef,
@@ -330,6 +331,17 @@ sub sectorSize($self) {
         }
 
         return undef;
+    }
+}
+
+sub bootrom($self) {
+    return sub($bootrom, @) {
+        return undef if !$self->absPath(0)->($bootrom);
+        return $self->elemOf(
+            grep { !/^BHYVE_VARS$/ }
+            map { basename($_, '.fd') }
+            glob "$FWPATH/*.fd"
+        )->($bootrom);
     }
 }
 
