@@ -473,8 +473,8 @@ where 'command' is one of the following:
     vacuum [-d <days>]
     brands
     start [-c [extra_args]] <zone_name>
-    stop <zone_name>
-    restart <zone_name>
+    stop [-c [extra_args]] <zone_name>
+    restart [-c [extra_args]] <zone_name>
     poweroff <zone_name>
     reset <zone_name>
     console [extra_args] <zone_name>
@@ -491,7 +491,7 @@ where 'command' is one of the following:
 
 =head1 COPYRIGHT
 
-Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2022 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 

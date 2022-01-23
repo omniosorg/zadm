@@ -543,14 +543,18 @@ sub boot($self, $cOpts) {
     $self->console($cOpts) if $self->opts->{console};
 }
 
-sub shutdown($self) {
+sub shutdown($self, $cOpts) {
     # fork shutdown to the bg
     $self->$zoneCmd('shutdown', [], 1);
+
+    $self->console($cOpts) if $self->opts->{console};
 }
 
-sub reboot($self) {
+sub reboot($self, $cOpts) {
     # fork shutdown to the bg
     $self->$zoneCmd('shutdown', [ qw(-r) ], 1);
+
+    $self->console($cOpts, 1) if $self->opts->{console};
 }
 
 sub poweroff($self) {
@@ -573,11 +577,11 @@ sub login($self) {
     privSet({ reset => 1 });
 }
 
-sub console($self, $cOpts = []) {
+sub console($self, $cOpts = [], $reboot = 0) {
     my $name = $self->name;
 
     push @$cOpts, qw(-d) if $self->$gconfIs(qw(CONSOLE auto_disconnect on))
-        && !grep { $_ eq '-d' } @$cOpts;
+        && !$reboot && !grep { $_ eq '-d' } @$cOpts;
     push @$cOpts, '-e', $self->utils->gconf->{CONSOLE}->{escape_char}
         if $self->utils->gconf->{CONSOLE}->{escape_char} && !grep { /^-e.?$/ } @$cOpts;
 
@@ -875,8 +879,8 @@ where 'command' is one of the following:
     vacuum [-d <days>]
     brands
     start [-c [extra_args]] <zone_name>
-    stop <zone_name>
-    restart <zone_name>
+    stop [-c [extra_args]] <zone_name>
+    restart [-c [extra_args]] <zone_name>
     poweroff <zone_name>
     reset <zone_name>
     console [extra_args] <zone_name>
@@ -891,7 +895,7 @@ where 'command' is one of the following:
 
 =head1 COPYRIGHT
 
-Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2022 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 
