@@ -22,8 +22,8 @@ where 'command' is one of the following:
     vacuum [-d <days>]
     brands
     start [-c [extra_args]] <zone_name>
-    stop <zone_name>
-    restart <zone_name>
+    stop [-c [extra_args]] <zone_name>
+    restart [-c [extra_args]] <zone_name>
     poweroff <zone_name>
     reset <zone_name>
     login <zone_name>
@@ -57,8 +57,8 @@ where 'command' is one of the following:
     vacuum [-d <days>]
     brands
     start [-c [extra_args]] <zone_name>
-    stop <zone_name>
-    restart <zone_name>
+    stop [-c [extra_args]] <zone_name>
+    restart [-c [extra_args]] <zone_name>
     poweroff <zone_name>
     reset <zone_name>
     nmi <zone_name>
@@ -94,8 +94,8 @@ where 'command' is one of the following:
     vacuum [-d <days>]
     brands
     start [-c [extra_args]] <zone_name>
-    stop <zone_name>
-    restart <zone_name>
+    stop [-c [extra_args]] <zone_name>
+    restart [-c [extra_args]] <zone_name>
     poweroff <zone_name>
     login <zone_name>
     console [extra_args] <zone_name>
@@ -128,8 +128,8 @@ where 'command' is one of the following:
     vacuum [-d <days>]
     brands
     start [-c [extra_args]] <zone_name>
-    stop <zone_name>
-    restart <zone_name>
+    stop [-c [extra_args]] <zone_name>
+    restart [-c [extra_args]] <zone_name>
     poweroff <zone_name>
     reset <zone_name>
     console [extra_args] <zone_name>
@@ -164,8 +164,8 @@ where 'command' is one of the following:
     vacuum [-d <days>]
     brands
     start [-c [extra_args]] <zone_name>
-    stop <zone_name>
-    restart <zone_name>
+    stop [-c [extra_args]] <zone_name>
+    restart [-c [extra_args]] <zone_name>
     poweroff <zone_name>
     reset <zone_name>
     login <zone_name>
@@ -269,11 +269,13 @@ Any B<extra_args> will be passed to B<zlogin(1)>.
 
 =head2 B<stop>
 
-stops the zone B<zone_name>
+stops the zone B<zone_name>. Attaches to the console if B<-c> is given.
+Any B<extra_args> will be passed to B<zlogin(1)>.
 
 =head2 B<restart>
 
-restarts the zone B<zone_name>
+restarts the zone B<zone_name>. Attaches to the console if B<-c> is given.
+Any B<extra_args> will be passed to B<zlogin(1)>.
 
 =head2 B<poweroff>
 
@@ -341,7 +343,7 @@ that attribute is shown.
 
 =head1 COPYRIGHT
 
-Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2022 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 
