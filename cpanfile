@@ -1,6 +1,6 @@
 requires 'Bytes::Random::Secure', '== 0.29';
 requires 'Cpanel::JSON::XS', '== 4.27';
-requires 'Data::Processor', '== 1.0.7';
+requires 'Data::Processor', '== 1.0.9';
 requires 'Mojolicious', '== 9.22';
 requires 'IO::Socket::SSL', '== 2.073';
 requires 'IO::Uncompress::UnXz', '== 2.101';

@@ -80,10 +80,10 @@ DISTRIBUTIONS
       Time::HiRes 1.9711
       base 0
       perl 5.006002
-  Data-Processor-1.0.7
-    pathname: M/MB/MBP/Data-Processor-1.0.7.tar.gz
+  Data-Processor-1.0.9
+    pathname: M/MB/MBP/Data-Processor-1.0.9.tar.gz
     provides:
-      Data::Processor 1.000007
+      Data::Processor 1.000009
       Data::Processor::Error::Collection undef
       Data::Processor::Error::Instance undef
       Data::Processor::Generator undef

@@ -18,44 +18,46 @@ has schema => sub($self) {
 };
 
 $SCHEMA = sub($self) {
+    my $diskmembers = {
+        path        => {
+            description => 'path of zvol',
+            example     => '"path" : "rpool/hdd-bhyve0"',
+            validator   => $self->sv->fileOrZvol,
+            transformer => $self->sv->stripDev,
+        },
+        size        => {
+            optional    => 1,
+            description => 'zvol disk size. according to zfs syntax',
+            example     => '"size" : "10G"',
+            validator   => $self->sv->regexp(qr/^\d+[bkmgtpe]$/i),
+            transformer => $self->sv->toInt,
+        },
+        blocksize   => {
+            optional    => 1,
+            description => 'zvol block size',
+            example     => '"blocksize" : "128k"',
+            validator   => $self->sv->blockSize,
+        },
+        sparse      => {
+            optional    => 1,
+            description => 'sparse zvol',
+            example     => '"sparse" : "true"',
+            validator   => $self->sv->bool,
+        },
+        serial      => {
+            optional    => 1,
+            description => 'serial number of disk, upper-case alpha-numeric, up to 20 characters',
+            example     => '"serial" : "XYZ123"',
+            validator   => $self->sv->regexp(qr/^[\dA-Z-]{1,20}$/),
+            'x-dskbool' => 0,
+        },
+    };
+
     return {
     bootdisk    => {
         optional    => 1,
         description => 'ZFS volume which will be attached as the boot disk',
-        members     => {
-            path        => {
-                description => 'path of zvol',
-                example     => '"path" : "rpool/hdd-bhyve0"',
-                validator   => $self->sv->fileOrZvol,
-                transformer => $self->sv->stripDev,
-            },
-            size        => {
-                optional    => 1,
-                description => 'zvol disk size. according to zfs syntax',
-                example     => '"size" : "10G"',
-                validator   => $self->sv->regexp(qr/^\d+[bkmgtpe]$/i),
-                transformer => $self->sv->toInt,
-            },
-            blocksize   => {
-                optional    => 1,
-                description => 'zvol block size',
-                example     => '"blocksize" : "128k"',
-                validator   => $self->sv->blockSize,
-            },
-            sparse      => {
-                optional    => 1,
-                description => 'sparse zvol',
-                example     => '"sparse" : "true"',
-                validator   => $self->sv->bool,
-            },
-            serial      => {
-                optional    => 1,
-                description => 'serial number of disk, upper-case alpha-numeric, up to 20 characters',
-                example     => '"serial" : "XYZ123"',
-                validator   => $self->sv->regexp(qr/^[\dA-Z-]{1,20}$/),
-                'x-dskattr' => 0,
-            },
-        },
+        members     => $diskmembers,
         transformer => $self->sv->toHash('path'),
         'x-attr'    => 1,
     },
@@ -88,40 +90,7 @@ $SCHEMA = sub($self) {
         array       => 1,
         allow_empty => 1,
         description => 'ZFS volume which will be attached as disk',
-        members     => {
-            path        => {
-                description => 'path of zvol',
-                example     => '"path" : "rpool/hdd-bhyve0"',
-                validator   => $self->sv->fileOrZvol,
-                transformer => $self->sv->stripDev,
-            },
-            size        => {
-                optional    => 1,
-                description => 'zvol disk size. according to zfs syntax',
-                example     => '"size" : "10G"',
-                validator   => $self->sv->regexp(qr/^\d+[bkmgtpe]$/i),
-                transformer => $self->sv->toInt,
-            },
-            blocksize   => {
-                optional    => 1,
-                description => 'zvol block size',
-                example     => '"blocksize" : "128k"',
-                validator   => $self->sv->blockSize,
-            },
-            sparse      => {
-                optional    => 1,
-                description => 'sparse zvol',
-                example     => '"sparse" : "true"',
-                validator   => $self->sv->bool,
-            },
-            serial      => {
-                optional    => 1,
-                description => 'serial number of disk, upper-case alpha-numeric, up to 20 characters',
-                example     => '"serial" : "XYZ123"',
-                validator   => $self->sv->regexp(qr/^[\dA-Z-]{1,20}$/),
-                'x-dskattr' => 0,
-            },
-        },
+        members     => $diskmembers,
         transformer => $self->sv->toHash('path', 1),
     },
     diskif      => {
