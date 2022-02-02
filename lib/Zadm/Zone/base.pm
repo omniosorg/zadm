@@ -280,6 +280,10 @@ my $zoneCmd = sub($self, $cmd, $opts = [], $fork = 0) {
     privSet({ reset => 1 });
 };
 
+my $getClassPath = sub($self, $mod) {
+    return Mojo::File->new($self->home, 'lib', class_to_path($mod))->to_abs->to_string;
+};
+
 # private static methods
 # not using pod_write from Data::Processor as we want a different formatting
 my $genDoc;
@@ -326,6 +330,7 @@ has public  => sub { [ qw(login fw) ] };
 has opts    => sub { {} };
 has mod     => sub($self) { ref $self };
 has smod    => sub($self) { my $mod = $self->mod; $mod =~ s/Zone/Schema/; $mod };
+has home    => sub($self) { Mojo::Home->new->detect($self->mod) };
 has exists  => sub($self) { $self->zones->exists($self->name) };
 has hasimg  => sub($self) { return $self->opts->{image} };
 has image   => sub($self) {
@@ -353,17 +358,19 @@ has config  => sub($self) {
 };
 
 has schema  => sub($self) {
-    my $mod = $self->smod;
-    return do {
-        # fall back to generic schema if there is no brand specific
-        load_class($mod) && do {
-            $mod = __PACKAGE__;
-            $mod =~ s/Zone/Schema/;
-            load_class($mod)
-                and Mojo::Exception->throw("ERROR: cannot load schema class '$mod'.\n");
-        };
-        $mod->new(sv => $self->sv)->schema;
+    my $smod = $self->smod;
+    my $modf = $self->$getClassPath($smod);
+
+    # fall back to generic schema if there is no brand specific
+    -e $modf || do {
+        $smod = __PACKAGE__;
+        $smod =~ s/Zone/Schema/;
     };
+
+    load_class($smod)
+        and Mojo::Exception->throw("ERROR: cannot load schema class '$smod'.\n");
+
+    return $smod->new(sv => $self->sv)->schema;
 };
 
 has resmap => sub($self) {
@@ -695,10 +702,7 @@ sub rollback($self, $snapname, $opts) {
 }
 
 sub usage($self) {
-    my $mod = $self->mod;
-
-    pod2usage(-input => Mojo::File->new(Mojo::Home->new->detect($mod),
-        'lib', class_to_path($mod))->to_abs->to_string, 1);
+    pod2usage(-input => $self->$getClassPath($self->mod), 1);
 }
 
 sub doc($self) {
