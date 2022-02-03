@@ -135,7 +135,6 @@ $SCHEMA = sub($self) {
     extra       => {
         optional    => 1,
         description => 'extra parameters',
-        default     => '',
         example     => '"extra" : "<parameters>"',
         validator   => $self->sv->regexp(qr/^.+$/, 'expected a string'),
         'x-attr'    => 1,
