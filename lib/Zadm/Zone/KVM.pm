@@ -95,8 +95,8 @@ has diskattr  => sub($self) {
     my %diskattr;
     for my $type (qw(disk bootdisk)) {
         $diskattr{$type} = {
-            map  { $_ => $self->schema->{$type}->{members}->{$_}->{'x-dskattr'} }
-            grep { exists $self->schema->{$type}->{members}->{$_}->{'x-dskattr'} }
+            map  { $_ => $self->schema->{$type}->{members}->{$_}->{'x-dskbool'} }
+            grep { exists $self->schema->{$type}->{members}->{$_}->{'x-dskbool'} }
             keys %{$self->schema->{$type}->{members}}
         };
     };
