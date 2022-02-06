@@ -306,6 +306,14 @@ $SCHEMA = sub($self) {
         validator   => $self->sv->stringorfile,
         'x-attr'    => 1,
     },
+    uefivars    => {
+        optional    => 1,
+        description => 'enable/disable persistent UEFI vars',
+        default     => 'on',
+        example     => '"uefivars" : "on"',
+        validator   => $self->sv->bool,
+        'x-attr'    => 1,
+    },
     vga         => {
         optional    => 1,
         description => 'type of VGA emulation to use',
