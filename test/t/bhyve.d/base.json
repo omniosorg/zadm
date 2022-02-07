@@ -60,6 +60,7 @@
    "rng" : "off",
    "scheduling-class" : "",
    "type" : "generic",
+   "uefivars" : "on",
    "vcpus" : "1",
    "vnc" : "off",
    "xhci" : "off",
