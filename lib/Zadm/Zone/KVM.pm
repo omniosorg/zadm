@@ -25,21 +25,6 @@ my $cpuCount = sub($vcpus, $raw = 0) {
     return join '/', map { $cpu{$_} // '1' } qw(sockets cores threads);
 };
 
-my $getIPPort = sub($self, $listen) {
-    $self->log->warn('WARNING: zone', $self->name, 'is not running')
-        if !$self->is('running');
-
-    Mojo::Exception->throw('ERROR: vnc is not set up for zone ' . $self->name . "\n")
-        if !$self->utils->boolIsTrue($self->config->{vnc});
-
-    my ($ip, $port) = $listen =~ /^(?:(\*|$IPv4_re|(?:\[?(?:$IPv6_re|::)\]?)):)?(\d+)$/;
-    Mojo::Exception->throw("ERROR: '$listen' is not valid\n") if !$port;
-    $ip = $self->utils->gconf->{VNC}->{bind_address} || '127.0.0.1' if !$ip;
-    $ip = '[::]' if $ip eq '*';
-
-    return ($ip, $port);
-};
-
 # attributes
 has template => sub($self) {
     my $name = $self->name;
@@ -188,54 +173,94 @@ my $getDiskProps = sub($self, $prop) {
     };
 };
 
+my $getIPPort = sub($self, $listen) {
+    $self->log->warn('WARNING: zone', $self->name, 'is not running')
+        if !$self->is('running');
+
+    Mojo::Exception->throw('ERROR: vnc is not set up for zone ' . $self->name . "\n")
+        if !$self->utils->boolIsTrue($self->config->{vnc});
+
+    my ($ip, $port) = $listen =~ /^(?:(\*|$IPv4_re|(?:\[?(?:$IPv6_re|::)\]?)):)?(\d+)$/;
+    Mojo::Exception->throw("ERROR: '$listen' is not valid\n") if !$port;
+    $ip = $self->utils->gconf->{VNC}->{bind_address} || '127.0.0.1' if !$ip;
+    $ip = '[::]' if $ip eq '*';
+
+    return ($ip, $port);
+};
+
+my $addToEmptySlot = sub($self, $list, $data) {
+    return if !$data || !$self->utils->isArrRef($list);
+
+    # let it overrun here by 1 on purpose so we find an empty slot for data
+    for (my $i = 0; $i <= @$list; $i++) {
+        next if $list->[$i];
+
+        $list->[$i] = $data;
+
+        last;
+    }
+};
+
+# public methods
 sub getPostProcess($self, $cfg) {
-    my $disk;
-    $cfg->{disk} = [];
-    # handle disks before the default getPostProcess
+    my %noIndex;
+
+    # handle disks/cdroms before the default getPostProcess
     if ($self->utils->isArrRef($cfg->{attr})) {
-        for (my $i = $#{$cfg->{attr}}; $i >= 0; $i--) {
-            my ($boot, $index) = $cfg->{attr}->[$i]->{name} =~ /^(boot)?disk(\d+)?$/
+        ATTR: for (my $i = $#{$cfg->{attr}}; $i >= 0; $i--) {
+            my ($type, $index) = $cfg->{attr}->[$i]->{name} =~ /^(diskif|cdrom|(?:boot)?disk)(\d+)?$/
                 or next;
 
-            if (defined $index) {
-                $cfg->{disk}->[$index] = $self->$getDiskProps($cfg->{attr}->[$i]->{value});
+            for ($type) {
+                /^disk$/ && do {
+                    if (!defined $index) {
+                        $noIndex{disk} = $self->$getDiskProps($cfg->{attr}->[$i]->{value});
+                    }
+                    else {
+                        $cfg->{disk}->[$index] = {
+                            %{$cfg->{disk}->[$index] || {}},
+                            %{$self->$getDiskProps($cfg->{attr}->[$i]->{value})},
+                        };
+                    }
+
+                    last;
+                };
+                /^bootdisk$/ && do {
+                    $cfg->{bootdisk} = $self->$getDiskProps($cfg->{attr}->[$i]->{value});
+
+                    last;
+                };
+                /^diskif$/ && do {
+                    next ATTR if !defined $index;
+
+                    $cfg->{disk}->[$index] = {
+                        %{$cfg->{disk}->[$index] || {}},
+                        diskif => $cfg->{attr}->[$i]->{value},
+                    };
+
+                    last;
+                };
+                /^cdrom$/ && do {
+                    if (!defined $index) {
+                        $noIndex{cdrom} = $cfg->{attr}->[$i]->{value};
+                    }
+                    else {
+                        $cfg->{cdrom}->[$index] = $cfg->{attr}->[$i]->{value};
+                    }
+
+                    last;
+                };
+
+                # default; skip removing attr
+                next ATTR;
             }
-            elsif (defined $boot) {
-                $cfg->{bootdisk} = $self->$getDiskProps($cfg->{attr}->[$i]->{value});
-            }
-            else {
-                $disk = $self->$getDiskProps($cfg->{attr}->[$i]->{value});
-            }
+
             splice @{$cfg->{attr}}, $i, 1;
         }
     }
 
-    # add disk w/o index to the first available slot
-    if ($disk) {
-        # let it overrun here by 1 on purpose so we find a slot for disk
-        for (my $i = 0; $i <= @{$cfg->{disk}}; $i++) {
-            if (!$cfg->{disk}->[$i]) {
-                $cfg->{disk}->[$i] = $disk;
-                last;
-            }
-        }
-    }
-
-    $cfg->{cdrom} = [];
-    # handle cdroms before the default getPostProcess
-    if ($self->utils->isArrRef($cfg->{attr})) {
-        for (my $i = $#{$cfg->{attr}}; $i >= 0; $i--) {
-            my ($index) = $cfg->{attr}->[$i]->{name} =~ /^cdrom(\d+)?$/
-                or next;
-
-            # TODO: this can be changed once we drop support for r30/r32
-            # since they only support a single cdrom we place the cdrom w/o index
-            # in slot 0; this could overwrite cdrom0 if it was manually added
-            $index //= 0;
-            $cfg->{cdrom}->[$index] = $cfg->{attr}->[$i]->{value};
-            splice @{$cfg->{attr}}, $i, 1;
-        }
-    }
+    # add disk/cdrom w/o index to the first available slot
+    $self->$addToEmptySlot($cfg->{$_}, $noIndex{$_}) for qw(disk cdrom);
 
     $cfg = $self->SUPER::getPostProcess($cfg);
 
@@ -310,7 +335,7 @@ sub setPreProcess($self, $cfg) {
     # handle disks
     if ($self->utils->isArrRef($cfg->{disk})) {
         for (my $i = 0; $i < @{$cfg->{disk}}; $i++) {
-            next if !$cfg->{disk}->[$i] || ($self->utils->isHashRef($cfg->{disk}->[$i]) && !%{$cfg->{disk}->[$i]});
+            next if !$self->utils->isHashRef($cfg->{disk}->[$i]) || !%{$cfg->{disk}->[$i]};
 
             my $disk = $cfg->{disk}->[$i]->{path};
             $disk =~ s!^$ZVOLRX!!;
@@ -320,6 +345,12 @@ sub setPreProcess($self, $cfg) {
                 type    => 'string',
                 value   => $disk . $self->$setDiskAttr('disk', $cfg->{disk}->[$i]),
             };
+
+            push @{$cfg->{attr}}, {
+                name    => "diskif$i",
+                type    => 'string',
+                value   => $cfg->{disk}->[$i]->{diskif},
+            } if $cfg->{disk}->[$i]->{diskif};
 
             # add device if disk is zvol backed
             push @{$cfg->{device}}, { match => "$ZVOLDEV/$disk" }
