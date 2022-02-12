@@ -189,6 +189,9 @@ my $clearAttributes = sub($self, $cfg) {
 
         # simple attributes
         if (!$self->$isRes($attr)) {
+            delete $cfg->{$attr} if $self->schema->{$attr}->{'x-noempty'}
+                && defined $cfg->{$attr} && $cfg->{$attr} eq '' && $self->attrs->{$attr} ne '';
+
             $self->$clearProperty($attr) if !exists $cfg->{$attr};
 
             next;
@@ -495,7 +498,7 @@ sub setConfig($self, $config) {
             $self->addResource($prop, $cfg->{$prop});
         }
         else {
-            next if !$cfg->{$prop} || ($self->attrs->{$prop} && $self->attrs->{$prop} eq $cfg->{$prop});
+            next if defined $self->attrs->{$prop} && $self->attrs->{$prop} eq $cfg->{$prop};
 
             $self->log->debug("property '$prop' changed:",
                 ($self->attrs->{$prop} // '(none)'), '->', $cfg->{$prop});

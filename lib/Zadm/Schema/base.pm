@@ -12,7 +12,7 @@ has schema => sub($self) {
     return {
     zonename    => {
         description => 'name of zone',
-        validator   => $self->sv->regexp(qr/^[-\w]+$/, 'zonename not valid'),
+        validator   => $self->sv->regexp(qr/^\S+$/, 'expected a string'),
     },
     zonepath    => {
         description => 'path to zone root',
@@ -27,22 +27,22 @@ has schema => sub($self) {
     bootargs    => {
         optional    => 1,
         description => 'boot arguments for zone',
-        validator   => sub { return undef },
+        validator   => $self->sv->regexp(qr/^.*$/, 'expected a string'),
     },
     pool        => {
         optional    => 1,
         description => 'name of the resource pool this zone must be bound to',
-        validator   => sub { return undef },
+        validator   => $self->sv->regexp(qr/^.*$/, 'expected a string'),
     },
     limitpriv   => {
         description => 'the maximum set of privileges any process in this zone can obtain',
         default     => 'default',
-        validator   => $self->sv->regexp(qr/^[-+!\w,]+$/, 'limitpriv not valid'),
+        validator   => $self->sv->regexp(qr/^[-+!\w,]*$/, 'limitpriv not valid'),
     },
     brand       => {
         description => "the zone's brand type",
         default     => 'lipkg',
-        validator   => sub { return undef },
+        validator   => $self->sv->regexp(qr/^\S+$/, 'expected a string'),
     },
     'ip-type'   => {
         description => 'ip-type of zone. can either be "exclusive" or "shared"',
@@ -52,7 +52,8 @@ has schema => sub($self) {
     hostid      => {
         optional    => 1,
         description => 'emulated 32-bit host identifier',
-        validator   => $self->sv->regexp(qr/^(?:[\da-f]{1,8}|)$/i, 'hostid not valid'),
+        validator   => $self->sv->regexp(qr/^(?:(?:0x)?[[:xdigit:]]{1,8}|)$/i, 'hostid not valid'),
+        'x-noempty' => 1,
     },
     'cpu-shares'    => {
         optional    => 1,
@@ -92,7 +93,7 @@ has schema => sub($self) {
     'scheduling-class'  => {
         optional    => 1,
         description => 'Specifies the scheduling class used for processes running',
-        validator   => sub { return undef },
+        validator   => $self->sv->regexp(qr/^.*$/, 'expected a string'),
     },
     'fs-allowed'    => {
         optional    => 1,
@@ -121,15 +122,15 @@ has schema => sub($self) {
         members     => {
             name    => {
                 description => 'attribute name',
-                validator   => sub { return undef },
+                validator   => $self->sv->regexp(qr/^.+$/, 'expected a string'),
             },
             type    => {
                 description => 'attribute type',
-                validator   => sub { return undef },
+                validator   => $self->sv->regexp(qr/^.+$/, 'expected a string'),
             },
             value   => {
                 description => 'attribute value',
-                validator   => sub { return undef },
+                validator   => $self->sv->regexp(qr/^.*$/, 'expected a string'),
             },
         },
     },
@@ -208,7 +209,7 @@ has schema => sub($self) {
             importance  => {
                 optional    => 1,
                 description => 'specifies the pset.importance value for use by poold',
-                validator   => sub { return undef },
+                validator   => $self->sv->regexp(qr/^.*$/, 'expected a string'),
             },
         },
     },
@@ -219,7 +220,7 @@ has schema => sub($self) {
         members     => {
             match   => {
                 description => 'device name to match',
-                validator   => sub { return undef },
+                validator   => $self->sv->regexp(qr/^.+$/, 'expected a string'),
             },
         },
     },
@@ -351,7 +352,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2022 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 
