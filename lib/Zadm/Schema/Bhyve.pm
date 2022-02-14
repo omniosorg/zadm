@@ -53,6 +53,12 @@ $SCHEMA = sub($self) {
             validator   => $self->sv->bool,
             'x-dskbool' => 1,
         },
+        diskif      => {
+            optional    => 1,
+            description => 'disk type',
+            example     => '"diskif" : "virtio"',
+            validator   => $self->sv->elemOf(qw(virtio virtio-blk nvme ahci ahci-hd ahci-cd ide)),
+        },
         sectorsize  => {
             optional    => 1,
             description => 'set logical/physical sector size',
