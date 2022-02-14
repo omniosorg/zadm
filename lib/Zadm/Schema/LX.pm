@@ -13,6 +13,10 @@ has schema => sub($self) {
 
 $SCHEMA = sub($self) {
     return {
+    hostid      => {
+        optional    => 1,
+        validator   => $self->sv->regexp(qr/^$/, 'lx zones do not support hostid emulation'),
+    },
     net => {
         optional    => 1,
         array       => 1,

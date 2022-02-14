@@ -6,7 +6,7 @@ use Mojo::Exception;
 use Mojo::File;
 use Mojo::JSON qw(decode_json);
 use Mojo::Util qw(b64_encode);
-use Bytes::Random::Secure qw(random_bytes);
+use Bytes::Random::Secure::Tiny;
 use File::Basename qw(basename dirname);
 use Regexp::IPv4 qw($IPv4_re);
 use Regexp::IPv6 qw($IPv6_re);
@@ -393,7 +393,8 @@ sub toPWHash($self) {
     return sub($str, @) {
         return $str if $self->utils->isPWHash($str) || Mojo::File->new($str)->is_abs;
 
-        my $seed = b64_encode(random_bytes(12)); # gives 16 bytes
+        my $rng  = Bytes::Random::Secure::Tiny->new;
+        my $seed = b64_encode($rng->bytes(12)); # gives 16 bytes
         $seed =~ s/\+/./g;
 
         return crypt ($str, "\$6\$$seed");
