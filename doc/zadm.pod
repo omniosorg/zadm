@@ -61,6 +61,7 @@ where 'command' is one of the following:
     restart [-c [extra_args]] <zone_name>
     poweroff <zone_name>
     reset <zone_name>
+    efireset <zone_name>
     nmi <zone_name>
     console [extra_args] <zone_name>
     vnc [-w] [<[bind_addr:]port>] <zone_name>
