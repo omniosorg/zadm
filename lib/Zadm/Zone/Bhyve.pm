@@ -2,10 +2,11 @@ package Zadm::Zone::Bhyve;
 use Mojo::Base 'Zadm::Zone::KVM', -signatures;
 
 use Mojo::Exception;
+use Mojo::File;
 
 # reset public interface as the inherited list
 # from KVM will have additional methods
-has public  => sub { [ qw(nmi vnc webvnc fw) ] };
+has public  => sub { [ qw(efireset nmi vnc webvnc fw) ] };
 has options => sub($self) {
     return {
         %{$self->SUPER::options},
@@ -172,6 +173,14 @@ sub nmi($self) {
     $self->$bhyveCtl('--inject-nmi');
 }
 
+sub efireset($self) {
+    Mojo::Exception->throw("ERROR: cannot reset EFI while zone is running\n")
+        if $self->is('running');
+
+    unlink Mojo::File->new($self->config->{zonepath}, qw(root etc uefivars))
+        or Mojo::Exception->throw("ERROR: cannot reset EFI: $!\n");
+}
+
 1;
 
 __END__
@@ -200,6 +209,7 @@ where 'command' is one of the following:
     restart [-c [extra_args]] <zone_name>
     poweroff <zone_name>
     reset <zone_name>
+    efireset <zone_name>
     nmi <zone_name>
     console [extra_args] <zone_name>
     vnc [-w] [<[bind_addr:]port>] <zone_name>
