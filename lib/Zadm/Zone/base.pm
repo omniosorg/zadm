@@ -490,7 +490,7 @@ sub setConfig($self, $config) {
         if ($self->utils->isArrRef($cfg->{$prop})) {
             $self->log->debug("property '$prop' is a resource array");
 
-            $self->addResource($prop, $_) for (@{$cfg->{$prop}});
+            $self->addResource($prop, $_) for @{$cfg->{$prop}};
         }
         elsif ($self->$isRes($prop)) {
             $self->log->debug("property '$prop' is a resource");
