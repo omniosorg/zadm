@@ -168,6 +168,7 @@ sub curl($self, $files, $opts = {}) {
                 local $SIG{__DIE__};
 
                 $res->save_to($files->[$i]->{path});
+                $files->[$i]->{path}->chmod(0644);
             };
 
             if ($@) {
@@ -192,6 +193,7 @@ sub seedZvol($self, $file, $ds) {
     my $bytes = 0;
     my $start = my $last = time;
     my $zvol;
+    my $snap;
     while (my $status = $decomp->read(my $buffer)) {
         Mojo::Exception->throw("ERROR: decompressing '$file' failed: $AnyUncompressError\n")
             if $status < 0;
@@ -200,8 +202,9 @@ sub seedZvol($self, $file, $ds) {
         if ($bytes == 0) {
             my $type = $self->utils->getFileType($buffer, '.' . $file->extname) // '';
 
-            my @cmd = $type eq 'ZFS snapshot stream' ? ($self->utils->getCmd('zfs'), qw(recv -Fv), $ds)
-                    :                                  ($self->utils->getCmd('dd'), "of=/dev/zvol/dsk/$ds", 'bs=1M');
+            $snap   = $type eq 'ZFS snapshot stream';
+            my @cmd = $snap ? ($self->utils->getCmd('zfs'), qw(recv -Fv), $ds)
+                    :         ($self->utils->getCmd('dd'), "of=/dev/zvol/dsk/$ds", 'bs=1M');
 
             $self->log->debug(@cmd);
 
@@ -223,6 +226,9 @@ sub seedZvol($self, $file, $ds) {
     }
     print "\r", $self->$progStr($bytes, time - $start), "\n";
     STDOUT->flush;
+
+    close $zvol;
+    $self->utils->snapshot('destroy', $ds, '%') if $snap;
 }
 
 sub dump($self, $opts = {}) {
