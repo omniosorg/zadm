@@ -401,10 +401,30 @@ sub toPWHash($self) {
     }
 }
 
-sub vnc($self, $brand) {
+sub toVNCHash($self) {
+    return sub($attr, @) {
+        return {} if !$attr;
+        return $attr if $self->utils->isHashRef($attr);
+
+        return {
+            map {
+                my ($key, $val) = split /=/, $_, 2;
+
+                if ($key =~ /^(?:on|off)$/) {
+                    $val = $key;
+                    $key = 'enabled';
+                }
+
+                $key => $val // 'on'
+            } split /,/, $attr
+        };
+    }
+}
+
+sub kvmVNC($self) {
     return sub($vnc, @) {
         return undef if $vnc =~ m!(?:^|,)unix[:=]/!;
-        return $self->bool($brand eq 'bhyve' ? qw(wait) : ())->($vnc);
+        return $self->bool->($vnc);
     }
 }
 
@@ -458,7 +478,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2022 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 

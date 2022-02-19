@@ -62,7 +62,6 @@
    "type" : "generic",
    "uefivars" : "on",
    "vcpus" : "1",
-   "vnc" : "off",
    "xhci" : "off",
    "zonename" : "bhyve",
    "zonepath" : "__ZADMROOT__/zones/bhyve"

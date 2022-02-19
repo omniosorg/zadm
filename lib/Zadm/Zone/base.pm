@@ -222,7 +222,7 @@ my $getConfig = sub($self) {
         next if $line =~ /not\s+specified$/;
         my ($isres, $prop, $val) = $line =~ /^(\s*)([^:\s]+):(?:\s+(.*))?$/;
         # at least property must be valid
-        length ($prop) or do {
+        length ($prop) || do {
             $self->log->warn("could not decode '$line'");
             next;
         };
@@ -230,7 +230,7 @@ my $getConfig = sub($self) {
             # decode property
             ($prop, $val) = $self->$decodeProp($res, $prop, $val);
             # check if property exists in schema
-            $self->$isResProp($res, $prop) or do {
+            $self->$isResProp($res, $prop) || do {
                 $self->log->warn("'$prop' is not a member of resource '$res'");
                 next;
             };
@@ -243,7 +243,7 @@ my $getConfig = sub($self) {
         }
         else {
             # check if property exists in schema
-            $self->$isProp($prop) or do {
+            $self->$isProp($prop) || do {
                 $self->log->warn("$prop does not exist in schema");
                 next;
             };
@@ -542,7 +542,8 @@ sub isSimpleProp($self, $prop) {
     $self->$isProp($prop)
         or Mojo::Exception->throw("ERROR: property '$prop' does not exist for brand " . $self->brand . "\n");
 
-    return !$self->$isRes($prop) && !$self->$resIsArray($prop);
+    return $self->schema->{$prop}->{'x-simple'}
+        || !$self->$isRes($prop) && !$self->$resIsArray($prop)
 }
 
 sub boot($self, $cOpts) {

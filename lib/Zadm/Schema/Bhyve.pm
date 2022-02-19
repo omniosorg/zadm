@@ -6,7 +6,7 @@ has schema => sub($self) {
     my $kvmschema = $self->SUPER::schema;
     # we need to drop these parent entries since merging would result in checking parent validators too;
     # the additional options from the bhyve brand would fail the check from the parent
-    delete $kvmschema->{$_} for qw(diskif netif);
+    delete $kvmschema->{$_} for qw(diskif netif vnc);
 
     my $dp = Data::Processor->new($kvmschema);
     my $ec = $dp->merge_schema($self->$SCHEMA);
@@ -327,6 +327,62 @@ $SCHEMA = sub($self) {
         validator   => $self->sv->elemOf(qw(on off io)), # change to bool once bhyve supports it
         'x-attr'    => 1,
     },
+    vnc         => {
+        optional    => 1,
+        description => 'VNC',
+        members     => {
+            enabled     => {
+                description => 'enable/disable VNC',
+                default     => 'off',
+                example     => '"enabled" : "on"',
+                validator   => $self->sv->bool,
+                'x-vncbool' => 1,
+                'x-vncidx'  => 0,
+            },
+            wait        => {
+                optional    => 1,
+                description => 'pause boot until the first VNC connection is established',
+                example     => '"wait" : "on"',
+                validator   => $self->sv->bool,
+                'x-vncbool' => 1,
+                'x-vncidx'  => 1,
+            },
+            unix        => {
+                optional    => 1,
+                description => 'sets up a VNC server UNIX socket at the specified path (relative to the zone root)',
+                example     => '"unix" : "/tmp/vncsock.vnc"',
+                validator   => $self->sv->absPath(0),
+                'x-vncbool' => 0,
+                'x-vncidx'  => 2,
+            },
+            w           => {
+                optional    => 1,
+                description => 'horizontal screen resolution',
+                example     => '"w" : "1200"',
+                validator   => $self->sv->numRange(320, 1920),
+                'x-vncbool' => 0,
+                'x-vncidx'  => 3,
+            },
+            h           => {
+                optional    => 1,
+                description => 'vertical screen resolution',
+                example     => '"h" : "800"',
+                validator   => $self->sv->numRange(200, 1200),
+                'x-vncbool' => 0,
+                'x-vncidx'  => 4,
+            },
+            password    => {
+                optional    => 1,
+                description => 'password for the VNC server or path to a file containing the password',
+                example     => '"password" : "secret"',
+                validator   => $self->sv->stringorfile,
+                'x-vncbool' => 0,
+                'x-vncidx'  => 5,
+            },
+        },
+        transformer => $self->sv->toVNCHash,
+        'x-simple'  => 1,
+    },
     xhci        => {
         optional    => 1,
         description => 'emulated USB tablet interface',
@@ -344,7 +400,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2022 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 

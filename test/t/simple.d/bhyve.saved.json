@@ -20,7 +20,6 @@
    "type" : "generic",
    "uefivars" : "on",
    "vcpus" : "1",
-   "vnc" : "off",
    "xhci" : "on",
    "zonename" : "simple",
    "zonepath" : "__ZADMROOT__/zones/simple"
