@@ -433,8 +433,8 @@ sub getPostProcess($self, $cfg) {
 }
 
 sub setPreProcess($self, $cfg) {
-    # sort the attr resources by name for deep compare
-    for my $res (sort keys %$cfg) {
+    # add remaining attr resources
+    for my $res (keys %$cfg) {
         next if !$self->$resIsAttr($res);
 
         my %elem = (
@@ -449,6 +449,10 @@ sub setPreProcess($self, $cfg) {
         push @{$cfg->{attr}}, \%elem;
         delete $cfg->{$res};
     }
+
+    # sort the attr resources by name for deep compare
+    $cfg->{attr} = [ sort { $a->{name} cmp $b->{name} } @{$cfg->{attr}} ]
+        if $self->utils->isArrRef($cfg->{attr});
 
     return $cfg;
 }
