@@ -205,6 +205,9 @@ my $addToEmptySlot = sub($self, $list, $data) {
 sub getPostProcess($self, $cfg) {
     my %noIndex;
 
+    # initialise array refs
+    $cfg->{disk}  = [];
+    $cfg->{cdrom} = [];
     # handle disks/cdroms before the default getPostProcess
     if ($self->utils->isArrRef($cfg->{attr})) {
         ATTR: for (my $i = $#{$cfg->{attr}}; $i >= 0; $i--) {

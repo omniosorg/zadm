@@ -6,8 +6,8 @@ use Mojo::File;
 
 # reset public interface as the inherited list
 # from KVM will have additional methods
-has public  => sub { [ qw(efireset nmi vnc webvnc fw) ] };
-has options => sub($self) {
+has public   => sub { [ qw(efireset nmi vnc webvnc fw) ] };
+has options  => sub($self) {
     return {
         %{$self->SUPER::options},
         fw => {
@@ -20,7 +20,24 @@ has options => sub($self) {
         },
     }
 };
+has vncattr  => sub($self) {
+    return {
+        map  { $_ => $self->schema->{vnc}->{members}->{$_}->{'x-vncbool'} }
+        grep { exists $self->schema->{vnc}->{members}->{$_}->{'x-vncbool'} }
+        keys %{$self->schema->{vnc}->{members}}
+    };
+};
+has vnckeys  => sub($self) {
+    return [
+        sort {
+            $self->schema->{vnc}->{members}->{$a}->{'x-vncidx'}
+            <=>
+            $self->schema->{vnc}->{members}->{$b}->{'x-vncidx'}
+        } keys %{$self->vncattr}
+    ];
+};
 
+# private methods
 my $bhyveCtl = sub($self, $cmd) {
     my $name = $self->name;
 
@@ -34,6 +51,27 @@ my $bhyveCtl = sub($self, $cmd) {
         "cannot $cmd zone $name");
 };
 
+my $setVNCAttr = sub($self, $vnc = {}) {
+    my @attrs;
+
+    for my $attr (@{$self->vnckeys}) {
+        if ($attr eq 'enabled') {
+            push @attrs, $self->utils->boolIsTrue($vnc->{$attr}) ? 'on' : 'off';
+
+            next;
+        }
+
+        push @attrs, !$vnc->{$attr}            ? ()
+                     # boolean attr handling
+                     : $self->vncattr->{$attr} ? ($self->utils->boolIsTrue($vnc->{$attr}) ? $attr : ())
+                     # non-boolean attr handling
+                     :                           "$attr=$vnc->{$attr}";
+    }
+
+    return join ',', @attrs;
+};
+
+# public methods
 sub getPostProcess($self, $cfg) {
     $cfg->{$_} = [] for qw(ppt virtfs);
 
@@ -58,6 +96,11 @@ sub getPostProcess($self, $cfg) {
                         path => $path // '',
                         ro   => $ro,
                     };
+
+                    last;
+                };
+                /^vnc$/ && do {
+                    $cfg->{vnc} = $self->sv->toVNCHash->($cfg->{attr}->[$i]->{value});
 
                     last;
                 };
@@ -156,6 +199,17 @@ HDEND
         }
 
         delete $cfg->{virtfs};
+    }
+
+    # handle VNC
+    if ($cfg->{vnc}) {
+        push @{$cfg->{attr}}, {
+            name  => 'vnc',
+            type  => 'string',
+            value => $self->$setVNCAttr($cfg->{vnc}),
+        };
+
+        delete $cfg->{vnc};
     }
 
     return $self->SUPER::setPreProcess($cfg);

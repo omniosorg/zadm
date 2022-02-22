@@ -143,7 +143,7 @@ $SCHEMA = sub($self) {
         description => 'VNC',
         default     => 'off',
         example     => '"vnc" : "on"',
-        validator   => $self->sv->vnc($self->brand),
+        validator   => $self->sv->kvmVNC,
         'x-attr'    => 1,
     },
 }};
@@ -154,7 +154,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2022 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 
