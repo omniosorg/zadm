@@ -1,0 +1,48 @@
+#!/bin/ksh
+
+source ${.sh.file%/*}/../lib/testenv.ksh
+
+start_environment
+
+z=bhyvedisk
+name="$z"
+
+create_zone $z bhyve
+# This will also add default values for known attributes
+validate $z "initial"
+
+# Add an unindexed disk attribute
+zonecfg -z $z <<- EOM
+	add attr; set name=disk; set type=string
+	  set value=$dataset/hdd-bhyve; end
+EOM
+validate $z "disk"
+
+# Check that the disk is still there
+
+name="$z disk still present"
+zonecfg -z $z info attr | egrep -s hdd-bhyve \
+    && result "$name" PASS || result "$name" FAIL
+zonecfg -z $z info
+
+zonecfg -z $z <<- EOM
+	remove attr name=disk
+	remove attr name=disk0
+EOM
+
+# Add an unindexed cdrom attribute
+mkfile 1m $datasetmp/test.iso
+zonecfg -z $z <<- EOM
+	add attr; set name=cdrom; set type=string
+	  set value=$datasetmp/test.iso; end
+EOM
+validate $z "cdrom"
+
+# Check that the cdrom is still there
+
+name="$z cdrom still present"
+zonecfg -z $z info attr | egrep -s test.iso \
+    && result "$name" PASS || result "$name" FAIL
+
+stop_environment
+
