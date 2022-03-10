@@ -79,7 +79,8 @@ my $propIsArray = sub($self, $res, $prop) {
 };
 
 my $propIsHash = sub($self, $res, $prop) {
-    return exists $self->schema->{$res}->{members}->{$prop}->{members};
+    return exists $self->schema->{$res}->{members}->{$prop}
+        && exists $self->schema->{$res}->{members}->{$prop}->{members};
 };
 
 my $getArray = sub($self, $val) {
@@ -154,9 +155,7 @@ my $setProperty = sub($self, $cfg, $prop) {
 my $decodeProp = sub($self, $res, $prop, $val) {
     my ($_prop, $_val) = $val =~ /name=([^,]+),value="([^"]+)"/;
 
-    ($prop, $val) = ($_prop, $_val)
-        if ($res eq 'net' && $_prop && exists $self->schema->{$res}->{members}->{$_prop}
-            && $self->schema->{$res}->{members}->{$_prop}->{'x-netprop'});
+    return ($_prop, $_val) if $res eq 'net' && $prop eq 'property' && $_prop;
 
     return ($prop, $val);
 };
@@ -230,10 +229,8 @@ my $getConfig = sub($self) {
             # decode property
             ($prop, $val) = $self->$decodeProp($res, $prop, $val);
             # check if property exists in schema
-            $self->$isResProp($res, $prop) || do {
-                $self->log->warn("'$prop' is not a member of resource '$res'");
-                next;
-            };
+            $self->log->warn("'$prop' is not a member of resource '$res'")
+                if !$self->$isResProp($res, $prop);
             if ($self->$resIsArray($res)) {
                 $config->{$res}->[-1]->{$prop} = $self->$getVal($res, $prop, $val);
             }
