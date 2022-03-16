@@ -581,12 +581,12 @@ sub reset($self) {
 sub login($self) {
     my $name = $self->name;
 
-    Mojo::Exception->throw("ERROR: '$name' is not running, cannot login.\n")
+    Mojo::Exception->throw("ERROR: '$name' is not running, cannot log in.\n")
         if !$self->is('running');
 
-    privSet({ all => 1 });
-    $self->utils->exec('zlogin', [ $name ], "cannot login to $name");
-    privSet({ reset => 1 });
+    privSet({ all => 1, inherit => 1 });
+    $self->utils->exec('zlogin', [ $name ], "cannot log in to $name");
+    privSet({ reset => 1, inherit => 1 });
 }
 
 sub console($self, $cOpts = [], $reboot = 0) {
