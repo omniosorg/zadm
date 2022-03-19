@@ -499,7 +499,8 @@ sub setConfig($self, $config) {
             $self->addResource($prop, $cfg->{$prop});
         }
         else {
-            next if defined $self->attrs->{$prop} && $self->attrs->{$prop} eq $cfg->{$prop};
+            next if defined $self->attrs->{$prop} && $self->attrs->{$prop} eq $cfg->{$prop}
+                || $self->schema->{$prop}->{'x-noempty'} && $cfg->{$prop} eq '';
 
             $self->log->debug("property '$prop' changed:",
                 ($self->attrs->{$prop} // '(none)'), '->', $cfg->{$prop});
