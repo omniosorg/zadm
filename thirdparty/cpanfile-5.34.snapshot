@@ -95,17 +95,17 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 0
       IO::Compress::Base 2.101
       IO::Uncompress::Base 2.101
-  IO-Socket-SSL-2.073
-    pathname: S/SU/SULLR/IO-Socket-SSL-2.073.tar.gz
+  IO-Socket-SSL-2.074
+    pathname: S/SU/SULLR/IO-Socket-SSL-2.074.tar.gz
     provides:
-      IO::Socket::SSL 2.073
+      IO::Socket::SSL 2.074
       IO::Socket::SSL::Intercept 2.056
-      IO::Socket::SSL::OCSP_Cache 2.073
-      IO::Socket::SSL::OCSP_Resolver 2.073
+      IO::Socket::SSL::OCSP_Cache 2.074
+      IO::Socket::SSL::OCSP_Resolver 2.074
       IO::Socket::SSL::PublicSuffix undef
-      IO::Socket::SSL::SSL_Context 2.073
-      IO::Socket::SSL::SSL_HANDLE 2.073
-      IO::Socket::SSL::Session_Cache 2.073
+      IO::Socket::SSL::SSL_Context 2.074
+      IO::Socket::SSL::SSL_HANDLE 2.074
+      IO::Socket::SSL::Session_Cache 2.074
       IO::Socket::SSL::Utils 2.015
     requirements:
       ExtUtils::MakeMaker 0
@@ -158,8 +158,8 @@ DISTRIBUTIONS
       Text::ParseWords 0
       perl 5.006001
       version 0.87
-  Mojolicious-9.22
-    pathname: S/SR/SRI/Mojolicious-9.22.tar.gz
+  Mojolicious-9.23
+    pathname: S/SR/SRI/Mojolicious-9.23.tar.gz
     provides:
       Mojo undef
       Mojo::Asset undef
@@ -227,7 +227,7 @@ DISTRIBUTIONS
       Mojo::UserAgent::Transactor undef
       Mojo::Util undef
       Mojo::WebSocket undef
-      Mojolicious 9.22
+      Mojolicious 9.23
       Mojolicious::Command undef
       Mojolicious::Command::Author::cpanify undef
       Mojolicious::Command::Author::generate undef
