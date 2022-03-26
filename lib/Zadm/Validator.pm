@@ -194,7 +194,9 @@ sub zoneNic($self) {
         eval {
             local $SIG{__DIE__};
 
+            privSet({ add => 1, inherit => 1 }, PRIV_SYS_DL_CONFIG);
             $self->utils->exec('dladm', [ (qw(create-vnic -l), $nic->{over}, $name) ]);
+            privSet({ remove => 1, inherit => 1 }, PRIV_SYS_DL_CONFIG);
         };
         return $@ if $@;
 

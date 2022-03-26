@@ -6,6 +6,7 @@ use Exporter qw(import);
 use constant {
     PRIV_DEBUG          => 1,
     PRIV_EFFECTIVE      => 'Effective',
+    PRIV_FILE_DAC_READ  => 'file_dac_read',
     PRIV_FILE_DAC_WRITE => 'file_dac_write',
     PRIV_INHERITABLE    => 'Inheritable',
     PRIV_LIMIT          => 'Limit',
@@ -15,12 +16,13 @@ use constant {
     PRIV_SET            => 2,
     PRIV_STR_LIT        => 1,
     PRIV_STR_PORT       => 0,
+    PRIV_SYS_DL_CONFIG  => 'sys_dl_config',
     PRIV_SYS_MOUNT      => 'sys_mount',
 };
 
-my @constants = qw(PRIV_DEBUG PRIV_EFFECTIVE PRIV_FILE_DAC_WRITE PRIV_INHERITABLE
-    PRIV_LIMIT PRIV_OFF PRIV_ON PRIV_PERMITTED PRIV_SET PRIV_STR_LIT PRIV_STR_PORT
-    PRIV_SYS_MOUNT);
+my @constants = qw(PRIV_DEBUG PRIV_EFFECTIVE PRIV_FILE_DAC_READ PRIV_FILE_DAC_WRITE
+    PRIV_INHERITABLE PRIV_LIMIT PRIV_OFF PRIV_ON PRIV_PERMITTED PRIV_SET PRIV_STR_LIT
+    PRIV_STR_PORT PRIV_SYS_DL_CONFIG PRIV_SYS_MOUNT);
 
 our @EXPORT_OK = (@constants, qw(getppriv priv_addset priv_emptyset priv_fillset
     priv_intersect priv_set_to_str priv_str_to_set setpflags setppriv));
@@ -42,7 +44,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2022 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 
