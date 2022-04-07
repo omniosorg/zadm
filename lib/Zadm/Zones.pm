@@ -10,6 +10,7 @@ use Mojo::Promise;
 use Mojo::IOLoop::Subprocess;
 use List::Util qw(min);
 use Term::ANSIColor qw(colored);
+use Zadm::Privilege qw(:CONSTANTS privSet);
 use Zadm::Utils;
 use Zadm::Zone;
 
@@ -68,7 +69,7 @@ has images  => sub($self) {
     # not used we dynamically load it on demand
     $self->utils->loadMod('Zadm::Images');
 
-    return Zadm::Images->new(log => $self->log, datadir => $self->datadir)
+    return Zadm::Images->new(log => $self->log, datadir => $self->datadir, utils => $self->utils)
 };
 has datadir => $DATADIR;
 has brands  => sub {
@@ -134,7 +135,9 @@ sub installBrand($self, $brand) {
         exit 1 if $check =~ /^no?$/i;
     }
 
+    privSet({ all => 1 });
     $self->utils->exec('pkg', [ 'install', "$PKGPREFIX/$brand" ]);
+    privSet({ reset => 1 });
 }
 
 sub refresh($self) {
