@@ -69,7 +69,7 @@ has images  => sub($self) {
     # not used we dynamically load it on demand
     $self->utils->loadMod('Zadm::Images');
 
-    return Zadm::Images->new(log => $self->log, datadir => $self->datadir)
+    return Zadm::Images->new(log => $self->log, datadir => $self->datadir, utils => $self->utils)
 };
 has datadir => $DATADIR;
 has brands  => sub {
