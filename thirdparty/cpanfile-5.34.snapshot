@@ -11,10 +11,22 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 6.56
       Test::More 0.98
       perl 5.008000
-  Compress-Raw-Lzma-2.101
-    pathname: P/PM/PMQS/Compress-Raw-Lzma-2.101.tar.gz
+  Compress-Raw-Bzip2-2.103
+    pathname: P/PM/PMQS/Compress-Raw-Bzip2-2.103.tar.gz
     provides:
-      Compress::Raw::Lzma 2.101
+      Compress::Raw::Bzip2 2.103
+    requirements:
+      ExtUtils::MakeMaker 0
+  Compress-Raw-Lzma-2.103
+    pathname: P/PM/PMQS/Compress-Raw-Lzma-2.103.tar.gz
+    provides:
+      Compress::Raw::Lzma 2.103
+    requirements:
+      ExtUtils::MakeMaker 0
+  Compress-Raw-Zlib-2.103
+    pathname: P/PM/PMQS/Compress-Raw-Zlib-2.103.tar.gz
+    provides:
+      Compress::Raw::Zlib 2.103
     requirements:
       ExtUtils::MakeMaker 0
   Compress-Stream-Zstd-0.202
@@ -63,38 +75,79 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 0
       perl 5.008005
-  IO-Compress-Lzma-2.101
-    pathname: P/PM/PMQS/IO-Compress-Lzma-2.101.tar.gz
+  IO-Compress-2.103
+    pathname: P/PM/PMQS/IO-Compress-2.103.tar.gz
     provides:
-      IO::Compress::Adapter::Lzip 2.101
-      IO::Compress::Adapter::Lzma 2.101
-      IO::Compress::Adapter::Xz 2.101
-      IO::Compress::Lzip 2.101
-      IO::Compress::Lzma 2.101
-      IO::Compress::Xz 2.101
-      IO::Uncompress::Adapter::UnLzip 2.101
-      IO::Uncompress::Adapter::UnLzma 2.101
-      IO::Uncompress::Adapter::UnXz 2.101
-      IO::Uncompress::UnLzip 2.101
-      IO::Uncompress::UnLzma 2.101
-      IO::Uncompress::UnXz 2.101
+      Compress::Zlib 2.103
+      File::GlobMapper 1.001
+      IO::Compress undef
+      IO::Compress::Adapter::Bzip2 2.103
+      IO::Compress::Adapter::Deflate 2.103
+      IO::Compress::Adapter::Identity 2.103
+      IO::Compress::Base 2.103
+      IO::Compress::Base::Common 2.103
+      IO::Compress::Bzip2 2.103
+      IO::Compress::Deflate 2.103
+      IO::Compress::Gzip 2.103
+      IO::Compress::Gzip::Constants 2.103
+      IO::Compress::RawDeflate 2.103
+      IO::Compress::Zip 2.103
+      IO::Compress::Zip::Constants 2.103
+      IO::Compress::Zip::WeakDecrypt undef
+      IO::Compress::Zlib::Constants 2.103
+      IO::Compress::Zlib::Extra 2.103
+      IO::Uncompress::Adapter::Bunzip2 2.103
+      IO::Uncompress::Adapter::Identity 2.103
+      IO::Uncompress::Adapter::Inflate 2.103
+      IO::Uncompress::AnyInflate 2.103
+      IO::Uncompress::AnyUncompress 2.103
+      IO::Uncompress::Base 2.103
+      IO::Uncompress::Bunzip2 2.103
+      IO::Uncompress::Gunzip 2.103
+      IO::Uncompress::Inflate 2.103
+      IO::Uncompress::RawInflate 2.103
+      IO::Uncompress::Unzip 2.103
+      U64 2.103
+      Zlib::OldDeflate 2.103
+      Zlib::OldInflate 2.103
     requirements:
-      Compress::Raw::Lzma 2.101
+      Compress::Raw::Bzip2 2.103
+      Compress::Raw::Zlib 2.103
+      Encode 0
       ExtUtils::MakeMaker 0
-      IO::Compress::Base 2.101
-      IO::Uncompress::Base 2.101
-  IO-Compress-Zstd-2.101
-    pathname: P/PM/PMQS/IO-Compress-Zstd-2.101.tar.gz
+      Scalar::Util 0
+  IO-Compress-Lzma-2.103
+    pathname: P/PM/PMQS/IO-Compress-Lzma-2.103.tar.gz
     provides:
-      IO::Compress::Adapter::Zstd 2.101
-      IO::Compress::Zstd 2.101
-      IO::Uncompress::Adapter::UnZstd 2.101
-      IO::Uncompress::UnZstd 2.101
+      IO::Compress::Adapter::Lzip 2.103
+      IO::Compress::Adapter::Lzma 2.103
+      IO::Compress::Adapter::Xz 2.103
+      IO::Compress::Lzip 2.103
+      IO::Compress::Lzma 2.103
+      IO::Compress::Xz 2.103
+      IO::Uncompress::Adapter::UnLzip 2.103
+      IO::Uncompress::Adapter::UnLzma 2.103
+      IO::Uncompress::Adapter::UnXz 2.103
+      IO::Uncompress::UnLzip 2.103
+      IO::Uncompress::UnLzma 2.103
+      IO::Uncompress::UnXz 2.103
+    requirements:
+      Compress::Raw::Lzma 2.103
+      ExtUtils::MakeMaker 0
+      IO::Compress::Base 2.103
+      IO::Uncompress::Base 2.103
+  IO-Compress-Zstd-2.103
+    pathname: P/PM/PMQS/IO-Compress-Zstd-2.103.tar.gz
+    provides:
+      IO::Compress::Adapter::Zstd 2.103
+      IO::Compress::Zstd 2.103
+      IO::Uncompress::Adapter::UnZstd 2.103
+      IO::Uncompress::UnZstd 2.103
     requirements:
       Compress::Stream::Zstd 0
       ExtUtils::MakeMaker 0
-      IO::Compress::Base 2.101
-      IO::Uncompress::Base 2.101
+      IO::Compress::Base 2.103
+      IO::Uncompress::Base 2.103
   IO-Socket-SSL-2.074
     pathname: S/SU/SULLR/IO-Socket-SSL-2.074.tar.gz
     provides:
