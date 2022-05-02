@@ -342,7 +342,7 @@ sub edit($self, $zone, $prop = {}) {
         }
 
         local $@;
-        $self->log->debug("validating JSON");
+        $self->log->debug('validating', uc ($self->conffmt));
         my $cfg = eval {
             local $SIG{__DIE__};
             %$prop ? { %{$zone->config}, %$prop } : $self->decconf->($config);
