@@ -58,9 +58,10 @@ has utils    => sub($self) { Zadm::Utils->new(log => $self->log) };
 has datadir  => sub { Mojo::Home->new->detect(__PACKAGE__)->rel_file('var')->to_string };
 has cache    => sub($self) {
     my $cache = Mojo::File->new($self->datadir, 'cache');
-    # check if cache directory exists
+    # check if cache directory exists and is writeable
     -d $cache || $cache->make_path
-        or Mojo::Exception->throw("ERROR: cannot create cache directory $self->cache\n");
+        or Mojo::Exception->throw("ERROR: cannot create cache directory '$cache'\n");
+    -w $cache or Mojo::Exception->throw("ERROR: permission denied writing to '$cache'\n");
 
     return $cache;
 };
