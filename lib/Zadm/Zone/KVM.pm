@@ -412,9 +412,9 @@ sub install($self, @args) {
         $self->utils->exec('zfs', [ 'set', 'volsize=' . $self->config->{bootdisk}->{size},
             $self->rootds ]);
         privSet({ remove => 1, inherit => 1 }, PRIV_SYS_MOUNT);
-
-        $self->SUPER::install;
     }
+
+    $self->SUPER::install;
 }
 
 sub poweroff($self) {
