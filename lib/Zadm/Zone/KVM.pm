@@ -173,12 +173,16 @@ my $getDiskProps = sub($self, $prop) {
     };
 };
 
-my $getIPPort = sub($self, $listen) {
+my $getVNCIPPort = sub($self, $listen) {
+    Mojo::Exception->throw("ERROR: permission denied accessing zone root.\n")
+        if !-x Mojo::File->new($self->config->{zonepath}, 'root');
+
     $self->log->warn('WARNING: zone', $self->name, 'is not running')
         if !$self->is('running');
 
-    Mojo::Exception->throw('ERROR: vnc is not set up for zone ' . $self->name . "\n")
-        if !$self->utils->boolIsTrue($self->config->{vnc});
+    my $vncEnabled = $self->brand eq 'kvm' ? $self->config->{vnc} : $self->config->{vnc}->{enabled};
+    $self->log->warn('WARNING: VNC is not enabled for zone', $self->name)
+        if !$self->utils->boolIsTrue($vncEnabled);
 
     my ($ip, $port) = $listen =~ /^(?:(\*|$IPv4_re|(?:\[?(?:$IPv6_re|::)\]?)):)?(\d+)$/;
     Mojo::Exception->throw("ERROR: '$listen' is not valid\n") if !$port;
@@ -408,9 +412,9 @@ sub install($self, @args) {
         $self->utils->exec('zfs', [ 'set', 'volsize=' . $self->config->{bootdisk}->{size},
             $self->rootds ]);
         privSet({ remove => 1, inherit => 1 }, PRIV_SYS_MOUNT);
-
-        $self->SUPER::install;
     }
+
+    $self->SUPER::install;
 }
 
 sub poweroff($self) {
@@ -431,15 +435,12 @@ sub nmi($self) {
 sub vnc($self, $listen = '5900') {
     return $self->webvnc($listen) if $self->opts->{web};
 
-    Mojo::Exception->throw("ERROR: permission denied accessing zone root.\n")
-        if !-x Mojo::File->new($self->config->{zonepath}, 'root');
+    my ($ip, $port) = $self->$getVNCIPPort($listen);
 
     # Zadm::VNC::Proxy is expensive to load and only used for VNC proxying.
     # To avoid having the penalty of loading it even when it is
     # not used we dynamically load it on demand
     $self->utils->loadMod('Zadm::VNC::Proxy');
-
-    my ($ip, $port) = $self->$getIPPort($listen);
 
     Zadm::VNC::Proxy->new(
         log   => $self->log,
@@ -450,15 +451,12 @@ sub vnc($self, $listen = '5900') {
 }
 
 sub webvnc($self, $listen = '8000') {
-    Mojo::Exception->throw("ERROR: permission denied accessing zone root.\n")
-        if !-x Mojo::File->new($self->config->{zonepath}, 'root');
+    my ($ip, $port) = $self->$getVNCIPPort($listen);
 
     # Zadm::VNC::NoVNC is expensive to load and only used for web VNC support.
     # To avoid having the penalty of loading it even when it is
     # not used we dynamically load it on demand
     $self->utils->loadMod('Zadm::VNC::NoVNC');
-
-    my ($ip, $port) = $self->$getIPPort($listen);
 
     Zadm::VNC::NoVNC->new(
         log   => $self->log,
