@@ -73,8 +73,6 @@ has image    => sub($self) {
 
     $img->{_file} = $self->provider->download($img->{uuid}
         . ($img->{ext} // '.tar.gz'), $img->{img}, chksum => $img->{chksum});
-    # TODO: instopt needs rework; e.g. joyent lx images are "type" : "lx-dataset"
-    # but tarballs (i.e. need -t for install). for now we don't set type for the Joyent provider
     $img->{_instopt} = ($img->{type} // '') =~ /-dataset$/ ? '-s' : '-t';
 
     # return the whole structure including all the metadata

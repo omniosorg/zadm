@@ -1,4 +1,4 @@
-package Zadm::Image::Joyent;
+package Zadm::Image::SmartOS;
 use Mojo::Base 'Zadm::Image::base', -signatures;
 
 use Mojo::JSON qw(decode_json);
@@ -6,7 +6,7 @@ use Mojo::File;
 use Mojo::URL;
 use Zadm::Privilege qw(:CONSTANTS privSet);
 
-has baseurl  => sub { Mojo::URL->new('https://images.joyent.com') };
+has baseurl  => sub { Mojo::URL->new('https://images.smartos.org') };
 has index    => sub($self) { Mojo::URL->new('/images')->base($self->baseurl)->to_abs };
 
 sub postProcess($self, $json) {
@@ -37,7 +37,7 @@ sub postProcess($self, $json) {
 sub postInstall($self, $brand, $opts = {}) {
     return if $brand ne 'illumos';
 
-    # illumos branded images from Joyent have a different structure to that
+    # illumos branded images from SmartOS have a different structure to that
     # which we expect. The zone root ends up containing a number of directories
     # including one called root/ which is the real zone root. We need to move
     # this into place while keeping within the same filesystem to avoid
