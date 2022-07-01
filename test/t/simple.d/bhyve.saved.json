@@ -2,7 +2,6 @@
    "acpi" : "on",
    "autoboot" : "false",
    "bootargs" : "",
-   "bootorder" : "cd",
    "bootrom" : "BHYVE",
    "brand" : "bhyve",
    "cloud-init" : "off",

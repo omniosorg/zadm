@@ -347,6 +347,29 @@ sub bootrom($self) {
     }
 }
 
+sub bhyveBootOrder($self, $singleDev = 0) {
+    return sub($bootorder, @) {
+        return undef if !$singleDev && $bootorder =~ /^(?:cd|dc)$/;
+
+        my @devs = $singleDev ? ($bootorder) : split /,/, $bootorder;
+
+        my @err;
+        for (@devs) {
+            /^shell$/ && next;
+            /^path\d*$/ && next;
+            /^bootdisk$/ && next;
+            /^disk\d*$/ && next;
+            /^cdrom\d*$/ && next;
+            /^net\d*(?:=(?:pxe|http))?$/ && next;
+            /^boot\d+$/ && next;
+
+            push @err, "boot device '$_' is not valid";
+        }
+
+        return @err ? join ('; ', @err) : undef;
+    }
+}
+
 sub stripDev($self) {
     return sub($path, @) {
         $path =~ s|^/dev/zvol/r?dsk/||;
