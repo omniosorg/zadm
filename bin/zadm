@@ -269,7 +269,14 @@ sub main {
             }
             my $zName = pop @ARGV or pod2usage(1);
 
-            $zones->zone($zName, opts => $opts)->boot(\@ARGV);
+            my $zone = $zones->zone($zName, opts => $opts);
+            {
+                local $SIG{__WARN__} = sub { };
+                GetOptions($opts, @{$zone->getOptions($mainOpt)}) or $zone->usage;
+            }
+            $zone->checkMandOptions($mainOpt) or $zone->usage;
+
+            $zone->boot(\@ARGV);
             last;
         };
         /^(?:stop|shutdown)$/ && do {
@@ -397,9 +404,9 @@ sub main {
                 local $SIG{__WARN__} = sub { };
                 GetOptions($opts, @{$zone->getOptions($mainOpt)}) or $zone->usage;
             }
-            $zone->checkMandOptions($mainOpt) or $zone->usage;
 
-            $zone->usage if !$zone->can($mainOpt) || !$zone->isPublic($mainOpt);
+            $zone->usage if !$zone->can($mainOpt) || !$zone->isPublic($mainOpt)
+                || !$zone->checkMandOptions($mainOpt);
 
             $zone->$mainOpt(@ARGV);
             last;
