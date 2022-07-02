@@ -128,14 +128,16 @@ $SCHEMA = sub($self) {
         optional    => 1,
         description => 'device to be used for the next boot only',
         example     => '"bootnext" : "cdrom0"',
-        validator   => $self->sv->bhyveBootOrder(1),
+        validator   => $self->sv->bhyveBootDev,
         'x-attr'    => 1,
     },
     bootorder   => {
         optional    => 1,
+        array       => 1,
         description => 'boot order',
         example     => '"bootorder" : "path0,bootdisk,cdrom0"',
-        validator   => $self->sv->bhyveBootOrder,
+        validator   => $self->sv->bhyveBootDev,
+        transformer => $self->sv->toArray(qr/,/),
         'x-attr'    => 1,
     },
     disk        => {

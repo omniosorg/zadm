@@ -347,26 +347,22 @@ sub bootrom($self) {
     }
 }
 
-sub bhyveBootOrder($self, $singleDev = 0) {
-    return sub($bootorder, @) {
-        return undef if !$singleDev && $bootorder =~ /^(?:cd|dc)$/;
+sub bhyveBootDev($self) {
+    return sub($bootdev, @) {
+        for ($bootdev) {
+            /^(?:cd|dc)$/ && last;
+            /^shell$/ && last;
+            /^path\d*$/ && last;
+            /^bootdisk$/ && last;
+            /^disk\d*$/ && last;
+            /^cdrom\d*$/ && last;
+            /^net\d*(?:=(?:pxe|http))?$/ && last;
+            /^boot\d+$/ && last;
 
-        my @devs = $singleDev ? ($bootorder) : split /,/, $bootorder;
-
-        my @err;
-        for (@devs) {
-            /^shell$/ && next;
-            /^path\d*$/ && next;
-            /^bootdisk$/ && next;
-            /^disk\d*$/ && next;
-            /^cdrom\d*$/ && next;
-            /^net\d*(?:=(?:pxe|http))?$/ && next;
-            /^boot\d+$/ && next;
-
-            push @err, "boot device '$_' is not valid";
+            return "boot device '$_' is not valid";
         }
 
-        return @err ? join ('; ', @err) : undef;
+        return undef;
     }
 }
 
@@ -408,9 +404,9 @@ sub toHash($self, $attr, $isarray = 0) {
     }
 }
 
-sub toArray($self) {
+sub toArray($self, $split = '') {
     return sub($elem, @) {
-        return $self->utils->isArrRef($elem) ? $elem : [ $elem ];
+        return $self->utils->isArrRef($elem) ? $elem : [ $split ? split (/$split/, $elem) : $elem ];
     }
 }
 
