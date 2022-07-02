@@ -6,7 +6,7 @@ has schema => sub($self) {
     my $kvmschema = $self->SUPER::schema;
     # we need to drop these parent entries since merging would result in checking parent validators too;
     # the additional options from the bhyve brand would fail the check from the parent
-    delete $kvmschema->{$_} for qw(diskif netif vnc);
+    delete $kvmschema->{$_} for qw(bootorder diskif netif vnc);
 
     my $dp = Data::Processor->new($kvmschema);
     my $ec = $dp->merge_schema($self->$SCHEMA);
@@ -123,6 +123,20 @@ $SCHEMA = sub($self) {
         optional    => 1,
         description => 'ZFS volume which will be attached as the boot disk',
         members     => $diskmembers,
+    },
+    bootnext    => {
+        optional    => 1,
+        description => 'device to be used for the next boot only',
+        example     => '"bootnext" : "cdrom0"',
+        validator   => $self->sv->bhyveBootOrder(1),
+        'x-attr'    => 1,
+    },
+    bootorder   => {
+        optional    => 1,
+        description => 'boot order',
+        example     => '"bootorder" : "path0,bootdisk,cdrom0"',
+        validator   => $self->sv->bhyveBootOrder,
+        'x-attr'    => 1,
     },
     disk        => {
         optional    => 1,
