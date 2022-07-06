@@ -430,8 +430,14 @@ sub getPostProcess($self, $cfg) {
 }
 
 sub setPreProcess($self, $cfg) {
-    # add remaining attr resources
+    # remove empty arrays and add remaining attr resources
     for my $res (keys %$cfg) {
+        if ($self->utils->isArrRef($cfg->{$res}) && !@{$cfg->{$res}}) {
+            delete $cfg->{$res};
+
+            next;
+        }
+
         next if !$self->$resIsAttr($res);
 
         my %elem = (
