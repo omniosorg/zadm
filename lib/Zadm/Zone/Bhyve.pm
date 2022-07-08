@@ -2,6 +2,8 @@ package Zadm::Zone::Bhyve;
 use Mojo::Base 'Zadm::Zone::KVM', -signatures;
 
 use Mojo::Exception;
+use Mojo::IOLoop::Subprocess;
+use Mojo::JSON qw(decode_json);
 use Mojo::File;
 
 # reset public interface as the inherited list
@@ -10,8 +12,13 @@ has public   => sub { [ qw(efireset nmi vnc webvnc fw) ] };
 has options  => sub($self) {
     return {
         %{$self->SUPER::options},
-        fw => {
-            edit   => {
+        boot => {
+            bootmenu => {
+                getopt => 'bootmenu|m',
+            },
+        },
+        fw   => {
+            edit     => {
                 getopt => 'edit|e=s',
             },
             map {
@@ -215,6 +222,121 @@ HDEND
     return $self->SUPER::setPreProcess($cfg);
 }
 
+sub boot($self, $cOpts) {
+    return $self->SUPER::boot($cOpts) if !$self->opts->{bootmenu};
+
+    my @val;
+    my %lbl;
+    my $cfg = $self->config;
+    my $sel = $self->utils->isArrRef($cfg->{bootorder}) ? $cfg->{bootorder}->[0] : '';
+
+    if ($cfg->{bootdisk} && $cfg->{bootdisk}->{path}) {
+        push @val, 'bootdisk';
+        $lbl{bootdisk} = "bootdisk: $cfg->{bootdisk}->{path}";
+    }
+
+    for my $dev (qw(cdrom disk net)) {
+        next if !$cfg->{$dev} || !@{$cfg->{$dev}};
+
+        for (my $i = 0; $i < @{$cfg->{$dev}}; $i++) {
+            next if !$cfg->{$dev}->[$i];
+
+            my $device = $dev eq 'cdrom' ? $cfg->{$dev}->[$i]
+                       : $dev eq 'disk'  ? $cfg->{$dev}->[$i]->{path}
+                       : $dev eq 'net'   ? $cfg->{$dev}->[$i]->{physical}
+                       :                   '';
+
+            next if !length ($device);
+
+            push @val, "$dev$i";
+            $lbl{"$dev$i"} = sprintf '%-10s%s', "$dev$i: ", $device;
+        }
+    }
+
+    my $uefivars = Mojo::File->new($cfg->{zonepath}, qw(root etc uefivars));
+
+    if (-r $uefivars && -x ($self->utils->getCmd('uefivars'))[0]) {
+        my $uev = decode_json($self->utils->readProc('uefivars', [ qw(-j -l), $uefivars ])->[0]);
+
+        $sel = "boot$uev->{order}->{first}" if exists $uev->{order}->{first};
+
+        for my $entry (@{$uev->{entries}}) {
+            my $i   = $entry->{slot};
+            my $dev = $entry->{title};
+
+            my $type = (keys %{$entry->{btype}})[0];
+
+            $dev .= " ($entry->{btype}->{$type})" if $type =~ /^(?:App|Path)$/;
+
+            push @val, "boot$i";
+            $lbl{"boot$i"} = sprintf '%-10s%s', "boot$i: ", $dev;
+        }
+    }
+
+    # Curses::UI is expensive to load and only used for interactive boot.
+    # To avoid having the penalty of loading it even when it is
+    # not used we dynamically load it on demand
+    $self->utils->loadMod('Curses::UI');
+
+    local $ENV{ESCDELAY} = 0;
+
+    my %sel;
+    if (exists $lbl{$sel}) {
+        for (my $i = 0; $i < @val; $i++) {
+            next if $val[$i] ne $sel;
+
+            %sel = (-selected => $i);
+
+            last;
+        }
+    }
+
+    # screen when run with `altscreen` set to `off` will redraw the UI once
+    # the zone console detaches and therefore overwrite the console output.
+    # forking the UI to another process seems to bypass this behaviour
+    Mojo::IOLoop::Subprocess->new->run_p(sub {
+        my $sel;
+        my $cui = Curses::UI->new;
+        my $win = $cui->add(qw(main Window));
+        my $lbx = $win->add(
+            qw(bootmenu Listbox),
+            -border     => 1,
+            -title      => 'One-Time Boot Menu',
+            -values     => \@val,
+            -labels     => \%lbl,
+            %sel,
+            -onchange   => sub($ret) {
+                $sel = $ret->get;
+
+                $cui->mainloopExit;
+            },
+        );
+
+        # this is a bit hacky; modifying a private property of an object
+        # however, we need to reset `-selected` in order to trigger an `-onchange`
+        # event in case the currently selected item is re-selected (e.g. hitting ENTER)
+        $lbx->{-selected} = undef;
+
+        $lbx->set_binding(sub { $cui->mainloopExit }, qw(q Q x X), "\x1b"); # ESC character
+        $lbx->focus;
+
+        $cui->mainloop;
+
+        $cui->leave_curses;
+
+        return $sel;
+    })->then(sub($sel) {
+        return if !$sel;
+
+        $self->utils->edit($self, { bootnext => $sel })
+            or Mojo::Exception->throw("ERROR: cannot set bootnext to '$sel'\n");
+
+        $self->SUPER::boot($cOpts);
+    })->catch(sub($err) {
+        warn $err;
+    })->wait;
+}
+
 sub poweroff($self) {
     $self->$bhyveCtl('--force-poweroff');
 }
@@ -258,7 +380,7 @@ where 'command' is one of the following:
     pull <image_uuid>
     vacuum [-d <days>]
     brands
-    start [-c [extra_args]] <zone_name>
+    start [-m|--bootmenu] [-c [extra_args]] <zone_name>
     stop [-c [extra_args]] <zone_name>
     restart [-c [extra_args]] <zone_name>
     poweroff <zone_name>

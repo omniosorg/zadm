@@ -56,7 +56,7 @@ where 'command' is one of the following:
     pull <image_uuid>
     vacuum [-d <days>]
     brands
-    start [-c [extra_args]] <zone_name>
+    start [-m|--bootmenu] [-c [extra_args]] <zone_name>
     stop [-c [extra_args]] <zone_name>
     restart [-c [extra_args]] <zone_name>
     poweroff <zone_name>

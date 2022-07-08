@@ -1,0 +1,449 @@
+# carton snapshot format: version 1.0
+DISTRIBUTIONS
+  Bytes-Random-Secure-Tiny-1.011
+    pathname: D/DA/DAVIDO/Bytes-Random-Secure-Tiny-1.011.tar.gz
+    provides:
+      Bytes::Random::Secure::Tiny 1.011
+      Crypt::Random::Seed::Embedded 1.011
+      Math::Random::ISAAC::Embedded 1.011
+      Math::Random::ISAAC::PP::Embedded 1.011
+    requirements:
+      ExtUtils::MakeMaker 6.56
+      Test::More 0.98
+      perl 5.008000
+  Compress-Raw-Lzma-2.201
+    pathname: P/PM/PMQS/Compress-Raw-Lzma-2.201.tar.gz
+    provides:
+      Compress::Raw::Lzma 2.201
+    requirements:
+      ExtUtils::MakeMaker 0
+  Compress-Stream-Zstd-0.203
+    pathname: P/PM/PMQS/Compress-Stream-Zstd-0.203.tar.gz
+    provides:
+      Compress::Stream::Zstd 0.203
+      Compress::Stream::Zstd::CompressionContext undef
+      Compress::Stream::Zstd::CompressionDictionary undef
+      Compress::Stream::Zstd::Compressor undef
+      Compress::Stream::Zstd::DecompressionContext undef
+      Compress::Stream::Zstd::DecompressionDictionary undef
+      Compress::Stream::Zstd::Decompressor undef
+    requirements:
+      ExtUtils::CBuilder 0
+      ExtUtils::ParseXS 0
+      Module::Build 0.4005
+      parent 0
+      perl 5.008001
+  Cpanel-JSON-XS-4.28
+    pathname: R/RU/RURBAN/Cpanel-JSON-XS-4.28.tar.gz
+    provides:
+      Cpanel::JSON::XS 4.28
+      Cpanel::JSON::XS::Type undef
+    requirements:
+      Carp 0
+      Config 0
+      Encode 1.9801
+      Exporter 0
+      ExtUtils::MakeMaker 0
+      Pod::Text 2.08
+      XSLoader 0
+      overload 0
+      strict 0
+      warnings 0
+  Curses-1.38
+    pathname: G/GI/GIRAFFED/Curses-1.38.tar.gz
+    provides:
+      Curses 1.38
+      Curses::Field 1.38
+      Curses::Form 1.38
+      Curses::Item 1.38
+      Curses::Menu 1.38
+      Curses::Panel 1.38
+      Curses::Screen 1.38
+      Curses::Window 1.38
+    requirements:
+      ExtUtils::MakeMaker 0
+  Curses-UI-0.9609
+    pathname: M/MD/MDXI/Curses-UI-0.9609.tar.gz
+    provides:
+      Curses::UI 0.9609
+      Curses::UI::Buttonbox 1.10
+      Curses::UI::Calendar 1.10
+      Curses::UI::Checkbox 1.11
+      Curses::UI::Color 0.01
+      Curses::UI::Common 1.10
+      Curses::UI::Container 1.11
+      Curses::UI::ContainerWidget 1.12
+      Curses::UI::Dialog::Basic 1.10
+      Curses::UI::Dialog::Calendar 1.10
+      Curses::UI::Dialog::Dirbrowser 1.0
+      Curses::UI::Dialog::Error 1.10
+      Curses::UI::Dialog::Filebrowser 1.10
+      Curses::UI::Dialog::Progress 1.10
+      Curses::UI::Dialog::Question 1.00
+      Curses::UI::Dialog::Status 1.10
+      Curses::UI::Label 1.11
+      Curses::UI::Language undef
+      Curses::UI::Language::chinese undef
+      Curses::UI::Language::czech undef
+      Curses::UI::Language::dutch undef
+      Curses::UI::Language::english undef
+      Curses::UI::Language::french undef
+      Curses::UI::Language::german undef
+      Curses::UI::Language::italian undef
+      Curses::UI::Language::japanese undef
+      Curses::UI::Language::norwegian undef
+      Curses::UI::Language::polish undef
+      Curses::UI::Language::portuguese undef
+      Curses::UI::Language::russian undef
+      Curses::UI::Language::slovak undef
+      Curses::UI::Language::spanish undef
+      Curses::UI::Language::turkish undef
+      Curses::UI::Listbox 1.3
+      Curses::UI::MenuListbox 1.10
+      Curses::UI::Menubar 1.10
+      Curses::UI::Notebook 1.0001
+      Curses::UI::PasswordEntry 1.10
+      Curses::UI::Popupmenu 1.0011
+      Curses::UI::PopupmenuListbox 1.0011
+      Curses::UI::Progressbar 1.10
+      Curses::UI::Radiobuttonbox 1.10
+      Curses::UI::SearchEntry 1.10
+      Curses::UI::Searchable 1.10
+      Curses::UI::TextEditor 1.5
+      Curses::UI::TextEntry 1.10
+      Curses::UI::TextViewer 1.10
+      Curses::UI::Widget 1.12
+      Curses::UI::Window 1.10
+    requirements:
+      Curses 0
+      ExtUtils::MakeMaker 6.42
+      Term::ReadKey 0
+  Data-Processor-1.0.9
+    pathname: M/MB/MBP/Data-Processor-1.0.9.tar.gz
+    provides:
+      Data::Processor 1.000009
+      Data::Processor::Error::Collection undef
+      Data::Processor::Error::Instance undef
+      Data::Processor::Generator undef
+      Data::Processor::PodWriter undef
+      Data::Processor::Transformer undef
+      Data::Processor::Validator undef
+      Data::Processor::ValidatorFactory undef
+    requirements:
+      ExtUtils::MakeMaker 0
+      perl 5.008005
+  Devel-Refcount-0.10
+    pathname: P/PE/PEVANS/Devel-Refcount-0.10.tar.gz
+    provides:
+      Devel::Refcount 0.10
+    requirements:
+      Exporter 5.57
+      ExtUtils::CBuilder 0
+      Module::Build 0
+      Test::Fatal 0
+      Test::More 0
+      XSLoader 0
+  IO-Compress-Lzma-2.103
+    pathname: P/PM/PMQS/IO-Compress-Lzma-2.103.tar.gz
+    provides:
+      IO::Compress::Adapter::Lzip 2.103
+      IO::Compress::Adapter::Lzma 2.103
+      IO::Compress::Adapter::Xz 2.103
+      IO::Compress::Lzip 2.103
+      IO::Compress::Lzma 2.103
+      IO::Compress::Xz 2.103
+      IO::Uncompress::Adapter::UnLzip 2.103
+      IO::Uncompress::Adapter::UnLzma 2.103
+      IO::Uncompress::Adapter::UnXz 2.103
+      IO::Uncompress::UnLzip 2.103
+      IO::Uncompress::UnLzma 2.103
+      IO::Uncompress::UnXz 2.103
+    requirements:
+      Compress::Raw::Lzma 2.103
+      ExtUtils::MakeMaker 0
+      IO::Compress::Base 2.103
+      IO::Uncompress::Base 2.103
+  IO-Compress-Zstd-2.103
+    pathname: P/PM/PMQS/IO-Compress-Zstd-2.103.tar.gz
+    provides:
+      IO::Compress::Adapter::Zstd 2.103
+      IO::Compress::Zstd 2.103
+      IO::Uncompress::Adapter::UnZstd 2.103
+      IO::Uncompress::UnZstd 2.103
+    requirements:
+      Compress::Stream::Zstd 0
+      ExtUtils::MakeMaker 0
+      IO::Compress::Base 2.103
+      IO::Uncompress::Base 2.103
+  IO-Socket-SSL-2.074
+    pathname: S/SU/SULLR/IO-Socket-SSL-2.074.tar.gz
+    provides:
+      IO::Socket::SSL 2.074
+      IO::Socket::SSL::Intercept 2.056
+      IO::Socket::SSL::OCSP_Cache 2.074
+      IO::Socket::SSL::OCSP_Resolver 2.074
+      IO::Socket::SSL::PublicSuffix undef
+      IO::Socket::SSL::SSL_Context 2.074
+      IO::Socket::SSL::SSL_HANDLE 2.074
+      IO::Socket::SSL::Session_Cache 2.074
+      IO::Socket::SSL::Utils 2.015
+    requirements:
+      ExtUtils::MakeMaker 0
+      Mozilla::CA 0
+      Net::SSLeay 1.46
+      Scalar::Util 0
+  Module-Build-0.4231
+    pathname: L/LE/LEONT/Module-Build-0.4231.tar.gz
+    provides:
+      Module::Build 0.4231
+      Module::Build::Base 0.4231
+      Module::Build::Compat 0.4231
+      Module::Build::Config 0.4231
+      Module::Build::Cookbook 0.4231
+      Module::Build::Dumper 0.4231
+      Module::Build::Notes 0.4231
+      Module::Build::PPMMaker 0.4231
+      Module::Build::Platform::Default 0.4231
+      Module::Build::Platform::MacOS 0.4231
+      Module::Build::Platform::Unix 0.4231
+      Module::Build::Platform::VMS 0.4231
+      Module::Build::Platform::VOS 0.4231
+      Module::Build::Platform::Windows 0.4231
+      Module::Build::Platform::aix 0.4231
+      Module::Build::Platform::cygwin 0.4231
+      Module::Build::Platform::darwin 0.4231
+      Module::Build::Platform::os2 0.4231
+      Module::Build::PodParser 0.4231
+    requirements:
+      CPAN::Meta 2.142060
+      Cwd 0
+      Data::Dumper 0
+      ExtUtils::CBuilder 0.27
+      ExtUtils::Install 0
+      ExtUtils::Manifest 0
+      ExtUtils::Mkbootstrap 0
+      ExtUtils::ParseXS 2.21
+      File::Basename 0
+      File::Compare 0
+      File::Copy 0
+      File::Find 0
+      File::Path 0
+      File::Spec 0.82
+      Getopt::Long 0
+      Module::Metadata 1.000002
+      Perl::OSType 1
+      Pod::Man 2.17
+      TAP::Harness 3.29
+      Text::Abbrev 0
+      Text::ParseWords 0
+      perl 5.006001
+      version 0.87
+  Mojolicious-9.25
+    pathname: S/SR/SRI/Mojolicious-9.25.tar.gz
+    provides:
+      Mojo undef
+      Mojo::Asset undef
+      Mojo::Asset::File undef
+      Mojo::Asset::Memory undef
+      Mojo::Base undef
+      Mojo::ByteStream undef
+      Mojo::Cache undef
+      Mojo::Collection undef
+      Mojo::Content undef
+      Mojo::Content::MultiPart undef
+      Mojo::Content::Single undef
+      Mojo::Cookie undef
+      Mojo::Cookie::Request undef
+      Mojo::Cookie::Response undef
+      Mojo::DOM undef
+      Mojo::DOM::CSS undef
+      Mojo::DOM::HTML undef
+      Mojo::Date undef
+      Mojo::DynamicMethods undef
+      Mojo::EventEmitter undef
+      Mojo::Exception undef
+      Mojo::File undef
+      Mojo::Headers undef
+      Mojo::HelloWorld undef
+      Mojo::Home undef
+      Mojo::IOLoop undef
+      Mojo::IOLoop::Client undef
+      Mojo::IOLoop::Server undef
+      Mojo::IOLoop::Stream undef
+      Mojo::IOLoop::Subprocess undef
+      Mojo::IOLoop::TLS undef
+      Mojo::JSON undef
+      Mojo::JSON::Pointer undef
+      Mojo::Loader undef
+      Mojo::Log undef
+      Mojo::Message undef
+      Mojo::Message::Request undef
+      Mojo::Message::Response undef
+      Mojo::Parameters undef
+      Mojo::Path undef
+      Mojo::Promise undef
+      Mojo::Reactor undef
+      Mojo::Reactor::EV undef
+      Mojo::Reactor::Poll undef
+      Mojo::Server undef
+      Mojo::Server::CGI undef
+      Mojo::Server::Daemon undef
+      Mojo::Server::Hypnotoad undef
+      Mojo::Server::Morbo undef
+      Mojo::Server::Morbo::Backend undef
+      Mojo::Server::Morbo::Backend::Poll undef
+      Mojo::Server::PSGI undef
+      Mojo::Server::Prefork undef
+      Mojo::Template undef
+      Mojo::Transaction undef
+      Mojo::Transaction::HTTP undef
+      Mojo::Transaction::WebSocket undef
+      Mojo::URL undef
+      Mojo::Upload undef
+      Mojo::UserAgent undef
+      Mojo::UserAgent::CookieJar undef
+      Mojo::UserAgent::Proxy undef
+      Mojo::UserAgent::Server undef
+      Mojo::UserAgent::Transactor undef
+      Mojo::Util undef
+      Mojo::WebSocket undef
+      Mojolicious 9.25
+      Mojolicious::Command undef
+      Mojolicious::Command::Author::cpanify undef
+      Mojolicious::Command::Author::generate undef
+      Mojolicious::Command::Author::generate::app undef
+      Mojolicious::Command::Author::generate::dockerfile undef
+      Mojolicious::Command::Author::generate::lite_app undef
+      Mojolicious::Command::Author::generate::makefile undef
+      Mojolicious::Command::Author::generate::plugin undef
+      Mojolicious::Command::Author::inflate undef
+      Mojolicious::Command::cgi undef
+      Mojolicious::Command::daemon undef
+      Mojolicious::Command::eval undef
+      Mojolicious::Command::get undef
+      Mojolicious::Command::prefork undef
+      Mojolicious::Command::psgi undef
+      Mojolicious::Command::routes undef
+      Mojolicious::Command::version undef
+      Mojolicious::Commands undef
+      Mojolicious::Controller undef
+      Mojolicious::Lite undef
+      Mojolicious::Plugin undef
+      Mojolicious::Plugin::Config undef
+      Mojolicious::Plugin::DefaultHelpers undef
+      Mojolicious::Plugin::EPLRenderer undef
+      Mojolicious::Plugin::EPRenderer undef
+      Mojolicious::Plugin::HeaderCondition undef
+      Mojolicious::Plugin::JSONConfig undef
+      Mojolicious::Plugin::Mount undef
+      Mojolicious::Plugin::NotYAMLConfig undef
+      Mojolicious::Plugin::TagHelpers undef
+      Mojolicious::Plugins undef
+      Mojolicious::Renderer undef
+      Mojolicious::Routes undef
+      Mojolicious::Routes::Match undef
+      Mojolicious::Routes::Pattern undef
+      Mojolicious::Routes::Route undef
+      Mojolicious::Sessions undef
+      Mojolicious::Static undef
+      Mojolicious::Types undef
+      Mojolicious::Validator undef
+      Mojolicious::Validator::Validation undef
+      Test::Mojo undef
+      ojo undef
+    requirements:
+      ExtUtils::MakeMaker 0
+      IO::Socket::IP 0.37
+      Sub::Util 1.41
+      perl 5.016
+  Mozilla-CA-20211001
+    pathname: A/AB/ABH/Mozilla-CA-20211001.tar.gz
+    provides:
+      Mozilla::CA 20211001
+    requirements:
+      ExtUtils::MakeMaker 0
+      perl 5.006
+  Net-SSLeay-1.92
+    pathname: C/CH/CHRISN/Net-SSLeay-1.92.tar.gz
+    provides:
+      Net::SSLeay 1.92
+      Net::SSLeay::Handle 1.92
+    requirements:
+      English 0
+      ExtUtils::MakeMaker 0
+      File::Spec::Functions 0
+      MIME::Base64 0
+      Text::Wrap 0
+      constant 0
+      perl 5.008001
+  Regexp-IPv4-0.003
+    pathname: P/PE/PERLANCAR/Regexp-IPv4-0.003.tar.gz
+    provides:
+      Regexp::IPv4 0.003
+    requirements:
+      Exporter 0
+      ExtUtils::MakeMaker 0
+      strict 0
+      warnings 0
+  Regexp-IPv6-0.03
+    pathname: S/SA/SALVA/Regexp-IPv6-0.03.tar.gz
+    provides:
+      Regexp::IPv6 0.03
+    requirements:
+      ExtUtils::MakeMaker 0
+  TOML-Tiny-0.15
+    pathname: J/JE/JEFFOBER/TOML-Tiny-0.15.tar.gz
+    provides:
+      TOML::Tiny 0.15
+      TOML::Tiny::Grammar 0.15
+      TOML::Tiny::Parser 0.15
+      TOML::Tiny::Tokenizer 0.15
+      TOML::Tiny::Util 0.15
+      TOML::Tiny::Writer 0.15
+    requirements:
+      Carp 0
+      Data::Dumper 0
+      Encode 0
+      Exporter 0
+      ExtUtils::MakeMaker 0
+      Math::BigInt 1.999718
+      perl 5.018
+  TermReadKey-2.38
+    pathname: J/JS/JSTOWE/TermReadKey-2.38.tar.gz
+    provides:
+      Term::ReadKey 2.38
+    requirements:
+      ExtUtils::MakeMaker 6.58
+  Test-Fatal-0.016
+    pathname: R/RJ/RJBS/Test-Fatal-0.016.tar.gz
+    provides:
+      Test::Fatal 0.016
+    requirements:
+      Carp 0
+      Exporter 5.57
+      ExtUtils::MakeMaker 0
+      Test::Builder 0
+      Try::Tiny 0.07
+      strict 0
+      warnings 0
+  Try-Tiny-0.31
+    pathname: E/ET/ETHER/Try-Tiny-0.31.tar.gz
+    provides:
+      Try::Tiny 0.31
+    requirements:
+      Carp 0
+      Exporter 5.57
+      ExtUtils::MakeMaker 0
+      constant 0
+      perl 5.006
+      strict 0
+      warnings 0
+  YAML-LibYAML-0.83
+    pathname: T/TI/TINITA/YAML-LibYAML-0.83.tar.gz
+    provides:
+      YAML::LibYAML 0.83
+      YAML::XS 0.83
+      YAML::XS::LibYAML undef
+    requirements:
+      ExtUtils::MakeMaker 0
+      perl 5.008001

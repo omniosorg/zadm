@@ -123,6 +123,7 @@ my %CMDS = (
     ipnat       => '/usr/sbin/ipnat',
     file        => '/usr/bin/file',
     dd          => '/usr/bin/dd',
+    uefivars    => '/opt/ooce/bin/uefivars',
 );
 
 my %ENVARGS = map {
