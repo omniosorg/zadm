@@ -43,8 +43,22 @@ has vnckeys  => sub($self) {
         } keys %{$self->vncattr}
     ];
 };
+has bhyvecfg => sub($self) {
+    return decode_json($self->utils->readProc('bhyve_boot', [ qw(-j), $self->name ])->[0]);
+};
+has slotmap  => sub($self) {
+    return { map { $self->bhyvecfg->{slots}->{$_} => $_ } keys %{$self->bhyvecfg->{slots}} };
+};
 
 # private methods
+my $bootDevType = sub($self, $data = {}) {
+    return '' if !exists $data->{btype}->{PCI};
+
+    my $slot = $data->{btype}->{PCI}->[1];
+
+    return $self->slotmap->{$slot} // '';
+};
+
 my $bhyveCtl = sub($self, $cmd) {
     my $name = $self->name;
 
@@ -261,6 +275,11 @@ sub boot($self, $cOpts) {
         $sel = "boot$uev->{order}->{first}" if exists $uev->{order}->{first};
 
         for my $entry (@{$uev->{entries}}) {
+            # remove hidden boot options
+            next if $entry->{attributes} & 0x8;
+            # remove cloud-init CD
+            next if $self->$bootDevType($entry) eq 'cloudinit';
+
             my $i   = $entry->{slot};
             my $dev = $entry->{title};
 
