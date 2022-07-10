@@ -239,6 +239,9 @@ HDEND
 sub boot($self, $cOpts) {
     return $self->SUPER::boot($cOpts) if !$self->opts->{bootmenu};
 
+    Mojo::Exception->throw('ERROR: The boot menu is only supported for UEFI boot, '
+        . "and with a persistent UEFI variable store.\n") if !$self->bhyvecfg->{uefi};
+
     my @val;
     my %lbl;
     my $cfg = $self->config;
