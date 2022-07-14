@@ -59,6 +59,27 @@ my $bootDevType = sub($self, $data = {}) {
     return $self->slotmap->{$slot} // '';
 };
 
+my $mapBootDev = sub($self, $data = {}) {
+    my ($type) = keys %{$data->{btype} || {}};
+
+    return '' if !$type;
+
+    my $bo   = $self->bhyvecfg->{bootoptions};
+    my $lct  = lc $type;
+    my $val  = $type eq 'PCI' ? join ('.', reverse @{$data->{btype}->{$type}})
+        : $data->{btype}->{$type};
+
+    my @devs = grep {
+        $bo->{$_}->[0] eq $lct
+        && $bo->{$_}->[1] eq $val
+    } keys %$bo;
+
+    # prefer indexed devices
+    my @idev = grep { /\d+$/ } @devs;
+
+    return $idev[0] // $devs[0] // '';
+};
+
 my $bhyveCtl = sub($self, $cmd) {
     my $name = $self->name;
 
@@ -242,14 +263,15 @@ sub boot($self, $cOpts) {
     Mojo::Exception->throw('ERROR: The boot menu is only supported for UEFI boot, '
         . "and with a persistent UEFI variable store.\n") if !$self->bhyvecfg->{uefi};
 
-    my @val;
     my %lbl;
+    my $fmt = '%-12s%s';
     my $cfg = $self->config;
     my $sel = $self->utils->isArrRef($cfg->{bootorder}) ? $cfg->{bootorder}->[0] : '';
+    my ($btype, $bidx, $bopt) = $sel =~ /^([^\d=]+)(\d*)(=(?:pxe|http))?$/;
+    $bopt //=  $btype eq 'net' ? '=pxe' : '';
 
     if ($cfg->{bootdisk} && $cfg->{bootdisk}->{path}) {
-        push @val, 'bootdisk';
-        $lbl{bootdisk} = "bootdisk: $cfg->{bootdisk}->{path}";
+        $lbl{bootdisk} = sprintf $fmt, "bootdisk:", $cfg->{bootdisk}->{path};
     }
 
     for my $dev (qw(cdrom disk net)) {
@@ -265,17 +287,27 @@ sub boot($self, $cOpts) {
 
             next if !length ($device);
 
-            push @val, "$dev$i";
-            $lbl{"$dev$i"} = sprintf '%-10s%s', "$dev$i: ", $device;
+            $bidx = "$i" if !length ($bidx) && $btype eq $dev;
+
+            if ($dev eq 'net') {
+                $lbl{"$dev$i=pxe"} = sprintf $fmt, "$dev$i=pxe:", "$device (PXE)";
+                $lbl{"$dev$i=http"} = sprintf $fmt, "$dev$i=http:", "$device (HTTP)";
+            }
+            else {
+                $lbl{"$dev$i"} = sprintf $fmt, "$dev$i:", $device;
+            }
         }
     }
 
+    $sel = "$btype$bidx$bopt";
+
     my $uefivars = Mojo::File->new($cfg->{zonepath}, qw(root etc uefivars));
 
+    my $pidx = 0;
     if (-r $uefivars && -x ($self->utils->getCmd('uefivars'))[0]) {
         my $uev = decode_json($self->utils->readProc('uefivars', [ qw(-j -l), $uefivars ])->[0]);
 
-        $sel = "boot$uev->{order}->{first}" if exists $uev->{order}->{first};
+        $sel ||= "boot$uev->{order}->{first}" if exists $uev->{order}->{first};
 
         for my $entry (@{$uev->{entries}}) {
             # remove hidden boot options
@@ -283,15 +315,18 @@ sub boot($self, $cOpts) {
             # remove cloud-init CD
             next if $self->$bootDevType($entry) eq 'cloudinit';
 
-            my $i   = $entry->{slot};
-            my $dev = $entry->{title};
+            my ($type) = keys %{$entry->{btype}};
 
-            my $type = (keys %{$entry->{btype}})[0];
+            my $devi = $type eq 'Path' ? 'path' . $pidx++
+                : $self->$mapBootDev($entry) || "boot$entry->{slot}";
+            my $devs = $entry->{title};
 
-            $dev .= " ($entry->{btype}->{$type})" if $type =~ /^(?:App|Path)$/;
+            $devi .= '=' . lc ($1) if ($devs =~ /^UEFI (PXE|HTTP)/);
+            $devs .= " ($entry->{btype}->{$type})" if $type =~ /^(?:App|Path)$/;
 
-            push @val, "boot$i";
-            $lbl{"boot$i"} = sprintf '%-10s%s', "boot$i: ", $dev;
+            $lbl{$devi} //= sprintf $fmt, "$devi:", $devs;
+
+            $sel = $devi if $sel eq "boot$entry->{slot}";
         }
     }
 
@@ -302,6 +337,7 @@ sub boot($self, $cOpts) {
 
     local $ENV{ESCDELAY} = 0;
 
+    my @val = sort keys %lbl;
     my %sel;
     if (exists $lbl{$sel}) {
         for (my $i = 0; $i < @val; $i++) {
