@@ -124,6 +124,7 @@ my %CMDS = (
     file        => '/usr/bin/file',
     dd          => '/usr/bin/dd',
     uefivars    => '/opt/ooce/bin/uefivars',
+    bhyve_boot  => '/usr/lib/brand/bhyve/boot',
 );
 
 my %ENVARGS = map {
