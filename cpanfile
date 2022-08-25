@@ -1,5 +1,5 @@
 requires 'Bytes::Random::Secure::Tiny', '== 1.011';
-requires 'Cpanel::JSON::XS', '== 4.30';
+requires 'Cpanel::JSON::XS', '== 4.32';
 requires 'Curses::UI', '== 0.9609';
 requires 'Data::Processor', '== 1.0.9';
 requires 'Mojolicious', '== 9.26';

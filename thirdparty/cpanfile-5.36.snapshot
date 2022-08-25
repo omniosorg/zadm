@@ -45,10 +45,10 @@ DISTRIBUTIONS
       Module::Build 0.4005
       parent 0
       perl 5.008001
-  Cpanel-JSON-XS-4.30
-    pathname: R/RU/RURBAN/Cpanel-JSON-XS-4.30.tar.gz
+  Cpanel-JSON-XS-4.32
+    pathname: R/RU/RURBAN/Cpanel-JSON-XS-4.32.tar.gz
     provides:
-      Cpanel::JSON::XS 4.30
+      Cpanel::JSON::XS 4.32
       Cpanel::JSON::XS::Type undef
     requirements:
       Carp 0
@@ -61,17 +61,17 @@ DISTRIBUTIONS
       overload 0
       strict 0
       warnings 0
-  Curses-1.38
-    pathname: G/GI/GIRAFFED/Curses-1.38.tar.gz
+  Curses-1.41
+    pathname: G/GI/GIRAFFED/Curses-1.41.tar.gz
     provides:
-      Curses 1.38
-      Curses::Field 1.38
-      Curses::Form 1.38
-      Curses::Item 1.38
-      Curses::Menu 1.38
-      Curses::Panel 1.38
-      Curses::Screen 1.38
-      Curses::Window 1.38
+      Curses 1.41
+      Curses::Field 1.41
+      Curses::Form 1.41
+      Curses::Item 1.41
+      Curses::Menu 1.41
+      Curses::Panel 1.41
+      Curses::Screen 1.41
+      Curses::Window 1.41
     requirements:
       ExtUtils::MakeMaker 0
   Curses-UI-0.9609
