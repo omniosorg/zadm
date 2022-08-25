@@ -2,9 +2,9 @@ package Zadm::Zone::Bhyve;
 use Mojo::Base 'Zadm::Zone::KVM', -signatures;
 
 use Mojo::Exception;
+use Mojo::File;
 use Mojo::IOLoop::Subprocess;
 use Mojo::JSON qw(decode_json);
-use Mojo::File;
 
 # reset public interface as the inherited list
 # from KVM will have additional methods
@@ -42,6 +42,11 @@ has vnckeys  => sub($self) {
             $self->schema->{vnc}->{members}->{$b}->{'x-vncidx'}
         } keys %{$self->vncattr}
     ];
+};
+has vncsock  => sub($self) {
+    my $socket = $self->config->{vnc}->{unix} || 'tmp/vm.vnc';
+
+    return Mojo::File->new($self->config->{zonepath}, 'root', $socket);
 };
 has bhyvecfg => sub($self) {
     return decode_json($self->utils->readProc('bhyve_boot', [ qw(-j), $self->name ])->[0]);
