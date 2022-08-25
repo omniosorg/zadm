@@ -69,8 +69,8 @@ has options => sub {
         },
     }
 };
-has monsocket => sub($self) { Mojo::File->new($self->config->{zonepath}, 'root/tmp/vm.monitor') };
-has vncsocket => sub($self) {
+has monsock   => sub($self) { Mojo::File->new($self->config->{zonepath}, 'root/tmp/vm.monitor') };
+has vncsock   => sub($self) {
     my ($socket) = $self->config->{vnc} =~ m!^unix[:=]/([^, ]+)!;
 
     return Mojo::File->new($self->config->{zonepath}, 'root', ($socket || 'tmp/vm.vnc'));
@@ -98,7 +98,7 @@ has rootds   => sub($self) { $self->config->{bootdisk}->{path} };
 my $queryMonitor = sub($self, $query, $nowait = 0) {
     my $socket = IO::Socket::UNIX->new(
         Type => SOCK_STREAM,
-        Peer => $self->monsocket,
+        Peer => $self->monsock,
     ) or Mojo::Exception->throw("Cannot open socket $!\n");
 
     $socket->send($query);
@@ -444,7 +444,7 @@ sub vnc($self, $listen = '5900') {
 
     Zadm::VNC::Proxy->new(
         log   => $self->log,
-        sock  => $self->vncsocket,
+        sock  => $self->vncsock,
         addr  => $ip,
         port  => $port,
     )->start;
@@ -460,7 +460,7 @@ sub webvnc($self, $listen = '8000') {
 
     Zadm::VNC::NoVNC->new(
         log   => $self->log,
-        sock  => $self->vncsocket,
+        sock  => $self->vncsock,
         novnc => $self->utils->gconf->{VNC}->{novnc_path},
         aconn => $self->utils->boolIsTrue($self->utils->gconf->{VNC}->{auto_connect}),
         port  => $port,
@@ -468,8 +468,8 @@ sub webvnc($self, $listen = '8000') {
 }
 
 sub monitor($self) {
-    $self->utils->exec('nc', [ '-U', $self->monsocket ],
-        'cannot access monitor socket ' . $self->monsocket);
+    $self->utils->exec('nc', [ '-U', $self->monsock ],
+        'cannot access monitor socket ' . $self->monsock);
 }
 
 sub zStats($self, $raw = 0) {
