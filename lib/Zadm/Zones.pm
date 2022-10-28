@@ -145,7 +145,7 @@ sub refresh($self) {
 }
 
 sub dump($self, $zName = undef, $opts = {}) {
-    my $format = "%-18s%-11s%-9s%6s%8s%8s\n";
+    my $format = "%-17s %-11s%-9s%6s%8s%8s\n";
     my @header = qw(NAME STATUS BRAND);
     my @zStats = qw(RAM CPUS SHARES);
 
