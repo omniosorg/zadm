@@ -80,7 +80,9 @@ has brands  => sub {
     ];
 };
 has availbrands => sub($self) {
+    privSet({ add => 1, inherit => 1 }, PRIV_NET_ACCESS);
     my $pkg = $self->utils->readProc('pkg', [ qw(list -aHv), "$PKGPREFIX/*" ]);
+    privSet({ remove => 1, inherit => 1 }, PRIV_NET_ACCESS);
     # TODO: the state of sn1/s10 brands is currently unknown
     # while zadm can still be used to configure them we don't advertise them as available
     return [ grep { !/^(?:sn1|s10)$/ } map { m!\Q$PKGPREFIX\E/([^@/]+)\@! } @$pkg ];

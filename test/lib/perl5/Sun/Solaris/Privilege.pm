@@ -21,8 +21,8 @@ use constant {
 };
 
 my @constants = qw(PRIV_DEBUG PRIV_EFFECTIVE PRIV_FILE_DAC_READ PRIV_FILE_DAC_WRITE
-    PRIV_INHERITABLE PRIV_LIMIT PRIV_OFF PRIV_ON PRIV_PERMITTED PRIV_SET PRIV_STR_LIT
-    PRIV_STR_PORT PRIV_SYS_DL_CONFIG PRIV_SYS_MOUNT);
+    PRIV_INHERITABLE PRIV_LIMIT PRIV_NET_ACCESS PRIV_OFF PRIV_ON PRIV_PERMITTED
+    PRIV_SET PRIV_STR_LIT PRIV_STR_PORT PRIV_SYS_DL_CONFIG PRIV_SYS_MOUNT);
 
 our @EXPORT_OK = (@constants, qw(getppriv priv_addset priv_emptyset priv_fillset
     priv_intersect priv_set_to_str priv_str_to_set setpflags setppriv));
