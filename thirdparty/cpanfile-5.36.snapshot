@@ -217,17 +217,17 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 0
       IO::Compress::Base 2.201
       IO::Uncompress::Base 2.201
-  IO-Socket-SSL-2.074
-    pathname: S/SU/SULLR/IO-Socket-SSL-2.074.tar.gz
+  IO-Socket-SSL-2.075
+    pathname: S/SU/SULLR/IO-Socket-SSL-2.075.tar.gz
     provides:
-      IO::Socket::SSL 2.074
+      IO::Socket::SSL 2.075
       IO::Socket::SSL::Intercept 2.056
-      IO::Socket::SSL::OCSP_Cache 2.074
-      IO::Socket::SSL::OCSP_Resolver 2.074
+      IO::Socket::SSL::OCSP_Cache 2.075
+      IO::Socket::SSL::OCSP_Resolver 2.075
       IO::Socket::SSL::PublicSuffix undef
-      IO::Socket::SSL::SSL_Context 2.074
-      IO::Socket::SSL::SSL_HANDLE 2.074
-      IO::Socket::SSL::Session_Cache 2.074
+      IO::Socket::SSL::SSL_Context 2.075
+      IO::Socket::SSL::SSL_HANDLE 2.075
+      IO::Socket::SSL::Session_Cache 2.075
       IO::Socket::SSL::Utils 2.015
     requirements:
       ExtUtils::MakeMaker 0
@@ -280,8 +280,8 @@ DISTRIBUTIONS
       Text::ParseWords 0
       perl 5.006001
       version 0.87
-  Mojolicious-9.26
-    pathname: S/SR/SRI/Mojolicious-9.26.tar.gz
+  Mojolicious-9.28
+    pathname: S/SR/SRI/Mojolicious-9.28.tar.gz
     provides:
       Mojo undef
       Mojo::Asset undef
@@ -349,7 +349,7 @@ DISTRIBUTIONS
       Mojo::UserAgent::Transactor undef
       Mojo::Util undef
       Mojo::WebSocket undef
-      Mojolicious 9.26
+      Mojolicious 9.28
       Mojolicious::Command undef
       Mojolicious::Command::Author::cpanify undef
       Mojolicious::Command::Author::generate undef
@@ -372,7 +372,6 @@ DISTRIBUTIONS
       Mojolicious::Lite undef
       Mojolicious::Plugin undef
       Mojolicious::Plugin::Config undef
-      Mojolicious::Plugin::Config::Sandbox undef
       Mojolicious::Plugin::DefaultHelpers undef
       Mojolicious::Plugin::EPLRenderer undef
       Mojolicious::Plugin::EPRenderer undef
@@ -457,11 +456,11 @@ DISTRIBUTIONS
       Term::ReadKey 2.38
     requirements:
       ExtUtils::MakeMaker 6.58
-  YAML-LibYAML-0.83
-    pathname: T/TI/TINITA/YAML-LibYAML-0.83.tar.gz
+  YAML-LibYAML-0.85
+    pathname: I/IN/INGY/YAML-LibYAML-0.85.tar.gz
     provides:
-      YAML::LibYAML 0.83
-      YAML::XS 0.83
+      YAML::LibYAML 0.85
+      YAML::XS 0.85
       YAML::XS::LibYAML undef
     requirements:
       ExtUtils::MakeMaker 0
