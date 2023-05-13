@@ -210,12 +210,11 @@ sub getPostProcess($self, $cfg) {
     my %noIndex;
 
     # initialise array refs
-    $cfg->{disk}  = [];
-    $cfg->{cdrom} = [];
+    $cfg->{$_} = [] for qw(disk cdrom extra);
     # handle disks/cdroms before the default getPostProcess
     if ($self->utils->isArrRef($cfg->{attr})) {
         ATTR: for (my $i = $#{$cfg->{attr}}; $i >= 0; $i--) {
-            my ($type, $index) = $cfg->{attr}->[$i]->{name} =~ /^(diskif|cdrom|(?:boot)?disk)(\d+)?$/
+            my ($type, $index) = $cfg->{attr}->[$i]->{name} =~ /^(diskif|cdrom|extra|(?:boot)?disk)(\d+)?$/
                 or next;
 
             for ($type) {
@@ -257,6 +256,17 @@ sub getPostProcess($self, $cfg) {
 
                     last;
                 };
+                /^extra$/ && do {
+                    if (!defined $index) {
+                        $noIndex{extra} = $cfg->{attr}->[$i]->{value};
+                    }
+                    else {
+                        $cfg->{extra}->[$index] = $cfg->{attr}->[$i]->{value};
+                    }
+
+                    last;
+                };
+
 
                 # default; skip removing attr
                 next ATTR;
@@ -266,8 +276,12 @@ sub getPostProcess($self, $cfg) {
         }
     }
 
-    # add disk/cdrom w/o index to the first available slot
-    $self->$addToEmptySlot($cfg->{$_}, $noIndex{$_}) for qw(disk cdrom);
+    # add disk/cdrom/extra w/o index to the first available slot
+    $self->$addToEmptySlot($cfg->{$_}, $noIndex{$_}) for qw(disk cdrom extra);
+    # remove empty extra slots
+    for (my $i = $#{$cfg->{extra}}; $i >= 0; $i--) {
+        splice @{$cfg->{extra}}, $i, 1 if !length ($cfg->{extra}->[$i]);
+    }
 
     $cfg = $self->SUPER::getPostProcess($cfg);
 
@@ -294,8 +308,9 @@ sub getPostProcess($self, $cfg) {
 
     }
 
-    # remove fs/device/disk/cdrom if empty
-    $self->utils->isArrRef($cfg->{$_}) && !@{$cfg->{$_}} && delete $cfg->{$_} for qw(fs device disk cdrom);
+    # remove fs/device/disk/cdrom/extra if empty
+    $self->utils->isArrRef($cfg->{$_}) && !@{$cfg->{$_}} && delete $cfg->{$_}
+        for qw(fs device disk cdrom extra);
 
     return $cfg;
 }
@@ -307,7 +322,8 @@ sub setPreProcess($self, $cfg) {
             next if !$cfg->{cdrom}->[$i];
 
             push @{$cfg->{attr}}, {
-                # cdrom0 shall be just cdrom
+                # we add cdrom0 as cdrom for compatibility with older OmniOS
+                # releses that don't support this attribute being an array
                 name    => 'cdrom' . ($i || ''),
                 type    => 'string',
                 value   => $cfg->{cdrom}->[$i],
@@ -322,6 +338,21 @@ sub setPreProcess($self, $cfg) {
         }
 
         delete $cfg->{cdrom};
+    }
+
+    # handle extra attributes
+    if ($self->utils->isArrRef($cfg->{extra})) {
+        for (my $i = 0; $i < @{$cfg->{extra}}; $i++) {
+            push @{$cfg->{attr}}, {
+                # we add extra0 as extra for compatibility with older OmniOS
+                # releses that don't support this attribute being an array
+                name    => 'extra' . ($i || ''),
+                type    => 'string',
+                value   => $cfg->{extra}->[$i],
+            };
+        }
+
+        delete $cfg->{extra};
     }
 
     # handle bootdisk

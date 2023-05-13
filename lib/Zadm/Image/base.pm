@@ -33,7 +33,7 @@ has images  => sub($self) { Zadm::Images->new(log => $self->log) };
 # private methods
 my $checkChecksum = sub($self, $file, $digest, $checksum) {
     $self->log->debug(q{checking checksum of '} . $file->basename . q{'...});
-    print "checking image checksum...\n";
+    print "checking image checksum...\n" if !$self->images->editing;
 
     return Digest::SHA->new($digest)->addfile($file->to_string)->hexdigest eq $checksum;
 };
@@ -49,7 +49,7 @@ sub download($self, $fileName, $url, %opts) {
 
     $self->images->curl([{ path => $file, url => $url }], \%opts) if !-f $file;
 
-    return $file if !exists $opts{chksum}
+    return $file if !exists $opts{chksum} || !$opts{chksum}->{chksum}
         || $self->$checkChecksum($file, $opts{chksum}->{digest}, $opts{chksum}->{chksum});
 
     # re-download since checksum mismatch
@@ -80,7 +80,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2021 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2023 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 
