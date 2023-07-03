@@ -24,7 +24,9 @@ sub postProcess($self, $json) {
             chksum => {
                 digest => 'sha256',
                 chksum => $_->{sha256},
-            }
+            },
+            attr   => $_->{attr} // {},
+            res    => $_->{resources} || [],
         } }
         @{$data->{images} // []}
     ];

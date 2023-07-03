@@ -336,13 +336,6 @@ $SCHEMA = sub($self) {
         validator   => $self->sv->bool,
         'x-attr'    => 1,
     },
-    vga         => {
-        optional    => 1,
-        description => 'type of VGA emulation to use',
-        example     => '"vga" : "on"',
-        validator   => $self->sv->elemOf(qw(on off io)), # change to bool once bhyve supports it
-        'x-attr'    => 1,
-    },
     vnc         => {
         optional    => 1,
         description => 'VNC',
@@ -407,8 +400,8 @@ $SCHEMA = sub($self) {
         validator   => $self->sv->bool,
         'x-attr'    => 1,
     },
-
-}};
+    }
+};
 
 1;
 
@@ -416,7 +409,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2022 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2023 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 

@@ -98,22 +98,23 @@ $SCHEMA = sub($self) {
         description => 'disk type',
         default     => 'virtio',
         example     => '"diskif" : "virtio"',
-        validator   => $self->sv->elemOf(qw(virtio ahci ide)),
+        validator   => $self->sv->elemOf(qw(virtio ahci ide virtio-blk-device)),
         'x-attr'    => 1,
     },
     extra       => {
         optional    => 1,
+        array       => 1,
         description => 'extra parameters',
-        example     => '"extra" : "<parameters>"',
+        example     => '"extra" : [ "param1", "param2", ... ]',
         validator   => $self->sv->regexp(qr/^.+$/, 'expected a string'),
-        'x-attr'    => 1,
+        transformer => $self->sv->toArray,
     },
     netif       => {
         optional    => 1,
         description => 'network interface type',
         default     => 'virtio',
         example     => '"netif" : "virtio"',
-        validator   => $self->sv->elemOf(qw(virtio e1000)),
+        validator   => $self->sv->elemOf(qw(virtio e1000 virtio-net-device)),
         'x-attr'    => 1,
     },
     ram         => {
@@ -146,7 +147,15 @@ $SCHEMA = sub($self) {
         validator   => $self->sv->kvmVNC,
         'x-attr'    => 1,
     },
-}};
+    vga         => {
+        optional    => 1,
+        description => 'type of VGA emulation to use',
+        example     => '"vga" : "on"',
+        validator   => $self->sv->elemOf(qw(on off io)),
+        'x-attr'    => 1,
+    },
+    }
+};
 
 1;
 
@@ -154,7 +163,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2022 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2023 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 

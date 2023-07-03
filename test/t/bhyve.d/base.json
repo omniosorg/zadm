@@ -47,7 +47,9 @@
       }
    ],
    "diskif" : "virtio",
-   "extra" : "-s 7,nvme,ram=1024",
+   "extra" : [
+      "-s 7,nvme,ram=1024"
+   ],
    "fs-allowed" : "",
    "hostbridge" : "i440fx",
    "hostid" : "",

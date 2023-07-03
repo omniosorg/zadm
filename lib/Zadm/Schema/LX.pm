@@ -57,7 +57,8 @@ $SCHEMA = sub($self) {
         validator    => $self->sv->elemOf(qw(true false)),
         'x-attr'     => 1,
     },
-}};
+    }
+};
 
 1;
 
