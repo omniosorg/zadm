@@ -125,6 +125,8 @@ my %CMDS = (
     dd          => '/usr/bin/dd',
     uefivars    => '/opt/ooce/bin/uefivars',
     bhyve_boot  => '/usr/lib/brand/bhyve/boot',
+    qemu        => '/usr/bin/qemu-system-x86_64',
+    isainfo     => '/usr/bin/isainfo',
 );
 
 my %ENVARGS = map {

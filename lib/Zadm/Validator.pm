@@ -479,6 +479,30 @@ sub cloudinit($self) {
     }
 }
 
+sub qemuCPUtype($self) {
+    return sub($cpuType, @) {
+        my $cpuTypes = $self->utils->readProc('qemu', [ qw(-cpu ?) ]);
+        s/^x86\s+\[?|\]$//g for @$cpuTypes;
+
+        my $cpuFeatures = $self->utils->readProc('isainfo', [ qw(-x) ]);
+        my ($featStr) = map { /^amd64:\s+(.+)$/ } @$cpuFeatures;
+        my @features = map { "+$_" } split /\s+/, $featStr;
+
+        my @cpuType = split /,/, $cpuType;
+
+        my $typeInvalid = $self->elemOf(@$cpuTypes)->(shift @cpuType);
+        return $typeInvalid if length ($typeInvalid);
+
+        for my $feature (@cpuType) {
+            my $featureInvalid = $self->elemOf(@features)->($feature);
+
+            return $featureInvalid if length ($featureInvalid);
+        }
+
+        return undef;
+    }
+}
+
 sub stringorfile($self) {
     return sub($arg, @) {
         return $self->file('<', 'No such file,')->($arg) if Mojo::File->new($arg)->is_abs;
@@ -499,7 +523,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2022 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2023 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 

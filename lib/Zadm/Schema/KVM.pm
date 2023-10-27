@@ -85,6 +85,13 @@ $SCHEMA = sub($self) {
         validator   => $self->sv->regexp(qr/^.+$/, 'expected a string'),
         'x-attr'    => 1,
     },
+    cpu         => {
+        optional    => 1,
+        description => 'emulated CPU and features',
+        example     => '"cpu" : "qemu64,+aes,+sse4.2,+sse4.1,+ssse3"',
+        validator   => $self->sv->qemuCPUtype,
+        'x-attr'    => 1,
+    },
     disk        => {
         optional    => 1,
         array       => 1,
