@@ -372,6 +372,7 @@ DISTRIBUTIONS
       Mojolicious::Lite undef
       Mojolicious::Plugin undef
       Mojolicious::Plugin::Config undef
+      Mojolicious::Plugin::Config::Sandbox undef
       Mojolicious::Plugin::DefaultHelpers undef
       Mojolicious::Plugin::EPLRenderer undef
       Mojolicious::Plugin::EPRenderer undef
@@ -398,13 +399,12 @@ DISTRIBUTIONS
       IO::Socket::IP 0.37
       Sub::Util 1.41
       perl 5.016
-  Mozilla-CA-20221114
-    pathname: H/HA/HAARG/Mozilla-CA-20221114.tar.gz
+  Mozilla-CA-20230821
+    pathname: L/LW/LWP/Mozilla-CA-20230821.tar.gz
     provides:
-      Mozilla::CA 20221114
+      Mozilla::CA 20230821
     requirements:
       ExtUtils::MakeMaker 0
-      perl 5.006
   Net-SSLeay-1.92
     pathname: C/CH/CHRISN/Net-SSLeay-1.92.tar.gz
     provides:
