@@ -6,7 +6,8 @@ has schema => sub($self) {
     my $kvmschema = $self->SUPER::schema;
     # we need to drop these parent entries since merging would result in checking parent validators too;
     # the additional options from the bhyve brand would fail the check from the parent
-    delete $kvmschema->{$_} for qw(bootorder diskif netif vnc);
+    # also dropping attributes not supported by the bhyve brand (e.g. cpu)
+    delete $kvmschema->{$_} for qw(bootorder cpu diskif netif vnc);
 
     my $dp = Data::Processor->new($kvmschema);
     my $ec = $dp->merge_schema($self->$SCHEMA);

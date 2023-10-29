@@ -32,6 +32,8 @@ my $getPrivSet = sub {
     priv_addset($targprivs, PRIV_FILE_DAC_WRITE) if $set ne 'empty';
     # We keep FILE_DAC_READ if the caller has it
     priv_addset($targprivs, PRIV_FILE_DAC_READ) if $set ne 'empty';
+    # We keep FILE_OWNER if the caller has it
+    priv_addset($targprivs, PRIV_FILE_OWNER) if $set ne 'empty';
 
     # get the current permitted privileges
     my $curprivs = getppriv(PRIV_PERMITTED);

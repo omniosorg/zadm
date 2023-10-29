@@ -8,6 +8,7 @@ use constant {
     PRIV_EFFECTIVE      => 'Effective',
     PRIV_FILE_DAC_READ  => 'file_dac_read',
     PRIV_FILE_DAC_WRITE => 'file_dac_write',
+    PRIV_FILE_OWNER     => 'file_owner',
     PRIV_INHERITABLE    => 'Inheritable',
     PRIV_LIMIT          => 'Limit',
     PRIV_OFF            => 1,
@@ -21,8 +22,8 @@ use constant {
 };
 
 my @constants = qw(PRIV_DEBUG PRIV_EFFECTIVE PRIV_FILE_DAC_READ PRIV_FILE_DAC_WRITE
-    PRIV_INHERITABLE PRIV_LIMIT PRIV_NET_ACCESS PRIV_OFF PRIV_ON PRIV_PERMITTED
-    PRIV_SET PRIV_STR_LIT PRIV_STR_PORT PRIV_SYS_DL_CONFIG PRIV_SYS_MOUNT);
+    PRIV_FILE_OWNER PRIV_INHERITABLE PRIV_LIMIT PRIV_NET_ACCESS PRIV_OFF PRIV_ON
+    PRIV_PERMITTED PRIV_SET PRIV_STR_LIT PRIV_STR_PORT PRIV_SYS_DL_CONFIG PRIV_SYS_MOUNT);
 
 our @EXPORT_OK = (@constants, qw(getppriv priv_addset priv_emptyset priv_fillset
     priv_intersect priv_set_to_str priv_str_to_set setpflags setppriv));
@@ -44,7 +45,7 @@ __END__
 
 =head1 COPYRIGHT
 
-Copyright 2022 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2023 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 
