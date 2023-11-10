@@ -198,7 +198,7 @@ my $edit = sub($self, $config) {
     my $suf  = $self->gconf->{CONFIG}->{format} || 'json';
     my $fh   = File::Temp->new(SUFFIX => ".$suf", OPEN => 0);
     my $file = Mojo::File->new($fh->filename);
-    $file->spurt($config);
+    $file->spew($config);
 
     my $mtime = $file->stat->mtime;
 
@@ -330,7 +330,7 @@ sub edit($self, $zone, $prop = {}) {
                 # restoring the zone XML config since it was changed but something went wrong
                 if ($backmod && $backmod != $xml->stat->mtime) {
                     $self->log->warn('WARNING: restoring the zone config.');
-                    $xml->spurt($backcfg);
+                    $xml->spew($backcfg);
 
                     return 0;
                 }
@@ -385,7 +385,7 @@ sub edit($self, $zone, $prop = {}) {
                 # restoring the zone XML config since it was changed but something went wrong
                 if ($backmod && $backmod != $xml->stat->mtime) {
                     $self->log->warn('WARNING: restoring the zone config.');
-                    $xml->spurt($backcfg);
+                    $xml->spew($backcfg);
                 }
 
                 return 0;
@@ -433,7 +433,7 @@ sub getZfsProp($self, $ds, $prop = []) {
 
 sub getFileType($self, $data, $suffix = '') {
     my $f = Mojo::File->new(File::Temp->new($suffix ? (SUFFIX => $suffix) : ()));
-    $f->spurt($data);
+    $f->spew($data);
 
     return $self->readProc('file', [ '-b', $f ])->[0];
 }
