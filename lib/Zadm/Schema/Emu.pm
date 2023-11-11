@@ -4,6 +4,9 @@ use Mojo::Base 'Zadm::Schema::KVM', -signatures;
 my $SCHEMA;
 has schema => sub($self) {
     my $kvmschema = $self->SUPER::schema;
+    # we need to drop these parent entries since merging would result in checking parent validators too;
+    # the additional options from the emu brand would fail the check from the parent
+    delete $kvmschema->{$_} for qw(cpu);
 
     my $dp = Data::Processor->new($kvmschema);
     my $ec = $dp->merge_schema($self->$SCHEMA);
