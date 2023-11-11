@@ -769,7 +769,7 @@ sub fw($self) {
         }
         else {
             # ipf requires a trailing newline
-            $f->spurt(join ("\n", @{$self->utils->getSTDIN}), "\n");
+            $f->spew(join ("\n", @{$self->utils->getSTDIN}), "\n");
         }
 
         return if !-f $f || $mtime == $f->stat->mtime;
