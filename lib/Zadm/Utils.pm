@@ -504,7 +504,11 @@ sub loadTemplate($self, $file, $name = '') {
 
 sub getOverLink($self) {
     my $dladm = $self->readProc('dladm', [ qw(show-link -p -o), 'link,class' ]);
-    return [ map { /^([^:]+):(?:phys|etherstub|aggr|overlay)/ } @$dladm ];
+
+    return [
+        (map { /^([^:]+):aggr/ } @$dladm),
+        map { /^([^:]+):(?:phys|etherstub|overlay)/ } @$dladm
+    ];
 }
 
 sub isVirtual($self) {
