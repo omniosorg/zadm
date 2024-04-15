@@ -5,9 +5,9 @@ zadm
 
 [![Unit Tests](https://github.com/omniosorg/zadm/workflows/Unit%20Tests/badge.svg?branch=master&event=push)](https://github.com/omniosorg/zadm/actions?query=workflow%3A%22Unit+Tests%22)
 
-Version: 0.14.2
+Version: 0.14.3
 
-Date: 2023-11-11
+Date: 2024-04-15
 
 `zadm` - zone management tool.
 
