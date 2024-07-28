@@ -11,23 +11,23 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 6.56
       Test::More 0.98
       perl 5.008000
-  Compress-Raw-Bzip2-2.211
-    pathname: P/PM/PMQS/Compress-Raw-Bzip2-2.211.tar.gz
+  Compress-Raw-Bzip2-2.212
+    pathname: P/PM/PMQS/Compress-Raw-Bzip2-2.212.tar.gz
     provides:
-      Compress::Raw::Bzip2 2.211
+      Compress::Raw::Bzip2 2.212
     requirements:
       ExtUtils::MakeMaker 0
-  Compress-Raw-Lzma-2.211
-    pathname: P/PM/PMQS/Compress-Raw-Lzma-2.211.tar.gz
+  Compress-Raw-Lzma-2.212
+    pathname: P/PM/PMQS/Compress-Raw-Lzma-2.212.tar.gz
     provides:
-      Compress::Raw::Lzma 2.211
+      Compress::Raw::Lzma 2.212
     requirements:
       ExtUtils::MakeMaker 0
       Pod::Markdown 0
-  Compress-Raw-Zlib-2.211
-    pathname: P/PM/PMQS/Compress-Raw-Zlib-2.211.tar.gz
+  Compress-Raw-Zlib-2.212
+    pathname: P/PM/PMQS/Compress-Raw-Zlib-2.212.tar.gz
     provides:
-      Compress::Raw::Zlib 2.211
+      Compress::Raw::Zlib 2.212
     requirements:
       ExtUtils::MakeMaker 0
   Compress-Stream-Zstd-0.206
@@ -46,10 +46,10 @@ DISTRIBUTIONS
       Module::Build 0.4005
       parent 0
       perl 5.008001
-  Cpanel-JSON-XS-4.37
-    pathname: R/RU/RURBAN/Cpanel-JSON-XS-4.37.tar.gz
+  Cpanel-JSON-XS-4.38
+    pathname: R/RU/RURBAN/Cpanel-JSON-XS-4.38.tar.gz
     provides:
-      Cpanel::JSON::XS 4.37
+      Cpanel::JSON::XS 4.38
       Cpanel::JSON::XS::Type undef
     requirements:
       Carp 0
@@ -62,17 +62,17 @@ DISTRIBUTIONS
       overload 0
       strict 0
       warnings 0
-  Curses-1.44
-    pathname: G/GI/GIRAFFED/Curses-1.44.tar.gz
+  Curses-1.45
+    pathname: G/GI/GIRAFFED/Curses-1.45.tar.gz
     provides:
-      Curses 1.44
-      Curses::Field 1.44
-      Curses::Form 1.44
-      Curses::Item 1.44
-      Curses::Menu 1.44
-      Curses::Panel 1.44
-      Curses::Screen 1.44
-      Curses::Window 1.44
+      Curses 1.45
+      Curses::Field 1.45
+      Curses::Form 1.45
+      Curses::Item 1.45
+      Curses::Menu 1.45
+      Curses::Panel 1.45
+      Curses::Screen 1.45
+      Curses::Window 1.45
     requirements:
       ExtUtils::MakeMaker 0
   Curses-UI-0.9609
@@ -145,95 +145,94 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 0
       perl 5.008005
-  IO-Compress-2.211
-    pathname: P/PM/PMQS/IO-Compress-2.211.tar.gz
+  IO-Compress-2.212
+    pathname: P/PM/PMQS/IO-Compress-2.212.tar.gz
     provides:
-      Compress::Zlib 2.211
+      Compress::Zlib 2.212
       File::GlobMapper 1.001
       IO::Compress undef
-      IO::Compress::Adapter::Bzip2 2.211
-      IO::Compress::Adapter::Deflate 2.211
-      IO::Compress::Adapter::Identity 2.211
-      IO::Compress::Base 2.211
-      IO::Compress::Base::Common 2.211
-      IO::Compress::Bzip2 2.211
-      IO::Compress::Deflate 2.211
-      IO::Compress::Gzip 2.211
-      IO::Compress::Gzip::Constants 2.211
-      IO::Compress::RawDeflate 2.211
-      IO::Compress::Zip 2.211
-      IO::Compress::Zip::Constants 2.211
-      IO::Compress::Zlib::Constants 2.211
-      IO::Compress::Zlib::Extra 2.211
-      IO::Uncompress::Adapter::Bunzip2 2.211
-      IO::Uncompress::Adapter::Identity 2.211
-      IO::Uncompress::Adapter::Inflate 2.211
-      IO::Uncompress::AnyInflate 2.211
-      IO::Uncompress::AnyUncompress 2.211
-      IO::Uncompress::Base 2.211
-      IO::Uncompress::Bunzip2 2.211
-      IO::Uncompress::Gunzip 2.211
-      IO::Uncompress::Inflate 2.211
-      IO::Uncompress::RawInflate 2.211
-      IO::Uncompress::Unzip 2.211
-      U64 2.211
-      Zlib::OldDeflate 2.211
-      Zlib::OldInflate 2.211
+      IO::Compress::Adapter::Bzip2 2.212
+      IO::Compress::Adapter::Deflate 2.212
+      IO::Compress::Adapter::Identity 2.212
+      IO::Compress::Base 2.212
+      IO::Compress::Base::Common 2.212
+      IO::Compress::Bzip2 2.212
+      IO::Compress::Deflate 2.212
+      IO::Compress::Gzip 2.212
+      IO::Compress::Gzip::Constants 2.212
+      IO::Compress::RawDeflate 2.212
+      IO::Compress::Zip 2.212
+      IO::Compress::Zip::Constants 2.212
+      IO::Compress::Zlib::Constants 2.212
+      IO::Compress::Zlib::Extra 2.212
+      IO::Uncompress::Adapter::Bunzip2 2.212
+      IO::Uncompress::Adapter::Identity 2.212
+      IO::Uncompress::Adapter::Inflate 2.212
+      IO::Uncompress::AnyInflate 2.212
+      IO::Uncompress::AnyUncompress 2.212
+      IO::Uncompress::Base 2.212
+      IO::Uncompress::Bunzip2 2.212
+      IO::Uncompress::Gunzip 2.212
+      IO::Uncompress::Inflate 2.212
+      IO::Uncompress::RawInflate 2.212
+      IO::Uncompress::Unzip 2.212
+      U64 2.212
+      Zlib::OldDeflate 2.212
+      Zlib::OldInflate 2.212
     requirements:
-      Compress::Raw::Bzip2 2.211
-      Compress::Raw::Zlib 2.211
+      Compress::Raw::Bzip2 2.212
+      Compress::Raw::Zlib 2.212
       Encode 0
       ExtUtils::MakeMaker 0
       Scalar::Util 0
       Time::Local 0
-  IO-Compress-Lzma-2.211
-    pathname: P/PM/PMQS/IO-Compress-Lzma-2.211.tar.gz
+  IO-Compress-Lzma-2.212
+    pathname: P/PM/PMQS/IO-Compress-Lzma-2.212.tar.gz
     provides:
-      IO::Compress::Adapter::Lzip 2.211
-      IO::Compress::Adapter::Lzma 2.211
-      IO::Compress::Adapter::Xz 2.211
-      IO::Compress::Lzip 2.211
-      IO::Compress::Lzma 2.211
-      IO::Compress::Xz 2.211
-      IO::Uncompress::Adapter::UnLzip 2.211
-      IO::Uncompress::Adapter::UnLzma 2.211
-      IO::Uncompress::Adapter::UnXz 2.211
-      IO::Uncompress::UnLzip 2.211
-      IO::Uncompress::UnLzma 2.211
-      IO::Uncompress::UnXz 2.211
+      IO::Compress::Adapter::Lzip 2.212
+      IO::Compress::Adapter::Lzma 2.212
+      IO::Compress::Adapter::Xz 2.212
+      IO::Compress::Lzip 2.212
+      IO::Compress::Lzma 2.212
+      IO::Compress::Xz 2.212
+      IO::Uncompress::Adapter::UnLzip 2.212
+      IO::Uncompress::Adapter::UnLzma 2.212
+      IO::Uncompress::Adapter::UnXz 2.212
+      IO::Uncompress::UnLzip 2.212
+      IO::Uncompress::UnLzma 2.212
+      IO::Uncompress::UnXz 2.212
     requirements:
-      Compress::Raw::Lzma 2.211
+      Compress::Raw::Lzma 2.212
       ExtUtils::MakeMaker 0
-      IO::Compress::Base 2.211
-      IO::Uncompress::Base 2.211
-  IO-Compress-Zstd-2.211
-    pathname: P/PM/PMQS/IO-Compress-Zstd-2.211.tar.gz
+      IO::Compress::Base 2.212
+      IO::Uncompress::Base 2.212
+  IO-Compress-Zstd-2.212
+    pathname: P/PM/PMQS/IO-Compress-Zstd-2.212.tar.gz
     provides:
-      IO::Compress::Adapter::Zstd 2.211
-      IO::Compress::Zstd 2.211
-      IO::Uncompress::Adapter::UnZstd 2.211
-      IO::Uncompress::UnZstd 2.211
+      IO::Compress::Adapter::Zstd 2.212
+      IO::Compress::Zstd 2.212
+      IO::Uncompress::Adapter::UnZstd 2.212
+      IO::Uncompress::UnZstd 2.212
     requirements:
       Compress::Stream::Zstd 0
       ExtUtils::MakeMaker 0
-      IO::Compress::Base 2.211
-      IO::Uncompress::Base 2.211
-  IO-Socket-SSL-2.085
-    pathname: S/SU/SULLR/IO-Socket-SSL-2.085.tar.gz
+      IO::Compress::Base 2.212
+      IO::Uncompress::Base 2.212
+  IO-Socket-SSL-2.088
+    pathname: S/SU/SULLR/IO-Socket-SSL-2.088.tar.gz
     provides:
-      IO::Socket::SSL 2.085
+      IO::Socket::SSL 2.088
       IO::Socket::SSL::Intercept 2.056
-      IO::Socket::SSL::OCSP_Cache 2.085
-      IO::Socket::SSL::OCSP_Resolver 2.085
+      IO::Socket::SSL::OCSP_Cache 2.088
+      IO::Socket::SSL::OCSP_Resolver 2.088
       IO::Socket::SSL::PublicSuffix undef
-      IO::Socket::SSL::SSL_Context 2.085
-      IO::Socket::SSL::SSL_HANDLE 2.085
-      IO::Socket::SSL::Session_Cache 2.085
-      IO::Socket::SSL::Trace 2.085
+      IO::Socket::SSL::SSL_Context 2.088
+      IO::Socket::SSL::SSL_HANDLE 2.088
+      IO::Socket::SSL::Session_Cache 2.088
+      IO::Socket::SSL::Trace 2.088
       IO::Socket::SSL::Utils 2.015
     requirements:
       ExtUtils::MakeMaker 0
-      Mozilla::CA 0
       Net::SSLeay 1.46
       Scalar::Util 0
   Module-Build-0.4234
@@ -281,14 +280,15 @@ DISTRIBUTIONS
       Text::ParseWords 0
       perl 5.006001
       version 0.87
-  Mojolicious-9.36
-    pathname: S/SR/SRI/Mojolicious-9.36.tar.gz
+  Mojolicious-9.37
+    pathname: S/SR/SRI/Mojolicious-9.37.tar.gz
     provides:
       Mojo undef
       Mojo::Asset undef
       Mojo::Asset::File undef
       Mojo::Asset::Memory undef
       Mojo::Base undef
+      Mojo::BaseUtil undef
       Mojo::ByteStream undef
       Mojo::Cache undef
       Mojo::Collection undef
@@ -350,7 +350,7 @@ DISTRIBUTIONS
       Mojo::UserAgent::Transactor undef
       Mojo::Util undef
       Mojo::WebSocket undef
-      Mojolicious 9.36
+      Mojolicious 9.37
       Mojolicious::Command undef
       Mojolicious::Command::Author::cpanify undef
       Mojolicious::Command::Author::generate undef
@@ -400,12 +400,6 @@ DISTRIBUTIONS
       IO::Socket::IP 0.37
       Sub::Util 1.41
       perl 5.016
-  Mozilla-CA-20240313
-    pathname: L/LW/LWP/Mozilla-CA-20240313.tar.gz
-    provides:
-      Mozilla::CA 20240313
-    requirements:
-      ExtUtils::MakeMaker 0
   Net-SSLeay-1.94
     pathname: C/CH/CHRISN/Net-SSLeay-1.94.tar.gz
     provides:
@@ -451,15 +445,15 @@ DISTRIBUTIONS
       Regexp::IPv6 0.03
     requirements:
       ExtUtils::MakeMaker 0
-  TOML-Tiny-0.16
-    pathname: O/OA/OALDERS/TOML-Tiny-0.16.tar.gz
+  TOML-Tiny-0.17
+    pathname: O/OA/OALDERS/TOML-Tiny-0.17.tar.gz
     provides:
-      TOML::Tiny 0.16
-      TOML::Tiny::Grammar 0.16
-      TOML::Tiny::Parser 0.16
-      TOML::Tiny::Tokenizer 0.16
-      TOML::Tiny::Util 0.16
-      TOML::Tiny::Writer 0.16
+      TOML::Tiny 0.17
+      TOML::Tiny::Grammar 0.17
+      TOML::Tiny::Parser 0.17
+      TOML::Tiny::Tokenizer 0.17
+      TOML::Tiny::Util 0.17
+      TOML::Tiny::Writer 0.17
     requirements:
       Carp 0
       Data::Dumper 0
@@ -542,11 +536,11 @@ DISTRIBUTIONS
       strict 0
       utf8 0
       warnings 0
-  YAML-LibYAML-0.88
-    pathname: I/IN/INGY/YAML-LibYAML-0.88.tar.gz
+  YAML-LibYAML-0.89
+    pathname: T/TI/TINITA/YAML-LibYAML-0.89.tar.gz
     provides:
-      YAML::LibYAML 0.88
-      YAML::XS 0.88
+      YAML::LibYAML 0.89
+      YAML::XS 0.89
       YAML::XS::LibYAML undef
     requirements:
       ExtUtils::MakeMaker 0

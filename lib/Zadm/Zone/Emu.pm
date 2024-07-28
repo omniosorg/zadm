@@ -6,22 +6,32 @@ use Mojo::URL;
 
 has ibrand   => sub($self) { $self->brand };
 has template => sub($self) {
-    my $template = $self->SUPER::template;
-
     return {
         %{$self->SUPER::template},
         $self->hasimg ? %{$self->image->metadata->{attr} || {}} : (),
     }
 };
+has public   => sub($self) { [ @{$self->SUPER::public}, qw(updateres) ] };
+has options  => sub($self) {
+    return {
+        %{$self->SUPER::options},
+        updateres => {
+            image => {
+                getopt => 'image|i=s',
+            },
+        },
+    }
+};
 
 # public methods
-sub install($self, @args) {
-    $self->SUPER::install(@args);
+sub updateres($self, @args) {
+    return 1 if $ENV{__ZADM_ALTROOT};
 
-    return 1 if $ENV{__ZADM_ALTROOT} || !$self->hasimg
-        || !$self->utils->isArrRef($self->image->metadata->{res});
+    $self->usage if !$self->hasimg;
 
-    # TODO: we could parallelise this; however, we just have one resource so far at maximum
+    return 1 if !$self->utils->isArrRef($self->image->metadata->{res});
+
+    # we could parallelise this; however, we just have a few resources and they are small
     # the advantage of doing it sequentially is that we can print progress
     for my $res (@{$self->image->metadata->{res}}) {
         my $file = Mojo::File->new($self->config->{zonepath}, 'root', Mojo::File->new($res)->basename);
@@ -29,6 +39,15 @@ sub install($self, @args) {
 
         $self->zones->images->curl([{ path => $file, url => $url }]);
     }
+}
+
+sub install($self, @args) {
+    $self->SUPER::install(@args);
+
+    return 1 if $ENV{__ZADM_ALTROOT} || !$self->hasimg
+        || !$self->utils->isArrRef($self->image->metadata->{res});
+
+    $self->updateres;
 }
 
 1;
@@ -47,6 +66,7 @@ where 'command' is one of the following:
     set <zone_name> <property=value>
     install [-i <image_uuid|image_path_or_uri>] [-f] <zone_name>
     uninstall [-f] <zone_name>
+    updateres -i <image_uuid> <zone_name>
     show [zone_name [property[,property]...]]
     list [-H] [-F <format>] [-b <brand>] [-s <state>] [zone_name]
     memstat
@@ -73,7 +93,7 @@ where 'command' is one of the following:
 
 =head1 COPYRIGHT
 
-Copyright 2023 OmniOS Community Edition (OmniOSce) Association.
+Copyright 2024 OmniOS Community Edition (OmniOSce) Association.
 
 =head1 LICENSE
 
