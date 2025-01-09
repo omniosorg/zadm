@@ -59,6 +59,9 @@ jobs:
         path: thirdparty
         key: ${{ matrix.os }}-cpan-${{ matrix.perl }}-${{ hashFiles('**/cpanfile') }}
 
+    - name: Dependencies
+      run: sudo apt-get install liblzma-dev
+
     - name: Bootstrap
       run: ./bootstrap
 
