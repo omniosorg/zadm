@@ -21,9 +21,9 @@ jobs:
           # - windows-latest
 
         perl:
-          - '5.34'
           - '5.36'
           - '5.38'
+          - '5.40'
         # exclude:
           #- os: ubuntu-16.04
           #  perl: '5.26'
