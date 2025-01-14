@@ -21,9 +21,9 @@ jobs:
           # - windows-latest
 
         perl:
-          - '5.34'
           - '5.36'
           - '5.38'
+          - '5.40'
         # exclude:
           #- os: ubuntu-16.04
           #  perl: '5.26'
@@ -58,6 +58,9 @@ jobs:
       with:
         path: thirdparty
         key: ${{ matrix.os }}-cpan-${{ matrix.perl }}-${{ hashFiles('**/cpanfile') }}
+
+    - name: Dependencies
+      run: sudo apt-get install liblzma-dev
 
     - name: Bootstrap
       run: ./bootstrap
