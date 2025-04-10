@@ -54,7 +54,7 @@ jobs:
 
     - name: CPAN Cache
       id: cpan-cache
-      uses: actions/cache@v1
+      uses: actions/cache@v4
       with:
         path: thirdparty
         key: ${{ matrix.os }}-cpan-${{ matrix.perl }}-${{ hashFiles('**/cpanfile') }}

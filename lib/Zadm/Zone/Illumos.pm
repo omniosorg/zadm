@@ -68,6 +68,7 @@ where 'command' is one of the following:
     stop [-c [extra_args]] <zone_name>
     restart [-c [extra_args]] <zone_name>
     poweroff <zone_name>
+    reset [-c [extra_args]] <zone_name>
     login <zone_name>
     console [extra_args] <zone_name>
     log <zone_name>

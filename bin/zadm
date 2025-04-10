@@ -310,9 +310,15 @@ sub main {
             last;
         };
         /^reset$/ && do {
+            my $opts = {};
+            Getopt::Long::Configure(qw(permute pass_through));
+            {
+                local $SIG{__WARN__} = sub { };
+                GetOptions($opts, qw(console|c|C)) or pod2usage(1);
+            }
             my $zName = shift @ARGV or pod2usage(1);
 
-            $zones->zone($zName)->reset;
+            $zones->zone($zName, opts => $opts)->reset(\@ARGV);
             last;
         };
         /^console$/ && do {
@@ -450,7 +456,7 @@ where 'command' is one of the following:
     stop [-c [extra_args]] <zone_name>
     restart [-c [extra_args]] <zone_name>
     poweroff <zone_name>
-    reset <zone_name>
+    reset [-c [extra_args]] <zone_name>
     login <zone_name>
     console [extra_args] <zone_name>
     log <zone_name>
