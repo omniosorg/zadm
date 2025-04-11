@@ -580,9 +580,9 @@ sub poweroff($self) {
     $self->$zoneCmd('halt');
 }
 
-sub reset($self) {
+sub reset($self, $cOpts) {
     $self->poweroff;
-    $self->boot;
+    $self->boot($cOpts);
 }
 
 sub login($self) {
@@ -898,7 +898,7 @@ where 'command' is one of the following:
     stop [-c [extra_args]] <zone_name>
     restart [-c [extra_args]] <zone_name>
     poweroff <zone_name>
-    reset <zone_name>
+    reset [-c [extra_args]] <zone_name>
     console [extra_args] <zone_name>
     log <zone_name>
     fw [-r] [-d] [-t] [-m] [-e ipf|ipf6|ipnat] <zone_name>
