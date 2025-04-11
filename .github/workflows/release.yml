@@ -29,6 +29,9 @@ jobs:
          # workflow shells always run with set -e -o pipefail
          [[ `cat VERSION` == ${{ steps.version.outputs.ver }} ]]
 
+    - name: Dependencies
+      run: sudo apt-get install liblzma-dev
+
     - name: Bootstrap
       run: ./bootstrap
 
