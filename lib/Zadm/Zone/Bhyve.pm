@@ -404,8 +404,11 @@ sub poweroff($self) {
     $self->$bhyveCtl('--force-poweroff');
 }
 
-sub reset($self) {
+sub reset($self, $cOpts) {
     $self->$bhyveCtl('--force-reset');
+
+    $self->opts->{console} = 1 if $self->gconfIs(qw(CONSOLE auto_connect on));
+    $self->console($cOpts) if $self->opts->{console};
 }
 
 sub nmi($self) {
