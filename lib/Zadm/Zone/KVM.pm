@@ -455,8 +455,11 @@ sub poweroff($self) {
     $self->SUPER::poweroff;
 }
 
-sub reset($self) {
+sub reset($self, $cOpts) {
     $self->$queryMonitor("system_reset\n", 1);
+
+    $self->opts->{console} = 1 if $self->gconfIs(qw(CONSOLE auto_connect on));
+    $self->console($cOpts) if $self->opts->{console};
 }
 
 sub nmi($self) {

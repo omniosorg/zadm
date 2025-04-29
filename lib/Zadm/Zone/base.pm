@@ -61,10 +61,6 @@ has options => sub {
 };
 
 # private methods
-my $gconfIs = sub($self, $sect, $elem, $val) {
-    return $self->utils->gconf->{$sect}->{$elem}
-        && $self->utils->gconf->{$sect}->{$elem} eq $val;
-};
 my $resIsArray = sub($self, $res) {
     return exists $self->schema->{$res} && $self->schema->{$res}->{array};
 };
@@ -531,6 +527,11 @@ sub checkMandOptions($self, $oper) {
     return 1;
 }
 
+sub gconfIs($self, $sect, $elem, $val) {
+    return $self->utils->gconf->{$sect}->{$elem}
+        && $self->utils->gconf->{$sect}->{$elem} eq $val;
+}
+
 sub state($self) {
     $self->zones->refresh;
     my $zones = $self->zones->list;
@@ -555,7 +556,7 @@ sub isSimpleProp($self, $prop) {
 }
 
 sub boot($self, $cOpts) {
-    $self->opts->{console} = 1 if $self->$gconfIs(qw(CONSOLE auto_connect on));
+    $self->opts->{console} = 1 if $self->gconfIs(qw(CONSOLE auto_connect on));
     # fork boot to the bg if we are about to attach to the console
     $self->$zoneCmd('boot', [], $self->opts->{console});
 
@@ -599,7 +600,7 @@ sub login($self) {
 sub console($self, $cOpts = [], $reboot = 0) {
     my $name = $self->name;
 
-    push @$cOpts, qw(-d) if $self->$gconfIs(qw(CONSOLE auto_disconnect on))
+    push @$cOpts, qw(-d) if $self->gconfIs(qw(CONSOLE auto_disconnect on))
         && !$reboot && !grep { $_ eq '-d' } @$cOpts;
     push @$cOpts, '-e', $self->utils->gconf->{CONSOLE}->{escape_char}
         if $self->utils->gconf->{CONSOLE}->{escape_char} && !grep { /^-e.?$/ } @$cOpts;
