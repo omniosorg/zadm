@@ -46,7 +46,7 @@
          "sparse" : "false"
       }
    ],
-   "diskif" : "virtio",
+   "diskif" : "nvme",
    "extra" : [
       "-s 7,nvme,ram=1024"
    ],
