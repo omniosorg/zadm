@@ -5,7 +5,7 @@
    "bootrom" : "BHYVE",
    "brand" : "bhyve",
    "cloud-init" : "off",
-   "diskif" : "virtio",
+   "diskif" : "nvme",
    "fs-allowed" : "",
    "hostbridge" : "i440fx",
    "hostid" : "",

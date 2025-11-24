@@ -57,7 +57,7 @@ $SCHEMA = sub($self) {
         diskif      => {
             optional    => 1,
             description => 'disk type',
-            example     => '"diskif" : "virtio"',
+            example     => '"diskif" : "nvme"',
             validator   => $self->sv->elemOf(qw(virtio virtio-blk nvme ahci ahci-hd ahci-cd ide)),
         },
         sectorsize  => {
@@ -278,8 +278,8 @@ $SCHEMA = sub($self) {
     diskif      => {
         optional    => 1,
         description => 'disk type',
-        default     => 'virtio',
-        example     => '"diskif" : "virtio"',
+        default     => 'nvme',
+        example     => '"diskif" : "nvme"',
         validator   => $self->sv->elemOf(qw(virtio virtio-blk nvme ahci ahci-hd ahci-cd ide)),
         'x-attr'    => 1,
     },
