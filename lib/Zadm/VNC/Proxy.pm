@@ -14,14 +14,14 @@ has sock => sub { Mojo::Exception->throw("ERROR: 'sock' must be specified on ins
 
 sub start($self) {
     Mojo::IOLoop->next_tick(sub($ioloop) {
-        privSet(undef, PRIV_FILE_READ, PRIV_NET_ACCESS, $self->port < 1024 ? PRIV_NET_PRIVADDR : ());
+        privSet(undef, PRIV_FILE_READ, PRIV_FILE_WRITE, PRIV_NET_ACCESS, $self->port < 1024 ? PRIV_NET_PRIVADDR : ());
     });
 
     Mojo::IOLoop->next_tick(sub($ioloop) {
         Mojo::IOLoop->server({ address => $self->addr, port => $self->port } => sub($loop, $stream, $id) {
             $self->log->debug('Client connected from', join ':', $stream->handle->peerhost, $stream->handle->peerport);
 
-            Mojo::IOLoop->next_tick(sub($ioloop) { privSet({ add => 1 }, PRIV_FILE_READ) });
+            Mojo::IOLoop->next_tick(sub($ioloop) { privSet({ add => 1 }, PRIV_FILE_READ, PRIV_FILE_WRITE) });
 
             Mojo::IOLoop->client(path => $self->sock, sub($loop, $err, $unix) {
                 return $self->log->warn("WARNING: cannot connect to VNC socket: $err") if $err;
@@ -54,12 +54,12 @@ sub start($self) {
                 });
             });
 
-            Mojo::IOLoop->next_tick(sub($ioloop) { privSet({ remove => 1 }, PRIV_FILE_READ) });
+            Mojo::IOLoop->next_tick(sub($ioloop) { privSet({ remove => 1 }, PRIV_FILE_READ, PRIV_FILE_WRITE) });
         });
     });
 
     Mojo::IOLoop->next_tick(sub($ioloop) {
-        privSet({ lock => 1 }, PRIV_FILE_READ);
+        privSet({ lock => 1 }, PRIV_FILE_READ, PRIV_FILE_WRITE);
         privSet;
     });
 
