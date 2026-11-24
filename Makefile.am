@@ -14,7 +14,7 @@ export PATH := /usr/gnu/bin:$(PATH)
 PERLTESTS := $(shell test -d t && find t -name "*.t")
 TOOLS := $(shell test -d tools && find tools)
 
-EXTRA_DIST = VERSION COPYRIGHT README.md LICENSE CHANGES AUTHORS cpanfile $(BIN) $(PERLTESTS) $(MAN) $(TOOLS)
+EXTRA_DIST = VERSION COPYRIGHT README.md LICENSE CHANGES AUTHORS cpanfile doc/user-guide.md $(BIN) $(PERLTESTS) $(MAN) $(TOOLS)
 
 YEAR := $(shell date +%Y)
 DATE := $(shell date +%Y-%m-%d)
