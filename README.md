@@ -33,5 +33,13 @@ To install the application, just run
 
     gmake install
 
-Check the [man page](doc/zadm.pod) for information about how to use `zadm`.
+Usage
+-----
+
+    zadm create -b lipkg web01    # create and install a zone
+    zadm start web01
+    zadm list
+
+The [user guide](doc/user-guide.md) covers common tasks and the configuration
+attributes. The [man page](doc/zadm.pod) is the command reference.
 
